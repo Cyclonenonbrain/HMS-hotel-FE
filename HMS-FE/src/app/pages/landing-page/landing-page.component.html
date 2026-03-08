@@ -1,0 +1,141 @@
+<div
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display flex flex-col min-h-screen">
+    <header
+        class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-primary/20 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md px-10 py-4">
+        <div class="flex items-center gap-2 text-primary">
+            <span class="material-symbols-outlined text-3xl">diamond</span>
+            <h2 class="text-xl font-bold tracking-tight">Lumina Resort</h2>
+        </div>
+        <div class="flex flex-1 justify-center gap-8">
+            <div class="flex items-center gap-9">
+                <a class="text-sm font-medium hover:text-primary transition-colors" href="#">Home</a>
+                <a class="text-sm font-medium hover:text-primary transition-colors" href="#">Search</a>
+            </div>
+        </div>
+        <div class="flex gap-4">
+            <button routerLink="/login"
+                class="flex min-w-[84px] items-center justify-center rounded-lg h-10 px-4 border border-primary text-primary hover:bg-primary/10 transition-colors text-sm font-bold">Login</button>
+            <button routerLink="/register"
+                class="flex min-w-[84px] items-center justify-center rounded-lg h-10 px-4 bg-primary text-slate-900 hover:bg-primary/90 transition-colors text-sm font-bold">Sign
+                Up</button>
+        </div>
+    </header>
+
+    <main class="flex-1">
+        <section class="relative w-full h-[80vh] min-h-[600px] flex flex-col items-center justify-center">
+            <div class="absolute inset-0 bg-cover bg-center"
+                style='background-image: linear-gradient(rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 100%), url("https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070");'>
+            </div>
+            <div class="relative z-10 flex flex-col gap-6 text-center px-4 max-w-4xl mx-auto w-full">
+                <h1 class="text-white text-5xl md:text-7xl font-black leading-tight drop-shadow-lg">Experience
+                    Unparalleled Luxury</h1>
+                <h2 class="text-slate-200 text-lg md:text-xl font-normal drop-shadow-md mb-8">Discover your perfect
+                    getaway at our premium resort.</h2>
+                <div
+                    class="w-full max-w-3xl mx-auto bg-background-light/10 dark:bg-background-dark/20 backdrop-blur-md border border-white/20 p-2 rounded-xl shadow-2xl">
+                    <div class="flex flex-col md:flex-row w-full gap-2">
+                        <div class="flex-1 relative">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300">calendar_today</span>
+                            <input
+                                class="w-full bg-white/10 border border-white/20 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg text-white placeholder:text-slate-300 pl-10 pr-4 py-3 h-12 text-sm md:text-base outline-none transition-all"
+                                placeholder="Check-in - Check-out" />
+                        </div>
+
+                        <div class="flex-1 relative">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300">group</span>
+                            <input
+                                class="w-full bg-white/10 border border-white/20 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg text-white placeholder:text-slate-300 pl-10 pr-4 py-3 h-12 text-sm md:text-base outline-none transition-all"
+                                placeholder="Guests" />
+                        </div>
+
+                        <button
+                            class="flex md:w-auto w-full cursor-pointer items-center justify-center rounded-lg h-12 px-8 bg-primary text-slate-900 text-base font-bold transition-all hover:bg-primary/90 shadow-[0_0_15px_rgba(242,204,13,0.3)]">
+                            <span class="truncate">Search Rooms</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="max-w-7xl mx-auto px-6 py-16 -mt-12 relative z-20">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="stat-card">
+                    <p class="text-primary text-4xl font-black">50+</p>
+                    <p class="text-slate-600 dark:text-slate-300 text-base font-medium uppercase tracking-wider">Luxury
+                        Suites</p>
+                </div>
+                <div class="stat-card">
+                    <p class="text-primary text-4xl font-black">10k+</p>
+                    <p class="text-slate-600 dark:text-slate-300 text-base font-medium uppercase tracking-wider">
+                        Satisfied Guests</p>
+                </div>
+                <div class="stat-card">
+                    <p class="text-primary text-4xl font-black">25+</p>
+                    <p class="text-slate-600 dark:text-slate-300 text-base font-medium uppercase tracking-wider">Awards
+                        Won</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="max-w-7xl mx-auto px-6 py-12">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-3xl md:text-4xl font-bold">Featured Room Types</h2>
+                <a class="text-primary hover:underline font-medium flex items-center gap-1" href="#">View All <span
+                        class="material-symbols-outlined text-sm">arrow_forward</span></a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div *ngFor="let room of rooms"
+                    class="group flex flex-col rounded-xl overflow-hidden bg-white dark:bg-background-dark border border-slate-200 dark:border-primary/10 shadow-md hover:shadow-xl transition-all">
+                    <div class="relative w-full aspect-[4/3] bg-cover bg-center overflow-hidden"
+                        [style.backgroundImage]="'url(' + room.image + ')'">
+                        <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
+                        <div
+                            class="absolute top-4 right-4 bg-background-dark/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-semibold border border-primary/30">
+                            From ${{room.price}}/night</div>
+                    </div>
+                    <div class="flex flex-col p-6 gap-4">
+                        <h3 class="text-xl font-bold">{{room.title}}</h3>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm line-clamp-2">{{room.desc}}</p>
+                        <div class="flex items-center gap-4 text-slate-500 text-sm mt-2">
+                            <span class="flex items-center gap-1"><span
+                                    class="material-symbols-outlined text-base">bed</span> {{room.beds}}</span>
+                            <span class="flex items-center gap-1"><span
+                                    class="material-symbols-outlined text-base">person</span> {{room.guests}}</span>
+                        </div>
+                        <button
+                            class="mt-4 w-full h-10 bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-slate-900 transition-colors text-sm font-bold rounded-lg">View
+                            Details</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section
+            class="bg-slate-100 dark:bg-background-dark/50 border-y border-slate-200 dark:border-primary/10 py-16 mt-8">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Why Choose Us</h2>
+                    <p class="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">Discover the exceptional amenities
+                        and services that make our resort the ultimate luxury destination.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div *ngFor="let feature of features" class="flex flex-col items-center text-center gap-4">
+                        <div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-3xl">{{feature.icon}}</span>
+                        </div>
+                        <h3 class="text-xl font-semibold">{{feature.title}}</h3>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm">{{feature.desc}}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-background-light dark:bg-background-dark border-t border-primary/20 py-8">
+        <div class="max-w-7xl mx-auto px-6 text-center text-sm text-slate-500">
+            <p>© 2024 Lumina Resort. All rights reserved.</p>
+        </div>
+    </footer>
+</div>
