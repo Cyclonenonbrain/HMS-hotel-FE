@@ -1,23 +1,20 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./src/**/*.{html,ts}",
-  ],
-  darkMode: 'class',
+  content: ["./src/**/*.{html,ts}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        "primary": "#d4af37", // Gold accent cho LuxeCore
-        "secondary": "#1a2538", // Deep navy
-        "background-light": "#f6f6f8",
-        "background-dark": "#0d131f", 
+        primary: "#eccb13", // Updated Dashboard Yellow
+        secondary: "#1a2538", // Deep navy
+        "background-light": "#f8f8f6",
+        "background-dark": "#221f10",
       },
       fontFamily: {
-        "display": ["Outfit", "sans-serif"] //
+        outfit: ["Outfit", "sans-serif"],
+        display: ["Inter", "sans-serif"],
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-  ],
-}
+  plugins: [require("@tailwindcss/forms")],
+};

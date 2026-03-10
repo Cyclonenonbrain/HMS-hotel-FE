@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -14,7 +14,7 @@ export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   showPassword = false;
 
-  constructor(private fb: FormBuilder) {}
+  constructor(private fb: FormBuilder, private router: Router) {}
 
   ngOnInit(): void {
     // Khởi tạo form với các điều kiện kiểm tra
@@ -40,5 +40,13 @@ export class LoginComponent implements OnInit {
   // Hàm ẩn/hiện mật khẩu
   togglePassword(): void {
     this.showPassword = !this.showPassword;
+  }
+
+  loginAsAdmin(): void {
+    this.router.navigate(['/admin/dashboard']);
+  }
+
+  loginAsStaff(): void {
+    this.router.navigate(['/staff/dashboard']);
   }
 }
