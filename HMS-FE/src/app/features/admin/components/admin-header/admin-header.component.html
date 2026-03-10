@@ -3,8 +3,8 @@
 >
   <div class="flex items-center gap-2">
     <a
-      class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal hover:text-primary transition-colors"
-      href="#"
+      class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal hover:text-primary transition-colors cursor-pointer"
+      [routerLink]="['/admin/dashboard']"
       >Home</a
     >
     <span
@@ -13,7 +13,7 @@
     >
     <span
       class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal"
-      >Dashboard</span
+      >{{ currentBreadcrumb }}</span
     >
   </div>
   <div class="flex flex-1 justify-end items-center gap-6">

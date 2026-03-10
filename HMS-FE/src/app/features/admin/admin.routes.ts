@@ -13,11 +13,13 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'dashboard',
-        loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent)
+        loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
+        data: { breadcrumb: 'Dashboard' }
       },
       {
         path: 'room-types',
-        loadComponent: () => import('./room-types/room-types.component').then(m => m.RoomTypesComponent)
+        loadComponent: () => import('./room-types/room-types.component').then(m => m.RoomTypesComponent),
+        data: { breadcrumb: 'Room Types' }
       }
     ]
   }
