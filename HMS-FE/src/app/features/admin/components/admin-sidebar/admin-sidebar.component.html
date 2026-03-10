@@ -101,10 +101,14 @@
                 Room Types
               </p>
             </a>
-            <!-- Rooms (Placeholder) -->
+            <!-- Rooms -->
             <a
-              class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
-              href="#"
+              class="flex items-center rounded-lg whitespace-nowrap group transition-all duration-300"
+              [routerLink]="['/admin/rooms']"
+              routerLinkActive="bg-primary/20 text-primary"
+              [class.text-slate-300]="true"
+              [class.hover:text-white]="true"
+              [class.hover:bg-slate-800]="true"
               [title]="isCollapsed ? 'Rooms' : ''"
               [ngClass]="
                 isCollapsed

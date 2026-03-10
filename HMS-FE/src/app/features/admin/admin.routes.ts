@@ -20,6 +20,11 @@ export const adminRoutes: Routes = [
         path: 'room-types',
         loadComponent: () => import('./room-types/room-types.component').then(m => m.RoomTypesComponent),
         data: { breadcrumb: 'Room Types' }
+      },
+      {
+        path: 'rooms',
+        loadComponent: () => import('./rooms/rooms.component').then(m => m.RoomsComponent),
+        data: { breadcrumb: 'Rooms' }
       }
     ]
   }
