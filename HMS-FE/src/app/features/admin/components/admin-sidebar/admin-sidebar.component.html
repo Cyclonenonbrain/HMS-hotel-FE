@@ -1,0 +1,341 @@
+<div
+  class="relative flex h-screen flex-col justify-between bg-slate-900 dark:bg-slate-950 border-r border-slate-800 shrink-0 transition-[width] duration-300 z-20"
+  [ngClass]="isCollapsed ? 'w-20' : 'w-64'"
+>
+  <!-- Toggle Button -->
+  <button
+    (click)="toggleSidebar()"
+    class="absolute -right-3.5 top-8 bg-slate-800 dark:bg-slate-950 border border-slate-700 text-slate-300 rounded-full p-1 z-50 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer shadow-md flex items-center justify-center"
+  >
+    <span
+      class="material-symbols-outlined text-[18px] transition-transform duration-300 block"
+      [class.rotate-180]="isCollapsed"
+      >menu_open</span
+    >
+  </button>
+
+  <!-- Scrollable/Clippable Container -->
+  <div class="flex-1 overflow-hidden h-full w-full">
+    <app-admin-scrollbar>
+      <div class="flex flex-col justify-between min-h-full py-4 px-3 w-full">
+        <div class="flex flex-col gap-4 w-full">
+          <!-- User Profile Area -->
+          <div class="flex gap-4 items-center px-1 py-2">
+            <div
+              class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shrink-0 border-2 border-primary/20"
+              data-alt="Luxury hotel building exterior"
+              style="
+                background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuDXsQXYakg3jpcTjBiVa1QNZ9lKlMnrdwOgKSeoNDOOSzAnkANMIOUMocFnoBybL6wClchU6tU4n2rQ6ikJt2Wiuw7JX0XBJKsH7TcqzN9i7zcvSKy0khA1ZsszUIwRbqmIH1Kmigz6jexUgvqJzKNZSj2_ojq6PLvFfsf2h7C3cYazx6Csri8WjPoUm_6ib0Um6z8sRZCkThBBnBBAWPZcrb4DEuu3WQw4Pb-Qv35p0Ov0Qb_p3N4M27q5wfvNuqHq1Ny8PHTUvjwX&quot;);
+              "
+            ></div>
+            <div
+              class="flex flex-col whitespace-nowrap overflow-hidden transition-opacity duration-300"
+              [ngClass]="isCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto'"
+            >
+              <h1 class="text-white text-base font-medium leading-normal">
+                Luxury Hotel
+              </h1>
+              <p class="text-primary text-sm font-normal leading-normal">
+                Admin Dashboard
+              </p>
+            </div>
+          </div>
+
+          <!-- Nav Links -->
+          <div class="flex flex-col gap-2 mt-4">
+            <a
+              class="flex items-center rounded-lg bg-primary/20 text-primary whitespace-nowrap group transition-all duration-300"
+              href="#"
+              [title]="isCollapsed ? 'Dashboard' : ''"
+              [ngClass]="
+                isCollapsed
+                  ? 'py-2 px-0 justify-center w-12 mx-auto'
+                  : 'py-2 px-3 gap-4 w-full'
+              "
+            >
+              <span class="material-symbols-outlined shrink-0 text-[22px]"
+                >dashboard</span
+              >
+              <p
+                class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
+                [ngClass]="
+                  isCollapsed
+                    ? 'max-w-0 opacity-0'
+                    : 'max-w-[200px] opacity-100'
+                "
+              >
+                Dashboard
+              </p>
+            </a>
+            <a
+              class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
+              href="#"
+              [title]="isCollapsed ? 'Room Types' : ''"
+              [ngClass]="
+                isCollapsed
+                  ? 'py-2 px-0 justify-center w-12 mx-auto'
+                  : 'py-2 px-3 gap-4 w-full'
+              "
+            >
+              <span class="material-symbols-outlined shrink-0 text-[22px]"
+                >bed</span
+              >
+              <p
+                class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
+                [ngClass]="
+                  isCollapsed
+                    ? 'max-w-0 opacity-0'
+                    : 'max-w-[200px] opacity-100'
+                "
+              >
+                Room Types
+              </p>
+            </a>
+            <a
+              class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
+              href="#"
+              [title]="isCollapsed ? 'Rooms' : ''"
+              [ngClass]="
+                isCollapsed
+                  ? 'py-2 px-0 justify-center w-12 mx-auto'
+                  : 'py-2 px-3 gap-4 w-full'
+              "
+            >
+              <span class="material-symbols-outlined shrink-0 text-[22px]"
+                >meeting_room</span
+              >
+              <p
+                class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
+                [ngClass]="
+                  isCollapsed
+                    ? 'max-w-0 opacity-0'
+                    : 'max-w-[200px] opacity-100'
+                "
+              >
+                Rooms
+              </p>
+            </a>
+            <a
+              class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
+              href="#"
+              [title]="isCollapsed ? 'Services' : ''"
+              [ngClass]="
+                isCollapsed
+                  ? 'py-2 px-0 justify-center w-12 mx-auto'
+                  : 'py-2 px-3 gap-4 w-full'
+              "
+            >
+              <span class="material-symbols-outlined shrink-0 text-[22px]"
+                >room_service</span
+              >
+              <p
+                class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
+                [ngClass]="
+                  isCollapsed
+                    ? 'max-w-0 opacity-0'
+                    : 'max-w-[200px] opacity-100'
+                "
+              >
+                Services
+              </p>
+            </a>
+            <a
+              class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
+              href="#"
+              [title]="isCollapsed ? 'Pricing' : ''"
+              [ngClass]="
+                isCollapsed
+                  ? 'py-2 px-0 justify-center w-12 mx-auto'
+                  : 'py-2 px-3 gap-4 w-full'
+              "
+            >
+              <span class="material-symbols-outlined shrink-0 text-[22px]"
+                >payments</span
+              >
+              <p
+                class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
+                [ngClass]="
+                  isCollapsed
+                    ? 'max-w-0 opacity-0'
+                    : 'max-w-[200px] opacity-100'
+                "
+              >
+                Pricing
+              </p>
+            </a>
+            <a
+              class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
+              href="#"
+              [title]="isCollapsed ? 'Coupons' : ''"
+              [ngClass]="
+                isCollapsed
+                  ? 'py-2 px-0 justify-center w-12 mx-auto'
+                  : 'py-2 px-3 gap-4 w-full'
+              "
+            >
+              <span class="material-symbols-outlined shrink-0 text-[22px]"
+                >local_activity</span
+              >
+              <p
+                class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
+                [ngClass]="
+                  isCollapsed
+                    ? 'max-w-0 opacity-0'
+                    : 'max-w-[200px] opacity-100'
+                "
+              >
+                Coupons
+              </p>
+            </a>
+            <a
+              class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
+              href="#"
+              [title]="isCollapsed ? 'Users' : ''"
+              [ngClass]="
+                isCollapsed
+                  ? 'py-2 px-0 justify-center w-12 mx-auto'
+                  : 'py-2 px-3 gap-4 w-full'
+              "
+            >
+              <span class="material-symbols-outlined shrink-0 text-[22px]"
+                >group</span
+              >
+              <p
+                class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
+                [ngClass]="
+                  isCollapsed
+                    ? 'max-w-0 opacity-0'
+                    : 'max-w-[200px] opacity-100'
+                "
+              >
+                Users
+              </p>
+            </a>
+            <a
+              class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
+              href="#"
+              [title]="isCollapsed ? 'Reviews' : ''"
+              [ngClass]="
+                isCollapsed
+                  ? 'py-2 px-0 justify-center w-12 mx-auto'
+                  : 'py-2 px-3 gap-4 w-full'
+              "
+            >
+              <span class="material-symbols-outlined shrink-0 text-[22px]"
+                >star</span
+              >
+              <p
+                class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
+                [ngClass]="
+                  isCollapsed
+                    ? 'max-w-0 opacity-0'
+                    : 'max-w-[200px] opacity-100'
+                "
+              >
+                Reviews
+              </p>
+            </a>
+            <a
+              class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
+              href="#"
+              [title]="isCollapsed ? 'Reports' : ''"
+              [ngClass]="
+                isCollapsed
+                  ? 'py-2 px-0 justify-center w-12 mx-auto'
+                  : 'py-2 px-3 gap-4 w-full'
+              "
+            >
+              <span class="material-symbols-outlined shrink-0 text-[22px]"
+                >description</span
+              >
+              <p
+                class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
+                [ngClass]="
+                  isCollapsed
+                    ? 'max-w-0 opacity-0'
+                    : 'max-w-[200px] opacity-100'
+                "
+              >
+                Reports
+              </p>
+            </a>
+            <a
+              class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
+              href="#"
+              [title]="isCollapsed ? 'Audit Logs' : ''"
+              [ngClass]="
+                isCollapsed
+                  ? 'py-2 px-0 justify-center w-12 mx-auto'
+                  : 'py-2 px-3 gap-4 w-full'
+              "
+            >
+              <span class="material-symbols-outlined shrink-0 text-[22px]"
+                >timeline</span
+              >
+              <p
+                class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
+                [ngClass]="
+                  isCollapsed
+                    ? 'max-w-0 opacity-0'
+                    : 'max-w-[200px] opacity-100'
+                "
+              >
+                Audit Logs
+              </p>
+            </a>
+          </div>
+        </div>
+
+        <!-- Bottom Group -->
+        <div
+          class="flex flex-col gap-2 mt-auto pt-6 border-t border-slate-800 w-full mb-4"
+        >
+          <a
+            class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap transition-all duration-300"
+            href="#"
+            [title]="isCollapsed ? 'Profile' : ''"
+            [ngClass]="
+              isCollapsed
+                ? 'py-2 px-0 justify-center w-12 mx-auto'
+                : 'py-2 px-3 gap-4 w-full'
+            "
+          >
+            <span class="material-symbols-outlined shrink-0 text-[22px]"
+              >person</span
+            >
+            <p
+              class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
+              [ngClass]="
+                isCollapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
+              "
+            >
+              Profile
+            </p>
+          </a>
+          <a
+            class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap transition-all duration-300"
+            href="#"
+            [title]="isCollapsed ? 'Settings' : ''"
+            [ngClass]="
+              isCollapsed
+                ? 'py-2 px-0 justify-center w-12 mx-auto'
+                : 'py-2 px-3 gap-4 w-full'
+            "
+          >
+            <span class="material-symbols-outlined shrink-0 text-[22px]"
+              >settings</span
+            >
+            <p
+              class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
+              [ngClass]="
+                isCollapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
+              "
+            >
+              Settings
+            </p>
+          </a>
+        </div>
+      </div>
+    </app-admin-scrollbar>
+  </div>
+</div>
