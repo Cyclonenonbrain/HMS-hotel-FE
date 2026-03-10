@@ -1,141 +1,170 @@
 <div
     class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display flex flex-col min-h-screen">
+
     <header
-        class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-primary/20 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md px-10 py-4">
+        class="sticky top-0 z-50 flex items-center justify-between border-b border-primary/20 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md px-10 py-4">
         <div class="flex items-center gap-2 text-primary">
             <span class="material-symbols-outlined text-3xl">diamond</span>
             <h2 class="text-xl font-bold tracking-tight">Lumina Resort</h2>
         </div>
-        <div class="flex flex-1 justify-center gap-8">
-            <div class="flex items-center gap-9">
-                <a class="text-sm font-medium hover:text-primary transition-colors" href="#">Home</a>
-                <a class="text-sm font-medium hover:text-primary transition-colors" href="#">Search</a>
+
+        <nav class="hidden md:flex items-center gap-9">
+            <a class="text-sm font-medium hover:text-primary transition-colors" href="#">Home</a>
+            <a class="text-sm font-medium hover:text-primary transition-colors" href="#">Search</a>
+            <a *ngIf="isLoggedIn" class="text-sm font-medium hover:text-primary transition-colors" href="#">My
+                Bookings</a>
+        </nav>
+
+        <div class="flex items-center gap-4">
+            <ng-container *ngIf="!isLoggedIn">
+                <button routerLink="/login"
+                    class="h-10 px-6 border border-primary text-primary rounded-lg font-bold text-sm hover:bg-primary/10">Login</button>
+                <button routerLink="/register"
+                    class="h-10 px-6 bg-primary text-slate-900 rounded-lg font-bold text-sm hover:bg-primary/90">Sign
+                    Up</button>
+            </ng-container>
+
+            <div *ngIf="isLoggedIn" class="flex items-center gap-3 group relative cursor-pointer">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-bold">{{user.name}}</p>
+                    <p class="text-[10px] text-primary font-bold uppercase">{{user.level}}</p>
+                </div>
+                <div class="size-10 rounded-full border-2 border-primary overflow-hidden shadow-lg">
+                    <img [src]="user.avatar" alt="Avatar">
+                </div>
+                <button (click)="toggleLogin()"
+                    class="absolute -bottom-10 right-0 bg-white dark:bg-slate-800 p-2 text-xs rounded shadow hidden group-hover:block">Sign
+                    Out</button>
             </div>
-        </div>
-        <div class="flex gap-4">
-            <button routerLink="/login"
-                class="flex min-w-[84px] items-center justify-center rounded-lg h-10 px-4 border border-primary text-primary hover:bg-primary/10 transition-colors text-sm font-bold">Login</button>
-            <button routerLink="/register"
-                class="flex min-w-[84px] items-center justify-center rounded-lg h-10 px-4 bg-primary text-slate-900 hover:bg-primary/90 transition-colors text-sm font-bold">Sign
-                Up</button>
         </div>
     </header>
 
     <main class="flex-1">
         <section class="relative w-full h-[80vh] min-h-[600px] flex flex-col items-center justify-center">
-            <div class="absolute inset-0 bg-cover bg-center"
-                style='background-image: linear-gradient(rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 100%), url("https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070");'>
+            <div class="absolute inset-0 bg-cover bg-center transition-all duration-700"
+                [style.backgroundImage]="isLoggedIn 
+            ? 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.7)), url(https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=2080)' 
+            : 'linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.6)), url(https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070)'">
             </div>
-            <div class="relative z-10 flex flex-col gap-6 text-center px-4 max-w-4xl mx-auto w-full">
-                <h1 class="text-white text-5xl md:text-7xl font-black leading-tight drop-shadow-lg">Experience
-                    Unparalleled Luxury</h1>
-                <h2 class="text-slate-200 text-lg md:text-xl font-normal drop-shadow-md mb-8">Discover your perfect
-                    getaway at our premium resort.</h2>
-                <div
-                    class="w-full max-w-3xl mx-auto bg-background-light/10 dark:bg-background-dark/20 backdrop-blur-md border border-white/20 p-2 rounded-xl shadow-2xl">
-                    <div class="flex flex-col md:flex-row w-full gap-2">
-                        <div class="flex-1 relative">
-                            <span
-                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300">calendar_today</span>
-                            <input
-                                class="w-full bg-white/10 border border-white/20 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg text-white placeholder:text-slate-300 pl-10 pr-4 py-3 h-12 text-sm md:text-base outline-none transition-all"
-                                placeholder="Check-in - Check-out" />
-                        </div>
 
-                        <div class="flex-1 relative">
-                            <span
-                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300">group</span>
-                            <input
-                                class="w-full bg-white/10 border border-white/20 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg text-white placeholder:text-slate-300 pl-10 pr-4 py-3 h-12 text-sm md:text-base outline-none transition-all"
-                                placeholder="Guests" />
-                        </div>
+            <div
+                class="w-full max-w-4xl bg-background-light/10 dark:bg-background-dark/30 backdrop-blur-xl border border-white/20 p-4 md:p-6 rounded-2xl shadow-2xl">
 
-                        <button
-                            class="flex md:w-auto w-full cursor-pointer items-center justify-center rounded-lg h-12 px-8 bg-primary text-slate-900 text-base font-bold transition-all hover:bg-primary/90 shadow-[0_0_15px_rgba(242,204,13,0.3)]">
-                            <span class="truncate">Search Rooms</span>
-                        </button>
+                <div *ngIf="isLoggedIn" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div class="text-left space-y-1">
+                        <span class="text-white/80 text-xs font-bold uppercase pl-1">Check-in</span>
+                        <input type="date"
+                            class="w-full bg-white dark:bg-background-dark border-none rounded-lg h-12 px-3 text-sm">
                     </div>
+                    <div class="text-left space-y-1">
+                        <span class="text-white/80 text-xs font-bold uppercase pl-1">Check-out</span>
+                        <input type="date"
+                            class="w-full bg-white dark:bg-background-dark border-none rounded-lg h-12 px-3 text-sm">
+                    </div>
+                    <div class="text-left space-y-1">
+                        <span class="text-white/80 text-xs font-bold uppercase pl-1">Guests</span>
+                        <select
+                            class="w-full bg-white dark:bg-background-dark border-none rounded-lg h-12 px-3 text-sm">
+                            <option selected>2 Guests</option>
+                            <option>1 Guest</option>
+                            <option>4 Guests</option>
+                        </select>
+                    </div>
+                    <button
+                        class="bg-primary text-slate-900 h-12 rounded-lg font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg">
+                        <span class="material-symbols-outlined">search</span> Search
+                    </button>
                 </div>
+
+                <div *ngIf="!isLoggedIn" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div class="relative text-left space-y-1">
+                        <span class="text-white/80 text-xs font-bold uppercase pl-1">Check-in - Check-out</span>
+                        <div class="relative">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">calendar_month</span>
+                            <input type="text" placeholder="Select dates"
+                                class="w-full bg-white dark:bg-background-dark border-none rounded-lg h-12 pl-10 pr-3 text-sm cursor-pointer">
+                        </div>
+                    </div>
+                    <div class="relative text-left space-y-1">
+                        <span class="text-white/80 text-xs font-bold uppercase pl-1">Guests</span>
+                        <div class="relative">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">group</span>
+                            <select
+                                class="w-full bg-white dark:bg-background-dark border-none rounded-lg h-12 pl-10 pr-3 text-sm cursor-pointer appearance-none">
+                                <option>Add guests</option>
+                                <option selected>2 Guests</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button
+                        class="bg-[#FCD34D] hover:bg-[#FBBF24] text-slate-900 h-12 rounded-lg font-bold transition-all flex items-center justify-center gap-2 shadow-lg">
+                        Search Rooms
+                    </button>
+                </div>
+
             </div>
         </section>
 
-        <section class="max-w-7xl mx-auto px-6 py-16 -mt-12 relative z-20">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="stat-card">
-                    <p class="text-primary text-4xl font-black">50+</p>
-                    <p class="text-slate-600 dark:text-slate-300 text-base font-medium uppercase tracking-wider">Luxury
-                        Suites</p>
-                </div>
-                <div class="stat-card">
-                    <p class="text-primary text-4xl font-black">10k+</p>
-                    <p class="text-slate-600 dark:text-slate-300 text-base font-medium uppercase tracking-wider">
-                        Satisfied Guests</p>
-                </div>
-                <div class="stat-card">
-                    <p class="text-primary text-4xl font-black">25+</p>
-                    <p class="text-slate-600 dark:text-slate-300 text-base font-medium uppercase tracking-wider">Awards
-                        Won</p>
-                </div>
+        <section class="max-w-7xl mx-auto px-6 py-20">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Featured Room Types</h2>
+                <div class="w-24 h-1 bg-primary mx-auto rounded-full"></div>
             </div>
-        </section>
 
-        <section class="max-w-7xl mx-auto px-6 py-12">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-3xl md:text-4xl font-bold">Featured Room Types</h2>
-                <a class="text-primary hover:underline font-medium flex items-center gap-1" href="#">View All <span
-                        class="material-symbols-outlined text-sm">arrow_forward</span></a>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div *ngFor="let room of rooms"
-                    class="group flex flex-col rounded-xl overflow-hidden bg-white dark:bg-background-dark border border-slate-200 dark:border-primary/10 shadow-md hover:shadow-xl transition-all">
-                    <div class="relative w-full aspect-[4/3] bg-cover bg-center overflow-hidden"
-                        [style.backgroundImage]="'url(' + room.image + ')'">
-                        <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
+                    class="group rounded-2xl overflow-hidden bg-white dark:bg-background-dark border border-primary/10 shadow-lg hover:shadow-2xl transition-all">
+                    <div class="relative aspect-video overflow-hidden">
+                        <img [src]="room.image"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                         <div
-                            class="absolute top-4 right-4 bg-background-dark/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-semibold border border-primary/30">
-                            From ${{room.price}}/night</div>
-                    </div>
-                    <div class="flex flex-col p-6 gap-4">
-                        <h3 class="text-xl font-bold">{{room.title}}</h3>
-                        <p class="text-slate-600 dark:text-slate-400 text-sm line-clamp-2">{{room.desc}}</p>
-                        <div class="flex items-center gap-4 text-slate-500 text-sm mt-2">
-                            <span class="flex items-center gap-1"><span
-                                    class="material-symbols-outlined text-base">bed</span> {{room.beds}}</span>
-                            <span class="flex items-center gap-1"><span
-                                    class="material-symbols-outlined text-base">person</span> {{room.guests}}</span>
+                            class="absolute top-4 right-4 bg-background-dark/80 text-primary px-3 py-1 rounded-full text-sm font-bold border border-primary/20">
+                            ${{room.price}} <span class="text-[10px] text-slate-400">/night</span>
                         </div>
-                        <button
-                            class="mt-4 w-full h-10 bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-slate-900 transition-colors text-sm font-bold rounded-lg">View
-                            Details</button>
                     </div>
-                </div>
-            </div>
-        </section>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">{{room.title}}</h3>
+                        <div class="flex gap-3 mb-4">
+                            <span *ngFor="let feat of room.features"
+                                class="material-symbols-outlined text-primary text-lg">{{feat}}</span>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm mb-6 line-clamp-2">{{room.desc}}</p>
 
-        <section
-            class="bg-slate-100 dark:bg-background-dark/50 border-y border-slate-200 dark:border-primary/10 py-16 mt-8">
-            <div class="max-w-7xl mx-auto px-6">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Why Choose Us</h2>
-                    <p class="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">Discover the exceptional amenities
-                        and services that make our resort the ultimate luxury destination.</p>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    <div *ngFor="let feature of features" class="flex flex-col items-center text-center gap-4">
-                        <div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                            <span class="material-symbols-outlined text-3xl">{{feature.icon}}</span>
-                        </div>
-                        <h3 class="text-xl font-semibold">{{feature.title}}</h3>
-                        <p class="text-slate-600 dark:text-slate-400 text-sm">{{feature.desc}}</p>
+                        <button class="w-full py-3 rounded-lg font-bold transition-all"
+                            [ngClass]="isLoggedIn ? 'bg-primary text-slate-900' : 'border-2 border-primary text-primary hover:bg-primary hover:text-white'">
+                            {{ isLoggedIn ? 'Book This Room' : 'View Details' }}
+                        </button>
                     </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <footer class="bg-background-light dark:bg-background-dark border-t border-primary/20 py-8">
-        <div class="max-w-7xl mx-auto px-6 text-center text-sm text-slate-500">
-            <p>© 2024 Lumina Resort. All rights reserved.</p>
+    <footer class="bg-background-light dark:bg-slate-900 border-t border-primary/10 py-12">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-10 text-sm">
+            <div>
+                <h2 class="text-primary text-xl font-bold mb-4">Lumina Resort</h2>
+                <p class="text-slate-500 leading-relaxed">Redefining luxury hospitality. Experience unparalleled comfort
+                    and design at our exclusive properties worldwide.</p>
+            </div>
+            <div>
+                <h3 class="font-bold mb-4">Contact Info</h3>
+                <ul class="space-y-2 text-slate-500">
+                    <li class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                        123 Paradise Island
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-sm">mail</span>
+                        contact&#64;lumina.com
+                    </li>
+                </ul>
+            </div>
+            <div class="text-center md:text-right">
+                <p class="text-slate-400">© 2024 Lumina Resort. All rights reserved.</p>
+            </div>
         </div>
     </footer>
 </div>
