@@ -1,0 +1,161 @@
+<div class="flex flex-col max-w-7xl mx-auto gap-8 p-6 md:p-8">
+  <!-- Page Header -->
+  <div
+    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+  >
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
+        Room Types
+      </h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        Manage all available room categories and pricing.
+      </p>
+    </div>
+    <button
+      class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-slate-900 hover:bg-primary/90 font-medium rounded-lg transition-colors shadow-sm"
+    >
+      <span class="material-symbols-outlined text-[20px]">add</span>
+      Add Room Type
+    </button>
+  </div>
+
+  <!-- Data Table -->
+  <div
+    class="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden"
+  >
+    <div class="overflow-x-auto w-full custom-scrollbar">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr
+            class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50"
+          >
+            <th
+              class="py-4 px-6 text-sm font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap"
+            >
+              ID
+            </th>
+            <th
+              class="py-4 px-6 text-sm font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap"
+            >
+              Name
+            </th>
+            <th
+              class="py-4 px-6 text-sm font-semibold text-slate-600 dark:text-slate-400 min-w-[250px]"
+            >
+              Description
+            </th>
+            <th
+              class="py-4 px-6 text-sm font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap"
+            >
+              Base Price
+            </th>
+            <th
+              class="py-4 px-6 text-sm font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap"
+            >
+              Capacity
+            </th>
+            <th
+              class="py-4 px-6 text-sm font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap"
+            >
+              Status
+            </th>
+            <th
+              class="py-4 px-6 text-sm font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap text-right"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/50">
+          <tr
+            *ngFor="let room of roomTypes"
+            class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+          >
+            <td
+              class="py-4 px-6 text-sm font-medium text-slate-900 dark:text-white whitespace-nowrap"
+            >
+              {{ room.id }}
+            </td>
+            <td
+              class="py-4 px-6 text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap"
+            >
+              {{ room.name }}
+            </td>
+            <td
+              class="py-4 px-6 text-sm text-slate-500 dark:text-slate-400 line-clamp-2"
+            >
+              {{ room.description }}
+            </td>
+            <td
+              class="py-4 px-6 text-sm font-medium text-slate-900 dark:text-white whitespace-nowrap"
+            >
+              ${{ room.price }}
+            </td>
+            <td
+              class="py-4 px-6 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap"
+            >
+              <div class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]"
+                  >person</span
+                >
+                <span>{{ room.capacity }}</span>
+              </div>
+            </td>
+            <td class="py-4 px-6 text-sm whitespace-nowrap">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                [ngClass]="
+                  room.status === 'Active'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                "
+              >
+                {{ room.status }}
+              </span>
+            </td>
+            <td class="py-4 px-6 text-sm whitespace-nowrap text-right">
+              <div class="flex items-center justify-end gap-2">
+                <button
+                  class="p-1.5 text-slate-400 hover:text-primary transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                  title="Edit"
+                >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >edit</span
+                  >
+                </button>
+                <button
+                  class="p-1.5 text-slate-400 hover:text-red-500 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                  title="Delete"
+                >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >delete</span
+                  >
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- Empty State handling if no data -->
+      <div
+        *ngIf="roomTypes.length === 0"
+        class="flex flex-col items-center justify-center py-12 px-4"
+      >
+        <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-full mb-4">
+          <span class="material-symbols-outlined text-4xl text-slate-400"
+            >hotel_class</span
+          >
+        </div>
+        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-1">
+          No Room Types Found
+        </h3>
+        <p
+          class="text-slate-500 dark:text-slate-400 text-sm text-center max-w-sm"
+        >
+          You haven't added any room types yet. Click the "Add Room Type" button
+          to get started.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

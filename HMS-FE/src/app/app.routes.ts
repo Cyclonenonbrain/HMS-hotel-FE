@@ -6,6 +6,6 @@ import { LandingPageComponent } from './pages/landing-page/landing-page.componen
 export const routes: Routes = [
     {path: 'login', component: LoginComponent},
     { path: 'register', component: RegisterComponent },
-    { path: 'admin/dashboard', loadComponent: () => import('./features/admin/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+    { path: 'admin', loadChildren: () => import('./features/admin/admin.routes').then(m => m.adminRoutes) },
     { path: '', component: LandingPageComponent }
 ];

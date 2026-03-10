@@ -14,7 +14,7 @@
     >
   </button>
 
-  <!-- Scrollable/Clippable Container -->
+  <!-- Scrollable Container -->
   <div class="flex-1 overflow-hidden h-full w-full">
     <app-admin-scrollbar>
       <div class="flex flex-col justify-between min-h-full py-4 px-3 w-full">
@@ -23,7 +23,6 @@
           <div class="flex gap-4 items-center px-1 py-2">
             <div
               class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shrink-0 border-2 border-primary/20"
-              data-alt="Luxury hotel building exterior"
               style="
                 background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuDXsQXYakg3jpcTjBiVa1QNZ9lKlMnrdwOgKSeoNDOOSzAnkANMIOUMocFnoBybL6wClchU6tU4n2rQ6ikJt2Wiuw7JX0XBJKsH7TcqzN9i7zcvSKy0khA1ZsszUIwRbqmIH1Kmigz6jexUgvqJzKNZSj2_ojq6PLvFfsf2h7C3cYazx6Csri8WjPoUm_6ib0Um6z8sRZCkThBBnBBAWPZcrb4DEuu3WQw4Pb-Qv35p0Ov0Qb_p3N4M27q5wfvNuqHq1Ny8PHTUvjwX&quot;);
               "
@@ -43,9 +42,15 @@
 
           <!-- Nav Links -->
           <div class="flex flex-col gap-2 mt-4">
+            <!-- Dashboard -->
             <a
-              class="flex items-center rounded-lg bg-primary/20 text-primary whitespace-nowrap group transition-all duration-300"
-              href="#"
+              class="flex items-center rounded-lg whitespace-nowrap group transition-all duration-300"
+              [routerLink]="['/admin/dashboard']"
+              routerLinkActive="bg-primary/20 text-primary"
+              [routerLinkActiveOptions]="{ exact: true }"
+              [class.text-slate-300]="true"
+              [class.hover:text-white]="true"
+              [class.hover:bg-slate-800]="true"
               [title]="isCollapsed ? 'Dashboard' : ''"
               [ngClass]="
                 isCollapsed
@@ -67,9 +72,14 @@
                 Dashboard
               </p>
             </a>
+            <!-- Room Types -->
             <a
-              class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
-              href="#"
+              class="flex items-center rounded-lg whitespace-nowrap group transition-all duration-300"
+              [routerLink]="['/admin/room-types']"
+              routerLinkActive="bg-primary/20 text-primary"
+              [class.text-slate-300]="true"
+              [class.hover:text-white]="true"
+              [class.hover:bg-slate-800]="true"
               [title]="isCollapsed ? 'Room Types' : ''"
               [ngClass]="
                 isCollapsed
@@ -91,6 +101,7 @@
                 Room Types
               </p>
             </a>
+            <!-- Rooms (Placeholder) -->
             <a
               class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
               href="#"
@@ -115,6 +126,7 @@
                 Rooms
               </p>
             </a>
+            <!-- Services (Placeholder) -->
             <a
               class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
               href="#"
@@ -139,6 +151,7 @@
                 Services
               </p>
             </a>
+            <!-- Pricing (Placeholder) -->
             <a
               class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
               href="#"
@@ -163,6 +176,7 @@
                 Pricing
               </p>
             </a>
+            <!-- Coupons (Placeholder) -->
             <a
               class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
               href="#"
@@ -187,6 +201,7 @@
                 Coupons
               </p>
             </a>
+            <!-- Users (Placeholder) -->
             <a
               class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
               href="#"
@@ -211,6 +226,7 @@
                 Users
               </p>
             </a>
+            <!-- Reviews (Placeholder) -->
             <a
               class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
               href="#"
@@ -233,54 +249,6 @@
                 "
               >
                 Reviews
-              </p>
-            </a>
-            <a
-              class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
-              href="#"
-              [title]="isCollapsed ? 'Reports' : ''"
-              [ngClass]="
-                isCollapsed
-                  ? 'py-2 px-0 justify-center w-12 mx-auto'
-                  : 'py-2 px-3 gap-4 w-full'
-              "
-            >
-              <span class="material-symbols-outlined shrink-0 text-[22px]"
-                >description</span
-              >
-              <p
-                class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
-                [ngClass]="
-                  isCollapsed
-                    ? 'max-w-0 opacity-0'
-                    : 'max-w-[200px] opacity-100'
-                "
-              >
-                Reports
-              </p>
-            </a>
-            <a
-              class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap group transition-all duration-300"
-              href="#"
-              [title]="isCollapsed ? 'Audit Logs' : ''"
-              [ngClass]="
-                isCollapsed
-                  ? 'py-2 px-0 justify-center w-12 mx-auto'
-                  : 'py-2 px-3 gap-4 w-full'
-              "
-            >
-              <span class="material-symbols-outlined shrink-0 text-[22px]"
-                >timeline</span
-              >
-              <p
-                class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
-                [ngClass]="
-                  isCollapsed
-                    ? 'max-w-0 opacity-0'
-                    : 'max-w-[200px] opacity-100'
-                "
-              >
-                Audit Logs
               </p>
             </a>
           </div>
