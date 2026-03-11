@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.services';
+import { RoomService } from '../../services/room.services';
 
 @Component({
   selector: 'app-landing-page',
@@ -9,55 +11,78 @@ import { RouterModule } from '@angular/router';
   templateUrl: './landing-page.component.html',
   styleUrls: ['./landing-page.component.css']
 })
-export class LandingPageComponent {
-  // Trạng thái đăng nhập
-  isLoggedIn: boolean = false; 
-  
-  // Thông tin user (giả lập)
-  user = {
-    name: 'Alex Johnson',
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC36ol4gnd1K2j2EP1d733wysKNBLIeCetMOG_lzEScjF2jTN3PAeAAJzDwRMs2xvpMRR9tCcwzPJ9f5CxxbCJQKWDCgZ7rpM4qNJKc75Ju__Mi8KXzKB4Y0tqjseqZyreXqsxFCkPbtoAK5H-Spo3n1crBaabozCa_Fzp7dniXnGNIHKgQCvSn8cPKfl4btQeSsKINbSrE4u2wFo0snd66HXmpFyn-AIxYs4XspBzNWIkoYN6DkLXwHRCtkcewqrSwk2JUhhlo3sn5',
-    level: 'Premium Member'
-  };
+export class LandingPageComponent implements OnInit {
+  isLoggedIn: boolean = false;
+  user: any = null;
+  rooms: any[] = [];
 
-  rooms = [
-    {
-      title: 'Grand Suite',
-      price: 800,
-      image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=1974',
-      desc: 'Experience ultimate comfort in our Grand Suite, featuring panoramic ocean views.',
-      beds: '1 King',
-      guests: 2,
-      features: ['wifi', 'pool']
-    },
-    {
-      title: 'Royal Villa',
-      price: 1500,
-      image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=2070',
-      desc: 'A private oasis with its own infinity pool and dedicated butler service.',
-      beds: '2 King',
-      guests: 4,
-      features: ['wifi', 'pool', 'beach_access']
-    },
-    {
-      title: 'Ocean Penthouse',
-      price: 2200,
-      image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?q=80&w=1974',
-      desc: 'The pinnacle of luxury with 360-degree views and unmatched elegance.',
-      beds: '3 King',
-      guests: 6,
-      features: ['wifi', 'pool', 'room_service']
-    }
-  ];
+  constructor(
+    private authService: AuthService,
+    private roomService: RoomService,
+    private cdr: ChangeDetectorRef // Thêm để ép cập nhật giao diện
+  ) { }
 
-  features = [
-    { icon: 'verified_user', title: 'Premium Security', desc: '24/7 top-tier security ensuring your privacy.' },
-    { icon: 'diamond', title: 'Exclusive Access', desc: 'Access to world-class facilities and private beaches.' },
-    { icon: 'restaurant_menu', title: 'Fine Dining', desc: 'Michelin-starred chefs preparing masterpieces.' },
-    { icon: 'support_agent', title: '24/7 Concierge', desc: 'Dedicated staff ready to fulfill every request.' }
-  ];
+  ngOnInit(): void {
+    // Theo dõi trạng thái đăng nhập
+    this.authService.isLoggedIn$.subscribe(status => {
+      this.isLoggedIn = status;
+      if (status) {
+        const userData = localStorage.getItem('currentUser');
+        this.user = userData ? JSON.parse(userData) : null;
 
-  toggleLogin() {
-    this.isLoggedIn = !this.isLoggedIn;
+        // CHỈ gọi lấy phòng khi đã xác nhận đăng nhập thành công
+        this.loadRoomsFromDB();
+      } else {
+        this.user = null;
+        this.rooms = []; // Xóa dữ liệu phòng khi đăng xuất
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  loadRoomsFromDB() {
+    this.roomService.getAllRooms().subscribe({
+      next: (response: any) => {
+        console.log('Dữ liệu thô nhận từ API:', response);
+
+        // Quan trọng: Truy cập vào response.data vì API của bạn bọc mảng trong đó
+        const roomArray = response.data || [];
+
+        if (roomArray.length > 0) {
+          this.rooms = roomArray.map((room: any) => ({
+            ...room,
+            title: room.name,
+            price: room.base_price,
+            desc: room.description,
+            features: this.getMockFeatures(room.name),
+            image: this.getHardcodedImage(room.name)
+          }));
+          this.cdr.detectChanges();
+          console.log('Mảng rooms sau khi map thành công:', this.rooms);
+        }
+      },
+      error: (err) => {
+        console.error('Lỗi kết nối Backend:', err);
+      }
+    });
+  }
+
+  getHardcodedImage(name: string): string {
+    const n = name ? name.toLowerCase() : '';
+    if (n.includes('suite')) return 'https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=1000';
+    if (n.includes('deluxe')) return 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000';
+    if (n.includes('family')) return 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?q=80&w=1000';
+    return 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=1000';
+  }
+
+  getMockFeatures(name: string): string[] {
+    const n = name ? name.toLowerCase() : '';
+    if (n.includes('suite')) return ['pool', 'wifi', 'ac', 'local_bar'];
+    return ['wifi', 'bed', 'tv'];
+  }
+
+  logout() {
+    this.authService.logout();
+    this.rooms = [];
   }
 }
