@@ -3,12 +3,13 @@
   font-family: 'Outfit', sans-serif;
 }
 
-/* Hiệu ứng mượt cho các thẻ card */
-.group {
+
+/* Đổi .group thành .room-card để chỉ định rõ mục tiêu */
+.room-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.group:hover {
+.room-card:hover {
   transform: translateY(-10px);
   box-shadow: 0 20px 25px -5px rgba(242, 204, 13, 0.1);
 }
