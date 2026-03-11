@@ -1,15 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-export interface RoomType {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  capacity: number;
-  status: 'Active' | 'Maintenance' | 'Inactive';
-}
+import { RoomTypeService } from '../../../core/room-type.service';
+import { RoomTypeResponse, RoomTypeCreateRequest } from '../../../core/models/room-type.model';
 
 @Component({
   selector: 'app-room-types',
@@ -18,35 +11,49 @@ export interface RoomType {
   templateUrl: './room-types.component.html',
   styleUrl: './room-types.component.css'
 })
-export class RoomTypesComponent {
-  roomTypes: RoomType[] = [
-    { id: 'RT01', name: 'Standard Room', description: 'Basic amenities, 1 King Bed', price: 100, capacity: 2, status: 'Active' },
-    { id: 'RT02', name: 'Deluxe Room', description: 'City view, 2 Queen Beds', price: 150, capacity: 4, status: 'Active' },
-    { id: 'RT03', name: 'Suite', description: 'Living area, Ocean view, 1 King Bed', price: 250, capacity: 2, status: 'Maintenance' },
-    { id: 'RT04', name: 'Family Room', description: 'Spacious, 2 King Beds, 1 Sofa Bed', price: 200, capacity: 6, status: 'Active' },
-    { id: 'RT05', name: 'Penthouse', description: 'Top floor, Panoramic view, 2 Master Bedrooms', price: 500, capacity: 4, status: 'Active' }
-  ];
+export class RoomTypesComponent implements OnInit {
+  roomTypes: RoomTypeResponse[] = [];
 
   // Modal state
   showModal = false;
   modalMode: 'add' | 'edit' = 'add';
   showDeleteDialog = false;
-  roomToDelete: RoomType | null = null;
+  roomToDelete: RoomTypeResponse | null = null;
 
   // Form model (used for both add & edit)
-  formData: Partial<RoomType> = {};
+  formData: Partial<RoomTypeResponse> = {};
 
   // Notification
   notification: { type: 'success' | 'error'; message: string } | null = null;
 
+  constructor(private roomTypeService: RoomTypeService) {}
+
+  ngOnInit(): void {
+    this.loadRoomTypes();
+  }
+
+  loadRoomTypes(): void {
+    this.roomTypeService.getRoomTypes().subscribe({
+      next: (response) => {
+        if (response && response.data) {
+          this.roomTypes = response.data;
+        }
+      },
+      error: (error) => {
+        this.showNotification('error', 'Failed to load room types.');
+        console.error('Error fetching room types:', error);
+      }
+    });
+  }
+
   // ─── Modals ────────────────────────────────
   openAddModal(): void {
     this.modalMode = 'add';
-    this.formData = { name: '', description: '', price: 0, capacity: 1, status: 'Active' };
+    this.formData = { name: '', description: '', basePrice: 0, capacity: 1 };
     this.showModal = true;
   }
 
-  openEditModal(room: RoomType): void {
+  openEditModal(room: RoomTypeResponse): void {
     this.modalMode = 'edit';
     this.formData = { ...room };
     this.showModal = true;
@@ -63,29 +70,43 @@ export class RoomTypesComponent {
       return;
     }
 
-    if (this.modalMode === 'add') {
-      const newId = 'RT' + String(this.roomTypes.length + 1).padStart(2, '0');
-      this.roomTypes = [...this.roomTypes, {
-        id: newId,
-        name: this.formData.name!,
-        description: this.formData.description!,
-        price: this.formData.price ?? 0,
-        capacity: this.formData.capacity ?? 1,
-        status: this.formData.status ?? 'Active'
-      }];
-      this.showNotification('success', 'Room type added successfully!');
-    } else {
-      this.roomTypes = this.roomTypes.map(r =>
-        r.id === this.formData.id ? { ...r, ...this.formData } as RoomType : r
-      );
-      this.showNotification('success', 'Room type updated successfully!');
-    }
+    const request: RoomTypeCreateRequest = {
+      name: this.formData.name,
+      description: this.formData.description,
+      basePrice: this.formData.basePrice ?? 0,
+      capacity: this.formData.capacity ?? 1
+    };
 
-    this.closeModal();
+    if (this.modalMode === 'add') {
+      this.roomTypeService.createRoomType(request).subscribe({
+        next: (response) => {
+          this.showNotification('success', 'Room type added successfully!');
+          this.loadRoomTypes();
+          this.closeModal();
+        },
+        error: (error) => {
+          this.showNotification('error', 'Failed to add room type.');
+          console.error('Error creating room type:', error);
+        }
+      });
+    } else {
+      if (!this.formData.id) return;
+      this.roomTypeService.updateRoomType(this.formData.id, request).subscribe({
+        next: (response) => {
+          this.showNotification('success', 'Room type updated successfully!');
+          this.loadRoomTypes();
+          this.closeModal();
+        },
+        error: (error) => {
+          this.showNotification('error', 'Failed to update room type.');
+          console.error('Error updating room type:', error);
+        }
+      });
+    }
   }
 
   // ─── Delete ────────────────────────────────
-  openDeleteDialog(room: RoomType): void {
+  openDeleteDialog(room: RoomTypeResponse): void {
     this.roomToDelete = room;
     this.showDeleteDialog = true;
   }
@@ -96,11 +117,20 @@ export class RoomTypesComponent {
   }
 
   confirmDelete(): void {
-    if (this.roomToDelete) {
-      this.roomTypes = this.roomTypes.filter(r => r.id !== this.roomToDelete!.id);
-      this.showNotification('success', `"${this.roomToDelete.name}" has been deleted.`);
+    if (this.roomToDelete && this.roomToDelete.id) {
+      this.roomTypeService.deleteRoomType(this.roomToDelete.id).subscribe({
+        next: () => {
+          this.showNotification('success', `"${this.roomToDelete?.name}" has been deleted.`);
+          this.loadRoomTypes();
+          this.closeDeleteDialog();
+        },
+        error: (error) => {
+          this.showNotification('error', 'Failed to delete room type.');
+          console.error('Error deleting room type:', error);
+          this.closeDeleteDialog();
+        }
+      });
     }
-    this.closeDeleteDialog();
   }
 
   // ─── Notification ─────────────────────────

@@ -71,11 +71,7 @@
             >
               Capacity
             </th>
-            <th
-              class="py-4 px-6 text-sm font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap"
-            >
-              Status
-            </th>
+
             <th
               class="py-4 px-6 text-sm font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap text-right"
             >
@@ -104,7 +100,7 @@
             <td
               class="py-4 px-6 text-sm font-semibold text-slate-900 dark:text-white whitespace-nowrap"
             >
-              ${{ room.price }}
+              ${{ room.basePrice }}
             </td>
             <td
               class="py-4 px-6 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap"
@@ -117,29 +113,7 @@
                 <span>{{ room.capacity }}</span>
               </div>
             </td>
-            <td class="py-4 px-6 text-sm whitespace-nowrap">
-              <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                [ngClass]="{
-                  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400':
-                    room.status === 'Active',
-                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400':
-                    room.status === 'Maintenance',
-                  'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400':
-                    room.status === 'Inactive',
-                }"
-              >
-                <span
-                  class="size-1.5 rounded-full mr-1.5"
-                  [ngClass]="{
-                    'bg-green-500': room.status === 'Active',
-                    'bg-yellow-500': room.status === 'Maintenance',
-                    'bg-slate-500': room.status === 'Inactive',
-                  }"
-                ></span>
-                {{ room.status }}
-              </span>
-            </td>
+
             <td class="py-4 px-6 text-sm whitespace-nowrap text-right">
               <div class="flex items-center justify-end gap-1">
                 <button
@@ -289,7 +263,7 @@
             >
             <input
               type="number"
-              [(ngModel)]="formData.price"
+              [(ngModel)]="formData.basePrice"
               min="0"
               placeholder="0"
               class="w-full pl-7 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
@@ -315,40 +289,6 @@
               class="w-full pl-9 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
             />
           </div>
-        </div>
-      </div>
-
-      <!-- Status -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-semibold text-slate-700 dark:text-slate-300"
-          >Status</label
-        >
-        <div class="flex gap-3">
-          <label
-            *ngFor="let s of ['Active', 'Maintenance', 'Inactive']"
-            class="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer text-sm font-medium transition-all"
-            [ngClass]="
-              formData.status === s
-                ? 'border-primary bg-primary/10 text-slate-900 dark:text-white'
-                : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-primary/40'
-            "
-          >
-            <input
-              type="radio"
-              [value]="s"
-              [(ngModel)]="formData.status"
-              class="hidden"
-            />
-            <span
-              class="size-2 rounded-full"
-              [ngClass]="{
-                'bg-green-500': s === 'Active',
-                'bg-yellow-500': s === 'Maintenance',
-                'bg-slate-400': s === 'Inactive',
-              }"
-            ></span>
-            {{ s }}
-          </label>
         </div>
       </div>
     </div>
