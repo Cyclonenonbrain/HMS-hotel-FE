@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { environment } from '../../environment/environment';
 import { ApiResponse } from './models/api-response.model';
 import { RoomTypeResponse, RoomTypeCreateRequest } from './models/room-type.model';
 
