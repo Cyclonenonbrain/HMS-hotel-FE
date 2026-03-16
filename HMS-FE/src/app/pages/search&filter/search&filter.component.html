@@ -63,7 +63,9 @@
         <div class="flex flex-wrap justify-between items-end gap-4 mb-10 border-b border-slate-200 pb-8">
             <div>
                 <h1 class="text-4xl font-extrabold tracking-tight mb-2">Available Rooms</h1>
-                <p class="text-slate-500 font-medium">{{ filteredRooms.length }} Premium Suites Available for your dates
+                <p class="text-slate-400 text-sm mt-1">
+                    {{ filteredRooms.length }} {{ filteredRooms.length === 1 ? 'Room' : 'Rooms' }} Available for your
+                    dates
                 </p>
             </div>
             <div class="flex items-center gap-2">
@@ -111,6 +113,35 @@
                     <div class="flex justify-between font-bold text-xs text-slate-600">
                         <span>$50</span>
                         <span>$1,000,000+</span>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Guests</label>
+
+                    <div
+                        class="mt-2 flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <span class="material-icons text-slate-400">groups</span>
+                            <span class="font-bold text-sm text-slate-700">Adults</span>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <button (click)="updateGuests(-1)" [disabled]="filters.guests <= 2"
+                                [class.opacity-30]="filters.guests <= 2"
+                                class="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center hover:bg-white transition-all text-slate-600">
+                                <span class="material-icons text-sm">remove</span>
+                            </button>
+
+                            <span class="font-bold text-slate-800 w-4 text-center select-none">{{ filters.guests
+                                }}</span>
+
+                            <button (click)="updateGuests(1)" [disabled]="filters.guests >= 4"
+                                [class.opacity-30]="filters.guests >= 4"
+                                class="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center hover:bg-white transition-all text-slate-600">
+                                <span class="material-icons text-sm">add</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 

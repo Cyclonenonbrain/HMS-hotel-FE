@@ -23,6 +23,7 @@ export class RoomListComponent implements OnInit {
     filters = {
         searchQuery: '',
         priceRange: 1000000,
+        guests: 2,
         amenities: {
             oceanView: false,
             privateBalcony: false,
@@ -58,6 +59,7 @@ export class RoomListComponent implements OnInit {
             // Nếu Slider là $2000 nhưng giá DB là 500k, phòng sẽ mất. Ở đây giả định giá đã chuẩn hóa.
             const isSliderAtMax = this.filters.priceRange >= 1000000;
             const matchPrice = isSliderAtMax ? true : room.displayPrice <= this.filters.priceRange;
+            const matchGuests = room.capacity >= this.filters.guests;
 
             // 2. Lọc theo từ khóa (Search)
             const matchSearch = !this.filters.searchQuery ||
@@ -76,16 +78,23 @@ export class RoomListComponent implements OnInit {
                 matchAmenities = matchAmenities && room.icons.some((i: any) => i.label === 'Balcony');
             }
 
-            return matchPrice && matchSearch && matchAmenities;
+            return matchPrice && matchSearch && matchGuests && matchAmenities;
         });
         this.applySort(); // Áp dụng sắp xếp sau khi lọc
         this.cdr.detectChanges();
     }
-
+    updateGuests(amount: number) {
+        const newValue = this.filters.guests + amount;
+        if (newValue >= 2 && newValue <= 4) { // Giới hạn từ 1 đến 10 khách
+            this.filters.guests = newValue;
+            this.applyFilters();
+        }
+    }
     clearAllFilters() {
         this.filters = {
             searchQuery: '',
             priceRange: 1000000,
+            guests: 2,
             amenities: {
                 oceanView: false,
                 privateBalcony: false,
