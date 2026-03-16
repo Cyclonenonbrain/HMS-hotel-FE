@@ -9,8 +9,8 @@
         </div>
 
         <nav class="hidden md:flex items-center gap-9">
-            <a class="text-sm font-medium hover:text-primary transition-colors" href="#">Home</a>
-            <a class="text-sm font-medium hover:text-primary transition-colors" href="#">Search</a>
+            <a class="text-sm font-medium hover:text-primary transition-colors" routerLink="/">Home</a>
+            <a class="text-sm font-medium hover:text-primary transition-colors" routerLink="/search">Search</a>
             <a *ngIf="isLoggedIn" class="text-sm font-medium hover:text-primary transition-colors" href="#">My
                 Bookings</a>
         </nav>

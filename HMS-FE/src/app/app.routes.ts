@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { LandingPageComponent } from './pages/landing-page/landing-page.component';
+import { RoomListComponent } from './pages/search&filter/search&filter.component';
 
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
@@ -15,5 +16,6 @@ export const routes: Routes = [
       canActivate: [authGuard, roleGuard],
       data: { expectedRoles: ['ADMIN'] }
     },
-    { path: '', component: LandingPageComponent }
+    { path: '', component: LandingPageComponent },
+    { path: 'search', component: RoomListComponent },
 ];
