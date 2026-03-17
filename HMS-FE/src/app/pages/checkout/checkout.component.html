@@ -1,0 +1,211 @@
+<div class="min-h-screen bg-[#f8f8f5] font-display text-slate-900 antialiased">
+    <header
+        class="sticky top-0 z-50 flex items-center justify-between border-b border-primary/20 bg-white/90 backdrop-blur-md px-10 py-4">
+        <div class="flex items-center gap-2 text-primary cursor-pointer" routerLink="/">
+            <span class="material-symbols-outlined text-3xl">diamond</span>
+            <h2 class="text-xl font-bold tracking-tight text-slate-900">Lumina Resort</h2>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-9">
+            <a class="text-sm font-medium hover:text-primary transition-colors text-slate-600"
+                routerLink="/search">Room</a>
+            <a class="text-sm font-medium hover:text-primary transition-colors text-slate-600" routerLink="/">Offers</a>
+            <a class="text-sm font-medium hover:text-primary transition-colors text-slate-600" href="#">Gallery</a>
+            <a class="text-sm font-medium hover:text-primary transition-colors text-slate-600" href="#">Contact</a>
+
+        </nav>
+
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3 group relative cursor-pointer" (click)="toggleProfileMenu()">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-bold text-slate-900">{{ user?.fullName }}</p>
+                    <p class="text-[10px] text-primary font-bold uppercase tracking-wider">{{ user?.role || 'Premium' }}
+                        Member</p>
+                </div>
+
+                <div
+                    class="size-10 rounded-full border-2 border-primary overflow-hidden shadow-lg transition-transform group-hover:scale-105">
+                    <img [src]="'https://ui-avatars.com/api/?name=' + user?.fullName + '&background=random&color=fff'"
+                        alt="Avatar">
+                </div>
+
+                <div [class.hidden]="!isProfileMenuOpen"
+                    class="absolute top-full right-0 pt-2 w-48 drop-shadow-2xl z-[100] md:group-hover:block">
+                    <div
+                        class="bg-white border border-primary/20 rounded-xl py-2 animate-in fade-in slide-in-from-top-2">
+                        <a routerLink="/profile"
+                            class="block px-4 py-2 text-xs font-medium hover:bg-primary/10 transition-colors">Profile</a>
+                        <a routerLink="/my-bookings"
+                            class="block px-4 py-2 text-xs font-medium hover:bg-primary/10 transition-colors">My
+                            Bookings</a>
+                        <hr class="my-1 border-primary/10">
+                        <button (click)="onLogout()"
+                            class="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 transition-colors">
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-8 lg:py-12">
+        <div class="mx-auto mb-12 max-w-3xl px-4 font-outfit">
+            <div class="relative flex items-center justify-between">
+
+                <div class="absolute left-0 top-5 z-0 h-0.5 w-full bg-neutral-200/60"></div>
+
+                <div class="absolute left-0 top-5 z-0 h-0.5 w-1/2 bg-primary transition-all duration-700 ease-in-out">
+                </div>
+
+                <div class="flex flex-col items-center gap-3">
+                    <div
+                        class="z-10 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-slate-900 font-bold step-active-glow border-[6px] border-[#f8f8f5]">
+                        <span class="material-symbols-outlined text-base font-bold">check</span>
+                    </div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Guest Details</span>
+                </div>
+
+                <div class="flex flex-col items-center gap-3">
+                    <div
+                        class="z-10 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-slate-900 font-bold step-active-glow ring-4 ring-primary/20 border-[6px] border-[#f8f8f5]">
+                        2
+                    </div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-900">Payment</span>
+                </div>
+
+                <div class="flex flex-col items-center gap-3">
+                    <div
+                        class="z-10 flex h-10 w-10 items-center justify-center rounded-full bg-neutral-200 text-neutral-500 font-bold border-[6px] border-[#f8f8f5]">
+                        3
+                    </div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Confirm</span>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="flex flex-col gap-8 lg:flex-row lg:gap-12">
+            <div class="flex flex-1 flex-col gap-8">
+                <section class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm lg:p-8">
+                    <h2 class="mb-6 flex items-center gap-2 text-xl font-bold">
+                        <span class="material-symbols-outlined text-primary">person</span> Guest Information
+                    </h2>
+                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <div class="relative md:col-span-2">
+                            <input type="text" [(ngModel)]="bookingData.fullName"
+                                class="peer w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-primary focus:outline-none"
+                                placeholder="Full Name">
+                        </div>
+                        <div class="relative">
+                            <input type="number" [(ngModel)]="bookingData.numberOfGuests"
+                                class="peer w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-primary focus:outline-none"
+                                placeholder="Number of Guests">
+                        </div>
+                        <div class="relative">
+                            <input type="tel" [(ngModel)]="bookingData.phone"
+                                class="peer w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-primary focus:outline-none"
+                                placeholder="Phone Number">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm lg:p-8">
+                    <h2 class="mb-6 flex items-center gap-2 text-xl font-bold">
+                        <span class="material-symbols-outlined text-primary">credit_card</span> Payment Method
+                    </h2>
+                    <div class="space-y-4">
+                        <div *ngFor="let card of cards; let i = index" (click)="selectedCardIndex = i"
+                            [ngClass]="{'border-primary bg-yellow-50/30 ring-1 ring-primary': selectedCardIndex === i}"
+                            class="flex cursor-pointer items-center justify-between rounded-xl border border-neutral-200 p-5 transition-all hover:border-primary/50">
+                            <div class="flex items-center gap-4">
+                                <div class="flex h-6 w-6 items-center justify-center rounded-full border-2"
+                                    [ngClass]="selectedCardIndex === i ? 'border-primary' : 'border-neutral-300'">
+                                    <div class="h-3 w-3 rounded-full"
+                                        [ngClass]="{'bg-primary': selectedCardIndex === i}"></div>
+                                </div>
+                                <div class="px-3 py-1 bg-white border border-slate-100 rounded-md shadow-sm">
+                                    <span class="text-[10px] font-black italic text-blue-800">{{card.type}}</span>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-sm text-slate-900">{{card.type}} ending in
+                                        {{card.lastFour}}</p>
+                                    <p class="text-[11px] text-slate-400 font-medium">Expires {{card.expiry}}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="w-full lg:w-[380px]">
+                <div class="sticky top-24 overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-xl">
+                    <div class="relative h-52 bg-cover bg-center" [style.backgroundImage]="'url(' + room.image + ')'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-5 left-5">
+                            <span
+                                class="mb-2 inline-block rounded-full bg-white/20 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-white backdrop-blur-md border border-white/30">Premium
+                                Suite</span>
+                            <h3 class="text-xl font-bold text-white">{{room.name}}</h3>
+                        </div>
+                    </div>
+
+                    <div class="p-8">
+                        <div class="mb-6 flex items-center justify-between border-b border-neutral-100 pb-6">
+                            <div>
+                                <p class="text-[10px] uppercase text-neutral-400 font-bold tracking-wider">Check-in</p>
+                                <p class="font-bold text-sm text-slate-900">{{bookingData.checkIn}}</p>
+                            </div>
+                            <div
+                                class="flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-600">
+                                <span class="material-symbols-outlined text-xs">dark_mode</span> 3 Nights
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] uppercase text-neutral-400 font-bold tracking-wider">Check-out</p>
+                                <p class="font-bold text-sm text-slate-900">{{bookingData.checkOut}}</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 text-sm">
+                            <div class="flex justify-between text-slate-500 font-medium">
+                                <span>${{room.price}} × 3 nights</span>
+                                <span class="font-bold text-slate-900">${{room.price * 3}}</span>
+                            </div>
+                            <div class="flex justify-between text-slate-500 font-medium">
+                                <span>Taxes (8%)</span>
+                                <span class="font-bold text-slate-900">${{taxAmount | number:'1.2-2'}}</span>
+                            </div>
+                            <div class="flex justify-between text-slate-500 font-medium">
+                                <span>Service Fee</span>
+                                <span class="font-bold text-slate-900">$27.00</span>
+                            </div>
+
+                            <div
+                                class="mt-6 border-t border-dashed border-slate-200 pt-6 flex justify-between items-end">
+                                <div>
+                                    <p class="text-[11px] font-bold text-slate-400 uppercase">Total Amount</p>
+                                    <p class="text-[10px] text-slate-300">Includes all taxes and fees</p>
+                                </div>
+                                <span class="text-4xl font-black text-slate-900 tracking-tighter">${{totalAmount |
+                                    number:'1.2-2'}}</span>
+                            </div>
+                        </div>
+
+                        <button (click)="onConfirmPayment()" [disabled]="isLoading"
+                            class="mt-8 w-full rounded-2xl bg-primary py-5 font-bold text-slate-900 shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50">
+                            <span *ngIf="!isLoading"
+                                class="flex items-center justify-center gap-2 uppercase tracking-widest text-xs">
+                                <span class="material-symbols-outlined text-sm">lock</span> Confirm & Pay
+                            </span>
+                            <span *ngIf="isLoading" class="flex items-center justify-center gap-2">
+                                <div
+                                    class="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent">
+                                </div> Processing...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+</div>

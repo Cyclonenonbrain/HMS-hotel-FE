@@ -145,7 +145,7 @@ export class RoomListComponent implements OnInit {
                     return {
                         ...room,
                         displayName: finalName,
-                        displayPrice: parseFloat(room.base_price), // Chuyển về số để lọc
+                        displayPrice: parseFloat(room.basePrice || room.base_price || 0), capacity: room.capacity || 2, // Giả định nếu DB không có trường này
                         displayDesc: room.description || "Experience unparalleled luxury with panoramic views and premium amenities.",
                         image: this.getImageByRoomName(room.name),
                         icons: this.getIconsByRoomName(room.name)
