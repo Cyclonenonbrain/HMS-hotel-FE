@@ -1,7 +1,8 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { RoomService } from '../../services/room.services';
 import { AuthService } from '../../services/auth.services';
 
@@ -12,12 +13,13 @@ import { AuthService } from '../../services/auth.services';
     templateUrl: 'search&filter.component.html',
     styleUrls: ['search&filter.component.css']
 })
-export class RoomListComponent implements OnInit {
+export class RoomListComponent implements OnInit, OnDestroy {
     allRooms: any[] = [];      // Danh sách gốc từ API
     filteredRooms: any[] = []; // Danh sách hiển thị sau khi lọc
     isLoggedIn: boolean = false;
     user: any = null;
     selectedSort: string = 'recommended';
+    private authSub!: Subscription;
 
     // --- PHẦN QUẢN LÝ FILTER ---
     filters = {
@@ -39,34 +41,53 @@ export class RoomListComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        this.authService.isLoggedIn$.subscribe(status => {
+        // 1. Theo dõi trạng thái đăng nhập và đồng bộ thông tin User
+        this.authSub = this.authService.isLoggedIn$.subscribe(status => {
             this.isLoggedIn = status;
             if (status) {
                 const userData = localStorage.getItem('currentUser');
-                this.user = userData ? JSON.parse(userData) : null;
+                if (userData) {
+                    try {
+                        const parsedUser = JSON.parse(userData);
+                        // Fix lỗi hiển thị null: Ưu tiên lấy full_name từ Backend trả về
+                        this.user = {
+                            ...parsedUser,
+                            fullName: parsedUser.full_name || parsedUser.fullName || 'Guest Member'
+                        };
+                    } catch (e) {
+                        console.error("Lỗi khi parse dữ liệu User:", e);
+                    }
+                }
+            } else {
+                this.user = null;
             }
             this.cdr.detectChanges();
         });
+
+        // 2. Tải danh sách phòng
         this.loadRooms();
     }
 
-    // Logic lọc chính
-    applyFilters() {
-        console.log('Đang lọc với:', this.filters);
+    ngOnDestroy(): void {
+        if (this.authSub) this.authSub.unsubscribe();
+    }
 
+    // --- LOGIC LỌC PHÒNG ---
+    applyFilters() {
         this.filteredRooms = this.allRooms.filter(room => {
-            // 1. Lọc theo giá (Lưu ý: database của bạn có giá Standard là 500,000 - cần check đơn vị)
-            // Nếu Slider là $2000 nhưng giá DB là 500k, phòng sẽ mất. Ở đây giả định giá đã chuẩn hóa.
+            // Lọc theo giá: Nếu thanh trượt ở mức Max (1,000,000) thì coi như không lọc giá
             const isSliderAtMax = this.filters.priceRange >= 1000000;
             const matchPrice = isSliderAtMax ? true : room.displayPrice <= this.filters.priceRange;
-            const matchGuests = room.capacity >= this.filters.guests;
+            
+            // Lọc theo số lượng khách
+            const matchGuests = (room.capacity || 2) >= this.filters.guests;
 
-            // 2. Lọc theo từ khóa (Search)
+            // Lọc theo từ khóa (Tên hoặc Mô tả)
             const matchSearch = !this.filters.searchQuery ||
                 room.displayName.toLowerCase().includes(this.filters.searchQuery.toLowerCase()) ||
                 room.displayDesc.toLowerCase().includes(this.filters.searchQuery.toLowerCase());
 
-            // 3. Lọc theo Amenities (Nếu checkbox được tick, phòng phải chứa icon tương ứng)
+            // Lọc theo tiện ích (Amenities)
             let matchAmenities = true;
             if (this.filters.amenities.oceanView) {
                 matchAmenities = matchAmenities && room.icons.some((i: any) => i.label === 'Ocean View');
@@ -80,29 +101,10 @@ export class RoomListComponent implements OnInit {
 
             return matchPrice && matchSearch && matchGuests && matchAmenities;
         });
-        this.applySort(); // Áp dụng sắp xếp sau khi lọc
-        this.cdr.detectChanges();
+
+        this.applySort();
     }
-    updateGuests(amount: number) {
-        const newValue = this.filters.guests + amount;
-        if (newValue >= 2 && newValue <= 4) { // Giới hạn từ 1 đến 10 khách
-            this.filters.guests = newValue;
-            this.applyFilters();
-        }
-    }
-    clearAllFilters() {
-        this.filters = {
-            searchQuery: '',
-            priceRange: 1000000,
-            guests: 2,
-            amenities: {
-                oceanView: false,
-                privateBalcony: false,
-                kingBed: false
-            }
-        };
-        this.applyFilters();
-    }
+
     applySort() {
         switch (this.selectedSort) {
             case 'low-to-high':
@@ -112,19 +114,32 @@ export class RoomListComponent implements OnInit {
                 this.filteredRooms.sort((a, b) => b.displayPrice - a.displayPrice);
                 break;
             default:
-                // Sắp xếp theo "Recommended" hoặc mặc định theo ID/Ngày tạo
-                // Ở đây ta dùng ID để giữ thứ tự ổn định
+                // Sắp xếp mặc định (Recommended)
                 this.filteredRooms.sort((a, b) => a.id.localeCompare(b.id));
                 break;
         }
         this.cdr.detectChanges();
     }
 
-    logout() {
-        this.authService.logout();
-        this.router.navigate(['/login']);
+    updateGuests(amount: number) {
+        const newValue = this.filters.guests + amount;
+        if (newValue >= 1 && newValue <= 10) {
+            this.filters.guests = newValue;
+            this.applyFilters();
+        }
     }
 
+    clearAllFilters() {
+        this.filters = {
+            searchQuery: '',
+            priceRange: 1000000,
+            guests: 2,
+            amenities: { oceanView: false, privateBalcony: false, kingBed: false }
+        };
+        this.applyFilters();
+    }
+
+    // --- DỮ LIỆU API ---
     loadRooms() {
         this.roomService.getAllRooms().subscribe({
             next: (response: any) => {
@@ -133,7 +148,7 @@ export class RoomListComponent implements OnInit {
                     let finalName = room.name;
                     const lowerName = room.name.toLowerCase();
 
-                    // Làm đẹp tên phòng từ DB
+                    // Chuẩn hóa tên hiển thị từ mã DB
                     if (lowerName.includes('bookingdeluxe')) {
                         finalName = "Executive Deluxe Room";
                     } else if (lowerName.includes('bookingstd') || lowerName.includes('p2-deluxe')) {
@@ -145,18 +160,18 @@ export class RoomListComponent implements OnInit {
                     return {
                         ...room,
                         displayName: finalName,
-                        displayPrice: parseFloat(room.basePrice || room.base_price || 0), capacity: room.capacity || 2, // Giả định nếu DB không có trường này
-                        displayDesc: room.description || "Experience unparalleled luxury with panoramic views and premium amenities.",
+                        displayPrice: parseFloat(room.basePrice || room.base_price || 0),
+                        capacity: room.capacity || 2,
+                        displayDesc: room.description || "Trải nghiệm không gian sang trọng với đầy đủ tiện nghi cao cấp.",
                         image: this.getImageByRoomName(room.name),
                         icons: this.getIconsByRoomName(room.name)
                     };
                 });
 
-                // Khởi tạo danh sách hiển thị ban đầu
                 this.filteredRooms = [...this.allRooms];
                 this.cdr.detectChanges();
             },
-            error: (err) => console.error("Lỗi khi load phòng:", err)
+            error: (err) => console.error("Không thể tải danh sách phòng:", err)
         });
     }
 
@@ -164,13 +179,11 @@ export class RoomListComponent implements OnInit {
         const n = name.toLowerCase();
         if (n.includes('deluxe')) return 'https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=1000';
         if (n.includes('suite')) return 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000';
-        if (n.includes('std') || n.includes('standard')) return 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=1000';
-        return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1000';
+        return 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=1000';
     }
 
     getIconsByRoomName(name: string): any[] {
         const n = name.toLowerCase();
-        // Gán Icon dựa trên loại phòng để filter Amenities hoạt động
         if (n.includes('deluxe') || n.includes('executive')) {
             return [
                 { icon: 'king_bed', label: 'King Bed' },
@@ -183,5 +196,10 @@ export class RoomListComponent implements OnInit {
             { icon: 'bed', label: 'Queen Bed' },
             { icon: 'wifi', label: 'Free WiFi' }
         ];
+    }
+
+    logout() {
+        this.authService.logout();
+        this.router.navigate(['/login']);
     }
 }
