@@ -8,14 +8,28 @@ export class RoomService {
 
   constructor(private http: HttpClient) {}
 
-  getAllRooms(): Observable<any[]> {
+  // Hàm helper để lấy Header có chứa Token
+  private getAuthHeaders(): HttpHeaders {
     const userData = localStorage.getItem('currentUser');
     const token = userData ? JSON.parse(userData).accessToken : '';
-
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}` // Gửi Token để Spring Security cho phép qua
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`
     });
+  }
 
-    return this.http.get<any[]>(this.apiUrl, { headers });
+  // Lấy toàn bộ danh sách phòng
+  getAllRooms(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl, { 
+      headers: this.getAuthHeaders() 
+    });
+  }
+
+  // Lấy chi tiết một phòng theo ID (Mới thêm)
+  getRoomById(id: string): Observable<any> {
+    // Thông thường API sẽ có dạng: .../api/v1/room-types/{id}
+    const url = `${this.apiUrl}/${id}`;
+    return this.http.get<any>(url, { 
+      headers: this.getAuthHeaders() 
+    });
   }
 }

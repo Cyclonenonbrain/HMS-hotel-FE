@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router'; // Thêm Router để điều hướng
-import { AuthService } from '../../services/auth.services'; // Kiểm tra đúng đường dẫn đến file của bạn
+import { RouterModule, Router } from '@angular/router';
+import { AuthService } from '../../services/auth.services';
 
 @Component({
   selector: 'app-login',
@@ -14,10 +14,9 @@ import { AuthService } from '../../services/auth.services'; // Kiểm tra đúng
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   showPassword = false;
-  isLoading = false; // Thêm biến để hiện trạng thái đang xử lý
-  errorMessage = ''; // Biến hiển thị lỗi lên UI
+  isLoading = false;
+  errorMessage = '';
 
-  // Inject AuthService và Router
   constructor(
     private fb: FormBuilder, 
     private authService: AuthService,
@@ -37,42 +36,38 @@ export class LoginComponent implements OnInit {
       this.isLoading = true;
       this.errorMessage = '';
 
-      // Lấy dữ liệu từ form: { email, password }
       const credentials = {
         email: this.loginForm.value.email,
         password: this.loginForm.value.password
       };
 
-      // Gọi API thật từ AuthService
       this.authService.login(credentials).subscribe({
         next: (response) => {
           this.isLoading = false;
           if (response.success) {
-            console.log('✅ Đăng nhập thật thành công:', response.data);
+            console.log('✅ Đăng nhập thành công:', response.data);
             
-            // Lưu token (Service của bạn thường đã làm việc này bằng .pipe(tap...))
+            // Lưu dữ liệu vào localStorage
             localStorage.setItem('accessToken', response.data.accessToken);
-            localStorage.setItem('userRole', response.data.role); // Gán role để RoleGuard kiểm tra
+            localStorage.setItem('userRole', response.data.role);
             
-            // Điều hướng sang trang Dashboard tương ứng với role
+            // Điều hướng theo phân quyền (Role-based Navigation)
             const role = response.data.role;
             if (role === 'ADMIN') {
               this.router.navigate(['/admin/dashboard']);
             } else if (role === 'STAFF') {
               this.router.navigate(['/staff/dashboard']);
             } else {
-              // Customer
-              this.router.navigate(['/']); 
+              this.router.navigate(['/']); // Customer / Homepage
             }
           }
         },
         error: (err) => {
           this.isLoading = false;
-          // Xử lý lỗi từ Backend (401, 403, 500...)
           if (err.status === 401) {
             this.errorMessage = 'Email hoặc mật khẩu không chính xác.';
           } else {
-            this.errorMessage = 'Có lỗi xảy ra khi kết nối tới máy chủ.';
+            this.errorMessage = 'Không thể kết nối tới máy chủ. Vui lòng thử lại sau.';
           }
           console.error('Login error:', err);
         }
@@ -84,13 +79,5 @@ export class LoginComponent implements OnInit {
 
   togglePassword(): void {
     this.showPassword = !this.showPassword;
-  }
-
-  loginAsAdmin(): void {
-    this.router.navigate(['/admin/dashboard']);
-  }
-
-  loginAsStaff(): void {
-    this.router.navigate(['/staff/dashboard']);
   }
 }

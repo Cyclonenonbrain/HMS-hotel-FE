@@ -1,192 +1,90 @@
-<div
-  class="min-h-screen bg-background-light dark:bg-background-dark font-display flex items-center justify-center p-4 sm:p-8"
->
-  <div
-    class="max-w-[1200px] w-full bg-white dark:bg-secondary rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[600px]"
-  >
-    <div
-      class="relative w-full md:w-5/12 lg:w-1/2 bg-cover bg-center flex flex-col justify-end p-8"
-      style="
-        background-image: url(&quot;https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070&auto=format&fit=crop&quot;);
-      "
-    >
-      <div
-        class="absolute inset-0 bg-gradient-to-t from-background-dark/90 via-background-dark/50 to-transparent"
-      ></div>
+<div class="min-h-screen bg-background-light dark:bg-background-dark font-display flex items-center justify-center p-4 sm:p-8">
+  <div class="max-w-[1200px] w-full bg-white dark:bg-secondary rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[600px]">
+    <div class="relative w-full md:w-5/12 lg:w-1/2 bg-cover bg-center flex flex-col justify-end p-8"
+      style="background-image: url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070&auto=format&fit=crop');">
+      <div class="absolute inset-0 bg-gradient-to-t from-background-dark/90 via-background-dark/50 to-transparent"></div>
       <div class="relative z-10 glass-panel rounded-xl p-6 sm:p-8">
         <div class="flex items-center gap-3 mb-6">
-          <span class="material-symbols-outlined text-primary text-4xl"
-            >hotel_class</span
-          >
-          <h2 class="text-white text-2xl font-bold tracking-wide uppercase">
-            LuxeCore
-          </h2>
+          <span class="material-symbols-outlined text-primary text-4xl">hotel_class</span>
+          <h2 class="text-white text-2xl font-bold tracking-wide uppercase">LuxeCore</h2>
         </div>
-        <h1
-          class="text-white text-3xl sm:text-4xl font-bold leading-tight mb-4"
-        >
-          Elevate Every Stay
-        </h1>
+        <h1 class="text-white text-3xl sm:text-4xl font-bold leading-tight mb-4">Elevate Every Stay</h1>
         <ul class="space-y-3 mt-6">
           <li class="flex items-start gap-3 text-slate-200">
-            <span class="material-symbols-outlined text-primary mt-0.5 text-xl"
-              >analytics</span
-            >
-            <span class="text-sm sm:text-base font-medium"
-              >Real-time Analytics</span
-            >
+            <span class="material-symbols-outlined text-primary mt-0.5 text-xl">analytics</span>
+            <span class="text-sm sm:text-base font-medium">Real-time Analytics</span>
           </li>
           <li class="flex items-start gap-3 text-slate-200">
-            <span class="material-symbols-outlined text-primary mt-0.5 text-xl"
-              >book_online</span
-            >
-            <span class="text-sm sm:text-base font-medium"
-              >Seamless Booking</span
-            >
+            <span class="material-symbols-outlined text-primary mt-0.5 text-xl">book_online</span>
+            <span class="text-sm sm:text-base font-medium">Seamless Booking</span>
           </li>
           <li class="flex items-start gap-3 text-slate-200">
-            <span class="material-symbols-outlined text-primary mt-0.5 text-xl"
-              >concierge</span
-            >
-            <span class="text-sm sm:text-base font-medium"
-              >Guest Experience Mastery</span
-            >
+            <span class="material-symbols-outlined text-primary mt-0.5 text-xl">concierge</span>
+            <span class="text-sm sm:text-base font-medium">Guest Experience Mastery</span>
           </li>
         </ul>
       </div>
     </div>
 
-    <div
-      class="w-full md:w-7/12 lg:w-1/2 flex flex-col justify-center p-8 sm:p-12 lg:p-16"
-    >
+    <div class="w-full md:w-7/12 lg:w-1/2 flex flex-col justify-center p-8 sm:p-12 lg:p-16">
       <div class="max-w-md w-full mx-auto">
         <div class="mb-10 text-center md:text-left">
-          <h2
-            class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2"
-          >
-            Welcome Back
-          </h2>
-          <p class="text-slate-500 dark:text-slate-400 text-sm">
-            Sign in to manage your property portfolio.
-          </p>
+          <h2 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2">Welcome Back</h2>
+          <p class="text-slate-500 dark:text-slate-400 text-sm">Sign in to manage your property portfolio.</p>
+        </div>
+
+        <div *ngIf="errorMessage" class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded">
+          {{ errorMessage }}
         </div>
 
         <form [formGroup]="loginForm" class="space-y-6">
           <div class="relative">
-            <input
-              formControlName="email"
-              type="email"
-              id="email"
-              placeholder="Email Address"
-              class="peer w-full h-14 bg-background-light dark:bg-background-dark border border-slate-300 dark:border-slate-700 rounded-lg px-4 pt-4 pb-1 text-slate-900 dark:text-white placeholder-transparent focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-            />
-            <label
-              for="email"
-              class="absolute left-4 top-2 text-xs font-medium text-slate-500 dark:text-slate-400 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary"
-            >
+            <input formControlName="email" type="email" id="email" placeholder="Email Address"
+              class="peer w-full h-14 bg-background-light dark:bg-background-dark border border-slate-300 dark:border-slate-700 rounded-lg px-4 pt-4 pb-1 text-slate-900 dark:text-white placeholder-transparent focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" />
+            <label for="email"
+              class="absolute left-4 top-2 text-xs font-medium text-slate-500 dark:text-slate-400 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary">
               Email Address
             </label>
-            <p
-              *ngIf="
-                loginForm.get('email')?.touched &&
-                loginForm.get('email')?.invalid
-              "
-              class="text-red-500 text-xs mt-1"
-            >
+            <p *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" class="text-red-500 text-xs mt-1">
               Please enter a valid email address.
             </p>
           </div>
 
           <div class="relative">
-            <input
-              formControlName="password"
-              [type]="showPassword ? 'text' : 'password'"
-              id="password"
-              placeholder="Password"
-              class="peer w-full h-14 bg-background-light dark:bg-background-dark border border-slate-300 dark:border-slate-700 rounded-lg px-4 pr-12 pt-4 pb-1 text-slate-900 dark:text-white placeholder-transparent focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-            />
-            <label
-              for="password"
-              class="absolute left-4 top-2 text-xs font-medium text-slate-500 dark:text-slate-400 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary"
-            >
+            <input formControlName="password" [type]="showPassword ? 'text' : 'password'" id="password" placeholder="Password"
+              class="peer w-full h-14 bg-background-light dark:bg-background-dark border border-slate-300 dark:border-slate-700 rounded-lg px-4 pr-12 pt-4 pb-1 text-slate-900 dark:text-white placeholder-transparent focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" />
+            <label for="password"
+              class="absolute left-4 top-2 text-xs font-medium text-slate-500 dark:text-slate-400 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary">
               Password
             </label>
-            <button
-              (click)="togglePassword()"
-              type="button"
-              class="absolute right-4 top-4 text-slate-400 hover:text-primary transition-colors"
-            >
-              <span class="material-symbols-outlined">{{
-                showPassword ? "visibility_off" : "visibility"
-              }}</span>
+            <button (click)="togglePassword()" type="button" class="absolute right-4 top-4 text-slate-400 hover:text-primary transition-colors">
+              <span class="material-symbols-outlined">{{ showPassword ? "visibility_off" : "visibility" }}</span>
             </button>
           </div>
 
           <div class="flex items-center justify-between text-sm">
             <label class="flex items-center gap-2 cursor-pointer group">
-              <input
-                formControlName="rememberMe"
-                type="checkbox"
-                class="w-5 h-5 rounded border-slate-300 dark:border-slate-700 bg-transparent text-primary focus:ring-0 transition-colors"
-              />
-              <span
-                class="text-slate-600 dark:text-slate-300 group-hover:text-primary transition-colors font-medium"
-                >Remember Me</span
-              >
+              <input formControlName="rememberMe" type="checkbox"
+                class="w-5 h-5 rounded border-slate-300 dark:border-slate-700 bg-transparent text-primary focus:ring-0 transition-colors" />
+              <span class="text-slate-600 dark:text-slate-300 group-hover:text-primary transition-colors font-medium">Remember Me</span>
             </label>
-            <a
-              href="#"
-              class="text-primary hover:text-primary/80 font-medium transition-colors"
-              >Forgot Password?</a
-            >
+            <a href="#" class="text-primary hover:text-primary/80 font-medium transition-colors">Forgot Password?</a>
           </div>
 
-          <button
-            (click)="onSignIn()"
-            [disabled]="loginForm.invalid"
-            type="button"
-            class="w-full h-12 rounded-lg bg-gradient-to-r from-secondary to-secondary via-[#1f2d47] text-white text-base font-semibold tracking-wide hover:shadow-lg hover:shadow-primary/20 transition-all border border-primary/30 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button (click)="onSignIn()" [disabled]="loginForm.invalid || isLoading" type="button"
+            class="w-full h-12 rounded-lg bg-gradient-to-r from-secondary to-secondary via-[#1f2d47] text-white text-base font-semibold tracking-wide hover:shadow-lg hover:shadow-primary/20 transition-all border border-primary/30 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed">
             <span class="relative z-10 flex items-center justify-center gap-2">
-              Sign In
-              <span
-                class="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1"
-                >arrow_forward</span
-              >
+              <span *ngIf="!isLoading">Sign In</span>
+              <span *ngIf="isLoading" class="animate-pulse">Authenticating...</span>
+              <span *ngIf="!isLoading" class="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">arrow_forward</span>
             </span>
           </button>
         </form>
 
-        <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            (click)="loginAsAdmin()"
-            type="button"
-            class="flex-1 h-10 rounded-lg bg-primary/10 text-primary border border-primary/30 font-medium hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
-          >
-            <span class="material-symbols-outlined text-sm"
-              >admin_panel_settings</span
-            >
-            Admin Mock Login
-          </button>
-          <button
-            (click)="loginAsStaff()"
-            type="button"
-            class="flex-1 h-10 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30 font-medium hover:bg-blue-500/20 transition-colors flex items-center justify-center gap-2"
-          >
-            <span class="material-symbols-outlined text-sm">badge</span>
-            Staff Mock Login
-          </button>
-        </div>
-
         <div class="mt-8 text-center">
           <p class="text-slate-500 dark:text-slate-400">
             Don't have an account?
-            <a
-              class="text-primary font-medium hover:underline ml-1 cursor-pointer"
-              routerLink="/register"
-            >
-              Sign up
-            </a>
+            <a class="text-primary font-medium hover:underline ml-1 cursor-pointer" routerLink="/register">Sign up</a>
           </p>
         </div>
       </div>
