@@ -78,7 +78,7 @@ export class RoomListComponent implements OnInit, OnDestroy {
             // Lọc theo giá: Nếu thanh trượt ở mức Max (1,000,000) thì coi như không lọc giá
             const isSliderAtMax = this.filters.priceRange >= 1000000;
             const matchPrice = isSliderAtMax ? true : room.displayPrice <= this.filters.priceRange;
-            
+
             // Lọc theo số lượng khách
             const matchGuests = (room.capacity || 2) >= this.filters.guests;
 
@@ -175,6 +175,16 @@ export class RoomListComponent implements OnInit, OnDestroy {
         });
     }
 
+    // Thêm vào trong class RoomListComponent
+
+    goToDetail(roomId: string): void {
+        if (roomId) {
+            // Điều hướng sang route /room-detail/ID_CUA_PHONG
+            this.router.navigate(['/room-detail', roomId]);
+        } else {
+            console.error("Room ID không tồn tại!");
+        }
+    }
     getImageByRoomName(name: string): string {
         const n = name.toLowerCase();
         if (n.includes('deluxe')) return 'https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=1000';

@@ -1,20 +1,48 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms'; // Quan trọng để dùng ngModel
+import { Subscription } from 'rxjs';
 import { RoomService } from '../../services/room.services';
+import { AuthService } from '../../services/auth.services';
 
 @Component({
   selector: 'app-room-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: 'room-details.component.html',
-  styleUrls: ['room-details.component.css']
+  imports: [CommonModule, RouterModule, FormsModule],
+  templateUrl: './room-details.component.html',
+  styleUrls: ['./room-details.component.css']
 })
-export class RoomDetailComponent implements OnInit {
+export class RoomDetailComponent implements OnInit, OnDestroy {
+  // Trạng thái dữ liệu
   room: any = null;
   loading: boolean = true;
   
-  // Mock data cho Gallery và Amenities vì Backend hiện chưa trả về các trường này
+  // Trạng thái User
+  isLoggedIn: boolean = false;
+  user: any = null;
+  private authSub!: Subscription;
+
+  // Form đặt phòng
+  bookingForm = {
+    checkIn: '',
+    checkOut: '',
+    guests: 2
+  };
+
+  // Cấu hình phí cố định
+  readonly CLEANING_FEE = 85;
+  readonly SERVICE_FEE = 120;
+  readonly TAX_RATE = 0.1;
+
+  // Kết quả tính toán hóa đơn
+  invoice = {
+    nights: 0,
+    roomTotal: 0,
+    taxes: 0,
+    finalTotal: 0
+  };
+
   mockGallery = [
     'https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=1000',
     'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000',
@@ -24,69 +52,133 @@ export class RoomDetailComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private roomService: RoomService
-  ) {}
+    private roomService: RoomService,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
-    // Lấy ID từ URL
+    // 1. Khởi tạo ngày mặc định (Hôm nay và 4 ngày sau)
+    this.initDefaultDates();
+
+    // 2. Đồng bộ User
+    this.authSub = this.authService.isLoggedIn$.subscribe(status => {
+      this.isLoggedIn = status;
+      if (status) {
+        const userData = localStorage.getItem('currentUser');
+        if (userData) {
+          try {
+            const parsedUser = JSON.parse(userData);
+            this.user = {
+              ...parsedUser,
+              fullName: parsedUser.full_name || parsedUser.fullName || 'Guest Member'
+            };
+          } catch (e) { console.error(e); }
+        }
+      } else {
+        this.user = null;
+      }
+      this.cdr.detectChanges();
+    });
+
+    // 3. Tải chi tiết phòng
     const roomId = this.route.snapshot.paramMap.get('id');
-    if (roomId) {
-      this.loadRoomDetail(roomId);
-    }
+    if (roomId) this.loadRoomDetail(roomId);
+  }
+
+  ngOnDestroy(): void {
+    if (this.authSub) this.authSub.unsubscribe();
+  }
+
+  private initDefaultDates() {
+    const today = new Date();
+    const future = new Date();
+    future.setDate(today.getDate() + 4);
+
+    this.bookingForm.checkIn = today.toISOString().split('T')[0];
+    this.bookingForm.checkOut = future.toISOString().split('T')[0];
   }
 
   loadRoomDetail(id: string) {
     this.loading = true;
-    // Giả sử service của bạn có hàm getRoomById
     this.roomService.getRoomById(id).subscribe({
       next: (res: any) => {
         const data = res.data;
-        // Map dữ liệu từ Backend và gán thêm thông tin mock
         this.room = {
           ...data,
           displayName: this.formatRoomName(data.name),
-          displayPrice: data.basePrice || data.base_price || 0,
-          description: data.description || "Step into an oasis of calm and luxury. Experience premium comfort with our top-tier facilities.",
+          displayPrice: parseFloat(data.basePrice || data.base_price || 0),
+          description: data.description || "Step into an oasis of calm and luxury. Our suites offer an expansive living space, a private balcony with panoramic sea views, and premium comfort.",
           amenities: this.getAmenitiesByRoom(data.name),
-          images: this.mockGallery // Tạm thời dùng mock gallery
+          images: this.mockGallery
         };
+        this.updateInvoice();
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error("Lỗi khi tải chi tiết phòng:", err);
+        console.error("Lỗi:", err);
         this.loading = false;
       }
     });
   }
 
-  // Logic map tên chuyên nghiệp (tái sử dụng từ search component)
+  updateInvoice() {
+    if (!this.room) return;
+
+    const start = new Date(this.bookingForm.checkIn);
+    const end = new Date(this.bookingForm.checkOut);
+
+    // Tính số đêm
+    const diffTime = end.getTime() - start.getTime();
+    let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Validation ngày hợp lệ
+    if (diffDays <= 0) {
+      diffDays = 1;
+      const newOut = new Date(start);
+      newOut.setDate(start.getDate() + 1);
+      this.bookingForm.checkOut = newOut.toISOString().split('T')[0];
+    }
+
+    this.invoice.nights = diffDays;
+    this.invoice.roomTotal = this.room.displayPrice * diffDays;
+    this.invoice.taxes = Math.round(this.invoice.roomTotal * this.TAX_RATE);
+    this.invoice.finalTotal = this.invoice.roomTotal + this.CLEANING_FEE + this.SERVICE_FEE + this.invoice.taxes;
+    
+    this.cdr.detectChanges();
+  }
+
   formatRoomName(name: string): string {
     const lower = name.toLowerCase();
     if (lower.includes('deluxe')) return "Executive Deluxe Room";
     if (lower.includes('std') || lower.includes('standard')) return "Premium Standard Room";
+    if (lower.includes('suite')) return "Ocean View Suite";
     return name;
   }
 
-  // Logic map Amenities dựa trên loại phòng (tương tự search component)
   getAmenitiesByRoom(name: string) {
-    const n = name.toLowerCase();
     const common = [
-        { icon: 'wifi', label: 'Free Wi-Fi' },
-        { icon: 'tv', label: '65" Smart TV' },
-        { icon: 'room_service', label: '24/7 Service' }
+      { icon: 'wifi', label: 'Free Wi-Fi' },
+      { icon: 'tv', label: '65" Smart TV' },
+      { icon: 'coffee_maker', label: 'Espresso Machine' },
+      { icon: 'room_service', label: '24/7 Service' }
     ];
-
-    if (n.includes('deluxe')) {
+    if (name.toLowerCase().includes('deluxe') || name.toLowerCase().includes('suite')) {
       return [
         { icon: 'king_bed', label: 'King Bed' },
         { icon: 'waves', label: 'Sea View' },
         { icon: 'deck', label: 'Balcony' },
+        { icon: 'bathtub', label: 'Deep Soaking Tub' },
         ...common
       ];
     }
-    return [
-        { icon: 'bed', label: 'Queen Bed' },
-        ...common
-    ];
+    return [{ icon: 'bed', label: 'Queen Bed' }, ...common];
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }
