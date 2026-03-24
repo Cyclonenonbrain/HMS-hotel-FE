@@ -1,0 +1,71 @@
+<div class="relative z-10 flex min-h-screen w-full flex-col group/design-root bg-background-light dark:bg-background-dark">
+  <div class="layout-container flex h-full grow flex-col items-center justify-center p-6 sm:p-12">
+    
+    <header class="mb-10 flex flex-col items-center gap-2 cursor-pointer" routerLink="/">
+      <div class="size-12 text-primary">
+        <span class="material-symbols-outlined text-5xl">hotel_class</span>
+      </div>
+      <h2 class="text-3xl font-bold tracking-tight text-primary">Luxecore</h2>
+    </header>
+
+    <div *ngIf="isLoading" class="text-primary font-bold animate-pulse">
+      Verifying your payment...
+    </div>
+
+    <div *ngIf="!isLoading && bookingData" class="glassmorphism flex w-full max-w-2xl flex-col rounded-2xl p-8 sm:p-12 shadow-2xl animate-in fade-in zoom-in duration-500">
+      
+      <div class="flex flex-col items-center text-center gap-4 mb-10">
+        <div class="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 mb-2">
+          <span class="material-symbols-outlined text-5xl">check_circle</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
+          Payment Successful!
+        </h1>
+        <p class="text-slate-600 dark:text-slate-300 text-lg">
+          Your booking has been confirmed and finalized.
+        </p>
+      </div>
+
+      <div class="mb-10 rounded-xl bg-white/50 dark:bg-black/20 p-6 border border-slate-200/50 dark:border-slate-700/50">
+        <h3 class="mb-4 text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Itinerary Summary</h3>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
+            <p class="text-slate-600 dark:text-slate-300 font-medium">Booking Reference</p>
+            <p class="text-slate-900 dark:text-white font-bold">#{{ bookingData.bookingCode || bookingData.id }}</p>
+          </div>
+          <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
+            <p class="text-slate-600 dark:text-slate-300 font-medium">Room Name</p>
+            <p class="text-slate-900 dark:text-white font-bold">{{ bookingData.roomName }}</p>
+          </div>
+          <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
+            <p class="text-slate-600 dark:text-slate-300 font-medium">Stay Dates</p>
+            <p class="text-slate-900 dark:text-white font-bold">{{ bookingData.checkIn | date:'MMM d' }} - {{ bookingData.checkOut | date:'MMM d, yyyy' }}</p>
+          </div>
+          <div class="flex justify-between items-center pt-1">
+            <p class="text-slate-600 dark:text-slate-300 font-medium">Total Amount Paid</p>
+            <p class="text-primary text-2xl font-black">${{ bookingData.totalPrice | number:'1.2-2' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button routerLink="/my-bookings" class="flex-1 flex cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-primary hover:bg-primary/90 text-slate-900 text-base font-bold shadow-lg shadow-primary/20 transition-all">
+          View My Bookings
+        </button>
+        <button (click)="downloadReceipt()" class="flex-1 flex cursor-pointer items-center justify-center rounded-lg h-12 px-6 border-2 border-slate-300 dark:border-slate-600 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-base font-bold transition-all">
+          <span class="material-symbols-outlined mr-2 text-xl">download</span>
+          Download Receipt
+        </button>
+      </div>
+    </div>
+
+    <footer class="mt-12 flex flex-col items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+      <div class="flex gap-6">
+        <a class="hover:text-primary transition-colors cursor-pointer">Privacy Policy</a>
+        <a class="hover:text-primary transition-colors cursor-pointer">Terms of Service</a>
+        <a class="hover:text-primary transition-colors cursor-pointer">Contact Us</a>
+      </div>
+      <p>© 2026 Lumina Resort. All rights reserved.</p>
+    </footer>
+  </div>
+</div>

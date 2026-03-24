@@ -19,50 +19,48 @@ export class LandingPageComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private roomService: RoomService,
-    private cdr: ChangeDetectorRef // Thêm để ép cập nhật giao diện
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
-    // Theo dõi trạng thái đăng nhập
     this.authService.isLoggedIn$.subscribe(status => {
       this.isLoggedIn = status;
       if (status) {
+        // Lấy dữ liệu từ localStorage
         const userData = localStorage.getItem('currentUser');
-        this.user = userData ? JSON.parse(userData) : null;
-
-        // CHỈ gọi lấy phòng khi đã xác nhận đăng nhập thành công
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          // Map lại dữ liệu: Nếu Backend trả full_name mà FE dùng fullName thì gán lại
+          this.user = {
+            ...parsedUser,
+            fullName: parsedUser.full_name || parsedUser.fullName // Chấp nhận cả 2 định dạng
+          };
+        }
         this.loadRoomsFromDB();
       } else {
         this.user = null;
-        this.rooms = []; // Xóa dữ liệu phòng khi đăng xuất
+        this.rooms = [];
       }
       this.cdr.detectChanges();
     });
-  }
+  } 
 
   loadRoomsFromDB() {
     this.roomService.getAllRooms().subscribe({
       next: (response: any) => {
-        console.log('Dữ liệu thô nhận từ API:', response);
-
-        // Quan trọng: Truy cập vào response.data vì API của bạn bọc mảng trong đó
         const roomArray = response.data || [];
-
-        if (roomArray.length > 0) {
-          this.rooms = roomArray.map((room: any) => ({
-            ...room,
-            title: room.name,
-            price: room.base_price,
-            desc: room.description,
-            features: this.getMockFeatures(room.name),
-            image: this.getHardcodedImage(room.name)
-          }));
-          this.cdr.detectChanges();
-          console.log('Mảng rooms sau khi map thành công:', this.rooms);
-        }
+        this.rooms = roomArray.map((room: any) => ({
+          ...room,
+          title: room.name,
+          price: room.base_price,
+          desc: room.description,
+          features: this.getMockFeatures(room.name),
+          image: this.getHardcodedImage(room.name)
+        }));
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Lỗi kết nối Backend:', err);
+        console.error('Lỗi API (Có thể do Token hết hạn hoặc sai):', err);
       }
     });
   }
@@ -84,5 +82,6 @@ export class LandingPageComponent implements OnInit {
   logout() {
     this.authService.logout();
     this.rooms = [];
+    this.cdr.detectChanges();
   }
 }
