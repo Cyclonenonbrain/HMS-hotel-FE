@@ -8,6 +8,6 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient() // Đăng ký HttpClient ở đây
+    provideHttpClient(withInterceptors([authInterceptor])) // Đăng ký Interceptor
   ]
 };
