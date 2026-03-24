@@ -117,16 +117,3 @@ article:hover {
 .z-60 {
     z-index: 60;
 }
-
-/* Sửa lại màu border-primary để khớp với theme diamond */
-.border-primary {
-    border-color: #f2cc0d !important;
-}
-
-.text-primary {
-    color: #f2cc0d !important;
-}
-
-.bg-primary {
-    background-color: #f2cc0d !important;
-}

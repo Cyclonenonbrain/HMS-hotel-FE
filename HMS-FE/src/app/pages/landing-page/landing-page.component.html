@@ -1,52 +1,62 @@
-<div class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display flex flex-col min-h-screen">
+<div class="bg-[#f8f8f5] min-h-screen font-display text-slate-900 flex flex-col">
 
-  <header class="sticky top-0 z-50 flex items-center justify-between border-b border-primary/20 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md px-10 py-4">
-    <div class="flex items-center gap-2 text-primary cursor-pointer" routerLink="/">
-      <span class="material-symbols-outlined text-3xl">hotel_class</span>
-      <h2 class="text-xl font-bold tracking-tight">Luxecore</h2>
-    </div>
-
-    <nav class="hidden md:flex items-center gap-9">
-      <a class="text-sm font-medium hover:text-primary transition-colors" routerLink="/">Home</a>
-      <a class="text-sm font-medium hover:text-primary transition-colors" routerLink="/search">Search</a>
-      <a *ngIf="isLoggedIn" class="text-sm font-medium hover:text-primary transition-colors" routerLink="/my-bookings">My Bookings</a>
-    </nav>
-
-    <div class="flex items-center gap-4">
-      <ng-container *ngIf="!isLoggedIn">
-        <button routerLink="/login"
-          class="h-10 px-6 border border-primary text-primary rounded-lg font-bold text-sm hover:bg-primary/10 transition-all">
-          Login
-        </button>
-        <button routerLink="/register"
-          class="h-10 px-6 bg-primary text-slate-900 rounded-lg font-bold text-sm hover:bg-primary/90 transition-all">
-          Sign Up
-        </button>
-      </ng-container>
-
-      <div *ngIf="isLoggedIn" class="flex items-center gap-3 group relative cursor-pointer">
-        <div class="text-right hidden sm:block">
-          <p class="text-xs font-bold">{{ user?.fullName || 'Member' }}</p>
-          <p class="text-[10px] text-primary font-bold uppercase tracking-wider">{{ user?.role || 'CUSTOMER' }} Member</p>
+    <header
+        class="sticky top-0 z-50 flex items-center justify-between border-b border-primary/20 bg-white/90 backdrop-blur-md px-10 py-4 shadow-sm">
+        <div class="flex items-center gap-2 cursor-pointer" routerLink="/">
+            <span class="material-symbols-outlined text-3xl text-primary">hotel_class</span>
+            <h2 class="text-xl font-bold tracking-tight text-primary">Luxecore</h2>
         </div>
 
-        <div class="size-10 rounded-full border-2 border-primary overflow-hidden shadow-lg transition-transform group-hover:scale-105">
-          <img [src]="'https://ui-avatars.com/api/?name=' + (user?.fullName || 'User') + '&background=random&color=fff'" alt="Avatar">
-        </div>
+        <nav class="hidden md:flex items-center gap-9">
+            <a routerLink="/" class="text-sm font-bold text-slate-900 border-b-2 border-primary pb-1">Home</a>
+            <a routerLink="/search" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Rooms</a>
+            <a *ngIf="isLoggedIn" routerLink="/my-bookings"
+                class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">My Bookings</a>
+        </nav>
 
-        <div class="absolute top-full right-0 pt-2 w-40 hidden group-hover:block drop-shadow-2xl">
-          <div class="bg-white dark:bg-slate-900 border border-primary/20 rounded-xl py-2 animate-in fade-in slide-in-from-top-2">
-            <a class="block px-4 py-2 text-xs font-medium hover:bg-primary/10 transition-colors cursor-pointer">Profile Setting</a>
-            <hr class="my-1 border-primary/10">
-            <button (click)="logout()"
-              class="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 transition-colors">
-              Sign Out
-            </button>
-          </div>
+        <div class="flex items-center gap-4">
+            <ng-container *ngIf="!isLoggedIn">
+                <button routerLink="/login"
+                    class="h-10 px-6 border border-primary text-primary rounded-lg font-bold text-sm hover:bg-primary/10 transition-all">
+                    Login
+                </button>
+                <button routerLink="/register"
+                    class="h-10 px-6 bg-primary text-slate-900 rounded-lg font-bold text-sm hover:bg-primary/90 transition-all">
+                    Sign Up
+                </button>
+            </ng-container>
+
+            <div *ngIf="isLoggedIn" class="flex items-center gap-3 group relative cursor-pointer">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-bold">{{ user?.fullName }}</p>
+                    <p class="text-[10px] text-primary font-bold uppercase tracking-wider">{{ user?.role || 'Member' }}
+                        Member</p>
+                </div>
+
+                <div
+                    class="size-10 rounded-full border-2 border-primary overflow-hidden shadow-lg transition-transform group-hover:scale-105">
+                    <img [src]="'https://ui-avatars.com/api/?name=' + user?.fullName + '&background=random&color=fff'"
+                        alt="Avatar">
+                </div>
+
+                <div class="absolute top-full right-0 pt-2 w-44 hidden group-hover:block drop-shadow-2xl z-[60]">
+                    <div
+                        class="bg-white border border-primary/20 rounded-xl py-2 shadow-xl animate-in fade-in slide-in-from-top-2">
+                        <a class="block px-4 py-2 text-xs font-medium hover:bg-primary/10 transition-colors">
+                            <span class="flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-sm">person</span> Profile Setting</span>
+                        </a>
+                        <hr class="my-1 border-primary/10">
+                        <button (click)="logout()"
+                            class="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 transition-colors">
+                            <span class="flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-sm">logout</span> Sign Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </header>
+    </header>
 
   <main class="flex-1">
     <section class="relative w-full h-[80vh] min-h-[600px] flex flex-col items-center justify-center overflow-hidden">

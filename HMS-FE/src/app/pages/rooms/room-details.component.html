@@ -1,42 +1,61 @@
-<div class="min-h-screen bg-[#f8f8f6] font-display text-slate-900 antialiased" *ngIf="!loading && room">
-  <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
-    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-      <div class="flex items-center gap-3 cursor-pointer" routerLink="/">
-        <span class="material-symbols-outlined text-primary text-3xl">hotel_class</span>
-        <span class="text-xl font-bold tracking-tight">Luxecore</span>
-      </div>
-      <nav class="hidden md:flex items-center gap-8">
-        <a class="text-sm font-semibold hover:text-primary transition-colors" routerLink="/">Home</a>
-        <a class="text-sm font-semibold text-primary" routerLink="/search">Rooms</a>
-        <a class="text-sm font-semibold hover:text-primary transition-colors">Dining</a>
-        <a class="text-sm font-semibold hover:text-primary transition-colors">Offers</a>
-      </nav>
-      <div class="flex items-center gap-6">
-        <ng-container *ngIf="isLoggedIn && user; else authButtons">
-          <div class="flex flex-col items-end hidden sm:flex">
-            <span class="text-[10px] font-black uppercase tracking-tighter text-primary">Customer Member</span>
-            <span class="text-sm font-bold text-slate-900">{{ user.fullName }}</span>
-          </div>
-          <div class="relative group cursor-pointer">
-            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-slate-900 font-black border-2 border-white shadow-sm hover:scale-105 transition-transform">
-              {{ user.fullName.charAt(0) }}
+<div class="min-h-screen bg-[#f8f8f5] font-display text-slate-900 antialiased" *ngIf="!loading && room">
+    <header
+        class="sticky top-0 z-50 flex items-center justify-between border-b border-primary/20 bg-white/90 backdrop-blur-md px-10 py-4 shadow-sm">
+        <div class="flex items-center gap-2 cursor-pointer" routerLink="/">
+            <span class="material-symbols-outlined text-3xl text-primary">hotel_class</span>
+            <h2 class="text-xl font-bold tracking-tight text-primary">Luxecore</h2>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-9">
+            <a routerLink="/" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Home</a>
+            <a routerLink="/search" class="text-sm font-bold text-slate-900 border-b-2 border-primary pb-1">Rooms</a>
+            <a *ngIf="isLoggedIn" routerLink="/my-bookings"
+                class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">My Bookings</a>
+        </nav>
+
+        <div class="flex items-center gap-4">
+            <ng-container *ngIf="!isLoggedIn">
+                <button routerLink="/login"
+                    class="h-10 px-6 border border-primary text-primary rounded-lg font-bold text-sm hover:bg-primary/10 transition-all">
+                    Login
+                </button>
+                <button routerLink="/register"
+                    class="h-10 px-6 bg-primary text-slate-900 rounded-lg font-bold text-sm hover:bg-primary/90 transition-all">
+                    Sign Up
+                </button>
+            </ng-container>
+
+            <div *ngIf="isLoggedIn" class="flex items-center gap-3 group relative cursor-pointer">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-bold">{{ user?.fullName }}</p>
+                    <p class="text-[10px] text-primary font-bold uppercase tracking-wider">{{ user?.role || 'Member' }}
+                        Member</p>
+                </div>
+
+                <div
+                    class="size-10 rounded-full border-2 border-primary overflow-hidden shadow-lg transition-transform group-hover:scale-105">
+                    <img [src]="'https://ui-avatars.com/api/?name=' + user?.fullName + '&background=random&color=fff'"
+                        alt="Avatar">
+                </div>
+
+                <div class="absolute top-full right-0 pt-2 w-44 hidden group-hover:block drop-shadow-2xl z-[60]">
+                    <div
+                        class="bg-white border border-primary/20 rounded-xl py-2 shadow-xl animate-in fade-in slide-in-from-top-2">
+                        <a class="block px-4 py-2 text-xs font-medium hover:bg-primary/10 transition-colors">
+                            <span class="flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-sm">person</span> Profile Setting</span>
+                        </a>
+                        <hr class="my-1 border-primary/10">
+                        <button (click)="logout()"
+                            class="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 transition-colors">
+                            <span class="flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-sm">logout</span> Sign Out</span>
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-              <button (click)="logout()" class="w-full px-4 py-2 text-left text-sm font-bold text-red-500 hover:bg-red-50 flex items-center gap-2">
-                <span class="material-symbols-outlined text-sm">logout</span> Log Out
-              </button>
-            </div>
-          </div>
-        </ng-container>
-        <ng-template #authButtons>
-          <div class="flex items-center gap-4">
-            <button routerLink="/login" class="text-sm font-bold hover:text-primary transition-colors">Log In</button>
-            <button class="bg-primary hover:bg-yellow-500 text-slate-900 px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-primary/20">Book Now</button>
-          </div>
-        </ng-template>
-      </div>
-    </div>
-  </header>
+        </div>
+    </header>
 
   <section class="relative h-[65vh] w-full pt-20">
     <img [src]="room.images[0]" class="absolute inset-0 w-full h-full object-cover" alt="Hero">
