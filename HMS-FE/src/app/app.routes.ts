@@ -19,6 +19,12 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { expectedRoles: ['ADMIN'] }
   },
+  {
+    path: 'staff',
+    loadChildren: () => import('./features/staff/staff.routes').then(m => m.staffRoutes),
+    canActivate: [authGuard, roleGuard],
+    data: { expectedRoles: ['STAFF', 'ADMIN'] }
+  },
   { path: '', component: LandingPageComponent },
   { path: 'search', component: RoomListComponent },
   { path: 'checkout', component: CheckoutComponent, canActivate: [authGuard] },
