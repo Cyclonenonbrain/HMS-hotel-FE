@@ -59,6 +59,6 @@ export class AdminHeaderComponent implements OnInit {
   // Hàm xử lý Đăng xuất
   logout() {
     this.authService.logout();
-    this.router.navigate(['/login']); // Điều hướng về trang login
+    this.router.navigate(['/']); // Điều hướng về trang landing page
   }
 }

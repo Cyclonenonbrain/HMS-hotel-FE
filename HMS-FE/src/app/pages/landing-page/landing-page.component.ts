@@ -26,24 +26,22 @@ export class LandingPageComponent implements OnInit {
     this.authService.isLoggedIn$.subscribe(status => {
       this.isLoggedIn = status;
       if (status) {
-        // Lấy dữ liệu từ localStorage
         const userData = localStorage.getItem('currentUser');
         if (userData) {
           const parsedUser = JSON.parse(userData);
-          // Map lại dữ liệu: Nếu Backend trả full_name mà FE dùng fullName thì gán lại
           this.user = {
             ...parsedUser,
-            fullName: parsedUser.full_name || parsedUser.fullName // Chấp nhận cả 2 định dạng
+            fullName: parsedUser.full_name || parsedUser.fullName
           };
         }
-        this.loadRoomsFromDB();
       } else {
         this.user = null;
-        this.rooms = [];
       }
       this.cdr.detectChanges();
     });
-  } 
+
+    this.loadRoomsFromDB();
+  }
 
   loadRoomsFromDB() {
     this.roomService.getAllRooms().subscribe({
@@ -60,7 +58,7 @@ export class LandingPageComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Lỗi API (Có thể do Token hết hạn hoặc sai):', err);
+        console.error('Loi khi tai danh sach phong:', err);
       }
     });
   }
@@ -81,7 +79,6 @@ export class LandingPageComponent implements OnInit {
 
   logout() {
     this.authService.logout();
-    this.rooms = [];
     this.cdr.detectChanges();
   }
 }

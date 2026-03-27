@@ -18,7 +18,7 @@ export class LoginComponent implements OnInit {
   errorMessage = '';
 
   constructor(
-    private fb: FormBuilder, 
+    private fb: FormBuilder,
     private authService: AuthService,
     private router: Router
   ) {}
@@ -45,29 +45,22 @@ export class LoginComponent implements OnInit {
         next: (response) => {
           this.isLoading = false;
           if (response.success) {
-            console.log('✅ Đăng nhập thành công:', response.data);
-            
-            // Lưu dữ liệu vào localStorage
-            localStorage.setItem('accessToken', response.data.accessToken);
-            localStorage.setItem('userRole', response.data.role);
-            
-            // Điều hướng theo phân quyền (Role-based Navigation)
             const role = response.data.role;
             if (role === 'ADMIN') {
               this.router.navigate(['/admin/dashboard']);
             } else if (role === 'STAFF') {
               this.router.navigate(['/staff/dashboard']);
             } else {
-              this.router.navigate(['/']); // Customer / Homepage
+              this.router.navigate(['/']);
             }
           }
         },
         error: (err) => {
           this.isLoading = false;
           if (err.status === 401) {
-            this.errorMessage = 'Email hoặc mật khẩu không chính xác.';
+            this.errorMessage = 'Email hoac mat khau khong chinh xac.';
           } else {
-            this.errorMessage = 'Không thể kết nối tới máy chủ. Vui lòng thử lại sau.';
+            this.errorMessage = 'Khong the ket noi toi may chu. Vui long thu lai sau.';
           }
           console.error('Login error:', err);
         }

@@ -54,6 +54,6 @@ export class StaffLayoutComponent {
   logout() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('userRole');
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
   }
 }
