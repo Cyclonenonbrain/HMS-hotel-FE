@@ -2,37 +2,82 @@
   display: block;
 }
 
+/* Glass Panel Effects */
+.glass-panel-dark {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-panel-hero {
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #1e293b;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #ecc813;
+  background: #d97706;
   border-radius: 10px;
 }
 
-/* Tối ưu hóa ô chọn ngày để không bị tràn Check-out */
-.booking-date-input {
+/* Dark Theme Date Input */
+.booking-date-input-dark {
   width: 100%;
-  min-width: 0; /* Cho phép co giãn theo grid */
+  min-width: 0;
   border: none;
   outline: none;
   background: transparent;
-  color: #0f172a; /* slate-900 */
-  font-size: 0.875rem; /* text-sm */
+  color: white;
+  font-size: 0.875rem;
   font-weight: 700;
   display: flex;
-  flex-direction: row-reverse; /* Đẩy icon lịch sang phải */
+  flex-direction: row-reverse;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
   padding: 4px 0;
 }
 
-/* Tùy chỉnh icon lịch mặc định của trình duyệt */
+.booking-date-input-dark::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+  margin: 0;
+  padding: 0;
+  filter: invert(1);
+}
+
+.booking-date-input-dark::-webkit-datetime-edit {
+  padding: 0;
+  display: flex;
+}
+
+/* Light Theme Date Input */
+.booking-date-input {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #0f172a;
+  font-size: 0.875rem;
+  font-weight: 700;
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
 .booking-date-input::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.5;
@@ -40,17 +85,39 @@
   padding: 0;
 }
 
-/* Hiển thị văn bản ngày tháng đầy đủ */
 .booking-date-input::-webkit-datetime-edit {
   padding: 0;
   display: flex;
 }
 
-/* Xử lý Select Box để không bị chồng 2 mũi tên */
+/* Dark Theme Guest Select */
+.guest-select-dark {
+  width: 100%;
+  padding-left: 1.75rem;
+  padding-right: 2rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: white;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.guest-select-dark option {
+  background-color: #1e293b;
+  color: white;
+}
+
+/* Light Theme Guest Select */
 .guest-select {
   width: 100%;
-  padding-left: 1.75rem; /* pl-7 */
-  padding-right: 2rem; /* pr-8 */
+  padding-left: 1.75rem;
+  padding-right: 2rem;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
   font-size: 0.875rem;
@@ -64,11 +131,28 @@
   -webkit-appearance: none;
 }
 
-/* Hiệu ứng Gallery */
+/* Gallery Effects */
 .grid img {
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .grid img:hover {
   transform: translateY(-5px);
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+}
+
+/* Đảm bảo Header không cắt cụt menu dropdown */
+header {
+  overflow: visible !important;
+}
+
+/* Ép menu dropdown phải luôn nổi lên trên cùng */
+.z-\[60\],
+.z-\[999\] {
+  z-index: 9999 !important;
+}
+
+.profile-area {
+    position: relative;
+    z-index: 101; /* Cao hơn header một chút */
 }

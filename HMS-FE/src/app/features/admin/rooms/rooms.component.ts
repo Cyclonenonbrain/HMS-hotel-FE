@@ -50,53 +50,53 @@ export class RoomsComponent {
 
   // Room Types for the dropdown
   roomTypes = [
-    { id: 'RT01', name: 'Standard Room', price: 100, capacity: 2 },
-    { id: 'RT02', name: 'Deluxe Room', price: 150, capacity: 4 },
-    { id: 'RT03', name: 'Suite', price: 250, capacity: 2 },
-    { id: 'RT04', name: 'Family Room', price: 200, capacity: 6 },
-    { id: 'RT05', name: 'Penthouse', price: 500, capacity: 4 },
+    { id: 'RT01', name: 'Deluxe/Superior', price: 4200000, capacity: 2 },
+    { id: 'RT02', name: 'Grand Deluxe/Executive', price: 7000000, capacity: 4 },
+    { id: 'RT03', name: 'Suite', price: 11500000, capacity: 2 },
+    { id: 'RT04', name: 'Specialty/Signature Suite', price: 26000000, capacity: 6 },
+    { id: 'RT05', name: 'Presidential Suite', price: 180000000, capacity: 4 },
   ];
 
   rooms: Room[] = [
     {
-      id: 'R001', roomNumber: '101', roomTypeId: 'RT01', roomTypeName: 'Standard Room',
-      floor: 1, description: 'Cozy standard room with garden view and modern amenities.', price: 100, capacity: 2,
+      id: 'R001', roomNumber: '101', roomTypeId: 'RT01', roomTypeName: 'Deluxe/Superior',
+      floor: 1, description: 'Cozy deluxe room with garden view, premium marble bathroom, and elegant design.', price: 4200000, capacity: 2,
       imageUrl: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80',
       amenities: ['Wi-Fi', 'TV', 'Safe'], status: 'Available'
     },
     {
-      id: 'R002', roomNumber: '102', roomTypeId: 'RT01', roomTypeName: 'Standard Room',
-      floor: 1, description: 'Sunny standard room overlooking the courtyard.', price: 100, capacity: 2,
+      id: 'R002', roomNumber: '102', roomTypeId: 'RT01', roomTypeName: 'Deluxe/Superior',
+      floor: 1, description: 'Sunny superior room with courtyard view and deluxe amenities.', price: 4500000, capacity: 2,
       imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=600&q=80',
       amenities: ['Wi-Fi', 'TV'], status: 'Occupied'
     },
     {
-      id: 'R003', roomNumber: '201', roomTypeId: 'RT02', roomTypeName: 'Deluxe Room',
-      floor: 2, description: 'Elegant suite featuring panoramic city views, marble bathroom, and exclusive lounge access.', price: 150, capacity: 4,
+      id: 'R003', roomNumber: '201', roomTypeId: 'RT02', roomTypeName: 'Grand Deluxe/Executive',
+      floor: 2, description: 'Grand executive room with skyline view, premium services and lounge access.', price: 6500000, capacity: 4,
       imageUrl: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=600&q=80',
       amenities: ['Wi-Fi', 'Pool', 'Bar', 'Balcony'], status: 'Available'
     },
     {
-      id: 'R004', roomNumber: '202', roomTypeId: 'RT02', roomTypeName: 'Deluxe Room',
-      floor: 2, description: 'Spacious deluxe room with king bed and city-facing balcony.', price: 150, capacity: 4,
+      id: 'R004', roomNumber: '202', roomTypeId: 'RT02', roomTypeName: 'Grand Deluxe/Executive',
+      floor: 2, description: 'Spacious executive suite with king bed, city-facing balcony and premium minibar.', price: 7200000, capacity: 4,
       imageUrl: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=600&q=80',
       amenities: ['Wi-Fi', 'Pool', 'Balcony'], status: 'Available'
     },
     {
       id: 'R005', roomNumber: '301', roomTypeId: 'RT03', roomTypeName: 'Suite',
-      floor: 3, description: 'Private overwater villa with direct ocean access, personal plunge pool, and spacious sundeck.', price: 250, capacity: 2,
+      floor: 3, description: 'Junior Suite with divided living and sleeping areas, private balcony, and butler service.', price: 11500000, capacity: 2,
       imageUrl: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=600&q=80',
       amenities: ['Wi-Fi', 'Pool', 'Beach', 'Spa', 'Butler'], status: 'Available'
     },
     {
-      id: 'R006', roomNumber: '401', roomTypeId: 'RT04', roomTypeName: 'Family Room',
-      floor: 4, description: 'Spacious family room with two bedrooms, living area, and dedicated kids zone.', price: 200, capacity: 6,
+      id: 'R006', roomNumber: '401', roomTypeId: 'RT04', roomTypeName: 'Specialty/Signature Suite',
+      floor: 4, description: 'Signature suite with dining area, kitchenette and curated art collection.', price: 26000000, capacity: 6,
       imageUrl: 'https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=600&q=80',
       amenities: ['Wi-Fi', 'TV', 'Kitchen', 'Parking'], status: 'Available'
     },
     {
-      id: 'R007', roomNumber: '501', roomTypeId: 'RT05', roomTypeName: 'Penthouse',
-      floor: 5, description: 'The ultimate luxury experience spanning the top floor, featuring 360-degree views, private cinema, and butler service.', price: 500, capacity: 4,
+      id: 'R007', roomNumber: '501', roomTypeId: 'RT05', roomTypeName: 'Presidential Suite',
+      floor: 5, description: 'Presidential Suite with private gym, steam room, dining room, and 360-degree cityscape.', price: 185000000, capacity: 4,
       imageUrl: 'https://images.unsplash.com/photo-1631049552057-403cdb8f0658?w=600&q=80',
       amenities: ['Wi-Fi', 'Pool', 'Butler', 'Gym', 'Bar', 'Balcony'], status: 'Available'
     },

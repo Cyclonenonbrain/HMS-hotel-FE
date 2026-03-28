@@ -80,8 +80,7 @@
           <div
             class="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-bold"
           >
-            ${{ room.price
-            }}<span class="text-xs font-normal text-slate-300">/night</span>
+            {{ room.price | number }} ₫<span class="text-xs font-normal text-slate-300">/night</span>
           </div>
           <!-- Status badge -->
           <div
@@ -299,7 +298,7 @@
           class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all appearance-none"
         >
           <option *ngFor="let rt of roomTypes" [value]="rt.id">
-            {{ rt.name }} — ${{ rt.price }}/night ({{ rt.capacity }} guests)
+            {{ rt.name }} — {{ rt.price | number }} ₫/night ({{ rt.capacity }} guests)
           </option>
         </select>
       </div>

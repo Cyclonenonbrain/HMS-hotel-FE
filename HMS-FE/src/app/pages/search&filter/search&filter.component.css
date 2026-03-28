@@ -1,87 +1,134 @@
-/* Biến màu sắc theo Prototype */
+/* 1. Base Settings & Variables */
 :host {
-    --primary: #f2cc0d;
-    --bg-main: #f8f8f5;
-    --text-main: #0f172a;
+    --primary: #d97706;
+    --primary-light: #fbbf24;
+    --bg-dark: #1a1a2e;
+    --glass-bg: rgba(15, 23, 42, 0.6);
     display: block;
     font-family: 'Manrope', sans-serif;
 }
 
-/* Tùy chỉnh Sidebar Sticky */
+/* 2. Layout & Header Fixes */
+header {
+    overflow: visible !important; /* Quan trọng để dropdown hiện ra ngoài */
+}
+
+.profile-area {
+    position: relative;
+    z-index: 110; /* Cao hơn nội dung trang */
+}
+
+/* Dropdown Menu Z-index */
+.z-\[110\], .z-60 {
+    z-index: 120 !important;
+}
+
+/* Sidebar Sticky */
 aside {
     height: fit-content;
     position: sticky;
     top: 100px;
+    z-index: 10;
 }
 
-/* Custom Checkbox theo tone vàng Primary */
-.form-checkbox {
-    @apply rounded border-slate-300 text-primary focus:ring-primary h-4 w-4 bg-slate-50;
-    cursor: pointer;
+/* 3. Panel & Card Effects */
+.glass-panel-dark {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Fix lỗi checkbox bị ẩn khi không hover */
-input[type="checkbox"].form-checkbox {
+article {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+article:hover {
+    transform: translateY(-4px);
+    border-color: rgba(217, 119, 6, 0.4) !important;
+}
+
+/* 4. Custom Form Controls */
+
+/* Checkbox */
+input[type="checkbox"] {
     appearance: checkbox !important;
     -webkit-appearance: checkbox !important;
     opacity: 1 !important;
     visibility: visible !important;
-    accent-color: #EAB308;
-    /* Màu vàng hiện đại của bạn */
+    accent-color: var(--primary);
     width: 1rem;
     height: 1rem;
     cursor: pointer;
 }
 
-/* Đảm bảo label không đè lên checkbox */
-.cursor-pointer {
-    -webkit-user-select: none;
-    user-select: none;
-}
-
-/* Custom Price Slider */
+/* Price Range Slider */
 input[type="range"] {
     -webkit-appearance: none;
     width: 100%;
     height: 6px;
-    background: #e2e8f0;
+    background: #475569;
     border-radius: 999px;
+    outline: none;
 }
 
+/* Slider Thumb (Chrome, Safari, Edge) */
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    height: 20px;
-    width: 20px;
+    height: 18px;
+    width: 18px;
     border-radius: 50%;
-    background: white;
-    border: 2px solid var(--primary);
+    background: var(--primary-light);
+    border: 2px solid white;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+    transition: transform 0.1s ease;
 }
 
-/* Card Room Styling */
-article {
-    @apply transition-all duration-300 border border-slate-100 shadow-sm;
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
 }
 
-article:hover {
-    @apply shadow-xl -translate-y-1 border-primary/20;
+/* Slider Thumb (Firefox) */
+input[type="range"]::-moz-range-thumb {
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    border: 2px solid white;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
 }
 
-/* Badge định dạng */
+/* 5. Badges & Labels */
 .badge {
-    @apply absolute top-4 left-4 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold shadow-sm uppercase tracking-wider;
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    z-index: 5;
 }
 
-.badge-popular {
-    @apply bg-white/90 text-primary;
+.badge-popular-dark {
+    background: rgba(217, 119, 6, 0.9);
+    color: white;
+    border: 1px solid rgba(217, 119, 6, 0.5);
 }
 
-.badge-limited {
-    @apply bg-slate-900/80 text-white;
+.badge-limited-dark {
+    background: rgba(30, 41, 59, 0.9);
+    color: var(--primary);
+    border: 1px solid rgba(217, 119, 6, 0.3);
 }
 
-/* Line Clamp cho Description */
+/* 6. Utility Classes */
 .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -89,31 +136,28 @@ article:hover {
     overflow: hidden;
 }
 
-/* Thêm vào cuối file search&filter.component.css */
-
 .size-10 {
     width: 2.5rem;
     height: 2.5rem;
 }
 
-/* Hiệu ứng Dropdown */
+.cursor-pointer {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* 7. Animations */
 .animate-in {
-    animation: fadeInSlide 0.2s ease-out forwards;
+    animation: fadeInSlide 0.25s ease-out forwards;
 }
 
 @keyframes fadeInSlide {
     from {
         opacity: 0;
-        transform: translateY(-8px);
+        transform: translateY(-10px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-/* Đảm bảo dropdown hiển thị trên cùng */
-.z-60 {
-    z-index: 60;
 }

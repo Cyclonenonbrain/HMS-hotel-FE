@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms'; // Quan trọng để dùng ngModel
@@ -17,10 +17,11 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
   // Trạng thái dữ liệu
   room: any = null;
   loading: boolean = true;
-  
+
   // Trạng thái User
   isLoggedIn: boolean = false;
   user: any = null;
+  isProfileMenuOpen: boolean = false;
   private authSub!: Subscription;
 
   // Form đặt phòng
@@ -31,8 +32,8 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
   };
 
   // Cấu hình phí cố định
-  readonly CLEANING_FEE = 85;
-  readonly SERVICE_FEE = 120;
+  readonly CLEANING_FEE = 2125000; // 2,125,000 VND
+  readonly SERVICE_FEE = 3000000; // 3,000,000 VND
   readonly TAX_RATE = 0.1;
 
   // Kết quả tính toán hóa đơn
@@ -55,7 +56,8 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
     private roomService: RoomService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private eRef: ElementRef
   ) { }
 
   ngOnInit(): void {
@@ -91,6 +93,27 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
     if (this.authSub) this.authSub.unsubscribe();
   }
 
+  // Thêm tham số event để xử lý chủ động
+  toggleProfileMenu(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isProfileMenuOpen = !this.isProfileMenuOpen;
+  
+    this.cdr.detectChanges();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: Event): void {
+    const target = event.target as HTMLElement;
+   
+    const isClickInside = target.closest('.profile-area');
+
+    if (!isClickInside && this.isProfileMenuOpen) {
+      this.isProfileMenuOpen = false;
+      this.cdr.detectChanges();
+    }
+  }
+
   private initDefaultDates() {
     const today = new Date();
     const future = new Date();
@@ -105,10 +128,12 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
     this.roomService.getRoomById(id).subscribe({
       next: (res: any) => {
         const data = res.data;
+        const computedPrice = this.convertToLuxuryPrice(parseFloat(data.basePrice || data.base_price || 0));
         this.room = {
           ...data,
           displayName: this.formatRoomName(data.name),
-          displayPrice: parseFloat(data.basePrice || data.base_price || 0),
+          displayPrice: computedPrice,
+          category: this.getRoomTierByPrice(computedPrice),
           description: data.description || "Step into an oasis of calm and luxury. Our suites offer an expansive living space, a private balcony with panoramic sea views, and premium comfort.",
           amenities: this.getAmenitiesByRoom(data.name),
           images: this.mockGallery
@@ -124,6 +149,44 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  getRoomTierByPrice(price: number): string {
+    if (price >= 100000000) return 'Presidential Suite';
+    if (price >= 20000000) return 'Specialty/Signature Suite';
+    if (price >= 9000000) return 'Suite';
+    if (price >= 5500000) return 'Grand Deluxe/Executive';
+    if (price >= 3500000) return 'Deluxe/Superior';
+    return 'Premium Comfort';
+  }
+
+  convertToLuxuryPrice(basePrice: number): number {
+    let vndPrice = Number.isFinite(basePrice) ? basePrice : 0;
+    if (vndPrice > 0 && vndPrice < 2000) {
+      vndPrice = Math.round(vndPrice * 25000);
+    }
+    if (vndPrice < 3500000) {
+      vndPrice = 3500000;
+    }
+    if (vndPrice < 5500000) {
+      return vndPrice; // Deluxe/Superior
+    }
+    if (vndPrice < 9000000) {
+      return Math.max(vndPrice, 5500000); // Grand Deluxe
+    }
+    if (vndPrice < 15000000) {
+      return Math.max(vndPrice, 9000000); // Suite
+    }
+    if (vndPrice < 20000000) {
+      return 20000000; // Specialty Suite
+    }
+    if (vndPrice < 50000000) {
+      return Math.max(vndPrice, 20000000);
+    }
+    if (vndPrice < 100000000) {
+      return 50000000; // segment high-end
+    }
+    return Math.max(vndPrice, 100000000);
+  }
+
   updateInvoice() {
     if (!this.room) return;
 
@@ -133,7 +196,7 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
     // Tính số đêm
     const diffTime = end.getTime() - start.getTime();
     let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     // Validation ngày hợp lệ
     if (diffDays <= 0) {
       diffDays = 1;
@@ -146,7 +209,7 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
     this.invoice.roomTotal = this.room.displayPrice * diffDays;
     this.invoice.taxes = Math.round(this.invoice.roomTotal * this.TAX_RATE);
     this.invoice.finalTotal = this.invoice.roomTotal + this.CLEANING_FEE + this.SERVICE_FEE + this.invoice.taxes;
-    
+
     this.cdr.detectChanges();
   }
 

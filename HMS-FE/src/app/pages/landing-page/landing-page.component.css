@@ -3,38 +3,94 @@
   font-family: 'Outfit', sans-serif;
 }
 
+/* Glass Panel Effects */
+.glass-panel-hero {
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
 
-/* Đổi .group thành .room-card để chỉ định rõ mục tiêu */
+.glass-panel-dark {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Input styling for dark theme search box */
+.search-input {
+  width: 100%;
+  background-color: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(217, 119, 6, 0.3);
+  border-radius: 0.75rem;
+  height: 3.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  font-size: 0.875rem;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.search-input::placeholder {
+  color: rgba(226, 232, 240, 0.5);
+}
+
+.search-input:focus {
+  outline: none;
+  background-color: rgba(30, 41, 59, 0.6);
+  border-color: #d97706;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+}
+
+/* Date picker icon styling */
+.search-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.search-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Select dropdown styling */
+.search-input[type="date"],
+.search-input option {
+  color-scheme: dark;
+}
+
+/* Room Card Styling */
 .room-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .room-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 20px 25px -5px rgba(242, 204, 13, 0.1);
+  transform: translateY(-12px);
 }
 
-/* Hiệu ứng kính mờ cho thanh tìm kiếm */
-input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* Animation khi vào trang */
-h1 {
-  animation: fadeInUp 0.8s ease-out;
-}
-
-.stat-card {
-    @apply flex flex-col items-center justify-center gap-2 rounded-xl p-8 bg-background-light dark:bg-background-dark border border-primary/20 shadow-lg text-center transform transition-transform hover:-translate-y-1;
-}
-
+/* Animation */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(40px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+h1 {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+/* Đảm bảo Header không cắt cụt menu dropdown */
+header {
+  overflow: visible !important;
+}
+
+/* Ép menu dropdown phải luôn nổi lên trên cùng */
+.z-\[60\], .z-\[999\] {
+  z-index: 9999 !important;
 }

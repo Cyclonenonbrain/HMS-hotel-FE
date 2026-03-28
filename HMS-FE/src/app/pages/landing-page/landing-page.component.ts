@@ -1,8 +1,9 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ElementRef, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.services';
 import { RoomService } from '../../services/room.services';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-landing-page',
@@ -11,19 +12,22 @@ import { RoomService } from '../../services/room.services';
   templateUrl: './landing-page.component.html',
   styleUrls: ['./landing-page.component.css']
 })
-export class LandingPageComponent implements OnInit {
+export class LandingPageComponent implements OnInit, OnDestroy {
   isLoggedIn: boolean = false;
   user: any = null;
   rooms: any[] = [];
+  isProfileMenuOpen: boolean = false;
+  private authSub!: Subscription;
 
   constructor(
     private authService: AuthService,
     private roomService: RoomService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private eRef: ElementRef
   ) { }
 
   ngOnInit(): void {
-    this.authService.isLoggedIn$.subscribe(status => {
+    this.authSub = this.authService.isLoggedIn$.subscribe(status => {
       this.isLoggedIn = status;
       if (status) {
         // Lấy dữ liệu từ localStorage
@@ -43,7 +47,33 @@ export class LandingPageComponent implements OnInit {
       }
       this.cdr.detectChanges();
     });
-  } 
+  }
+
+  ngOnDestroy(): void {
+    if (this.authSub) {
+      this.authSub.unsubscribe();
+    }
+  }
+
+  toggleProfileMenu(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isProfileMenuOpen = !this.isProfileMenuOpen;
+
+    this.cdr.detectChanges();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: Event): void {
+    const target = event.target as HTMLElement;
+    
+    const isClickInside = target.closest('.profile-area');
+
+    if (!isClickInside && this.isProfileMenuOpen) {
+      this.isProfileMenuOpen = false;
+      this.cdr.detectChanges();
+    }
+  }
 
   loadRoomsFromDB() {
     this.roomService.getAllRooms().subscribe({

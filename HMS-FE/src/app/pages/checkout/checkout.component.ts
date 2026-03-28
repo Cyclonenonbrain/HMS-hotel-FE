@@ -26,8 +26,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   room = {
     id: '550e8400-e29b-41d4-a716-446655440000', 
     name: 'Executive Suite',
-    price: 450.00, 
-    serviceFee: 27.00,
+    price: 11250000, // 11,250,000 VND
+    serviceFee: 675000, // 675,000 VND
     image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80'
   };
 
