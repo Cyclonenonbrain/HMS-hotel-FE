@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { VndPipe } from '../../../core/vnd.pipe';
 
 // ─── Models ────────────────────────────────────────────────────────────────
 export interface Amenity {
@@ -41,7 +42,7 @@ const ALL_AMENITIES: Amenity[] = [
 @Component({
   selector: 'app-rooms',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, VndPipe],
   templateUrl: './rooms.component.html',
   styleUrl: './rooms.component.css'
 })

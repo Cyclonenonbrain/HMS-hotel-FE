@@ -5,11 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { RoomService } from '../../services/room.services';
 import { AuthService } from '../../services/auth.services';
+import { VndPipe } from '../../core/vnd.pipe';
 
 @Component({
     selector: 'app-room-list',
     standalone: true,
-    imports: [CommonModule, RouterModule, FormsModule],
+    imports: [CommonModule, RouterModule, FormsModule, VndPipe],
     templateUrl: 'search&filter.component.html',
     styleUrls: ['search&filter.component.css']
 })
@@ -24,7 +25,7 @@ export class RoomListComponent implements OnInit, OnDestroy {
     // --- PHẦN QUẢN LÝ FILTER ---
     filters = {
         searchQuery: '',
-        priceRange: 1000000,
+        priceRange: 100000000,
         guests: 2,
         amenities: {
             oceanView: false,
@@ -75,8 +76,8 @@ export class RoomListComponent implements OnInit, OnDestroy {
     // --- LOGIC LỌC PHÒNG ---
     applyFilters() {
         this.filteredRooms = this.allRooms.filter(room => {
-            // Lọc theo giá: Nếu thanh trượt ở mức Max (1,000,000) thì coi như không lọc giá
-            const isSliderAtMax = this.filters.priceRange >= 1000000;
+            // Lọc theo giá: Nếu thanh trượt ở mức Max (100,000,000) thì coi như không lọc giá
+            const isSliderAtMax = this.filters.priceRange >= 100000000;
             const matchPrice = isSliderAtMax ? true : room.displayPrice <= this.filters.priceRange;
 
             // Lọc theo số lượng khách
@@ -132,7 +133,7 @@ export class RoomListComponent implements OnInit, OnDestroy {
     clearAllFilters() {
         this.filters = {
             searchQuery: '',
-            priceRange: 1000000,
+            priceRange: 100000000,
             guests: 2,
             amenities: { oceanView: false, privateBalcony: false, kingBed: false }
         };

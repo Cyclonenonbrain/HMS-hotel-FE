@@ -79,15 +79,15 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           <div class="text-left space-y-1">
             <span class="text-white/80 text-[10px] font-bold uppercase pl-1 tracking-widest">Check-in</span>
-            <input type="date" class="w-full bg-white dark:bg-slate-800 border-none rounded-lg h-12 px-3 text-sm focus:ring-2 ring-primary">
+            <input type="date" class="w-full bg-white border-none rounded-lg h-12 px-3 text-sm text-slate-900 font-medium focus:ring-2 ring-primary">
           </div>
           <div class="text-left space-y-1">
             <span class="text-white/80 text-[10px] font-bold uppercase pl-1 tracking-widest">Check-out</span>
-            <input type="date" class="w-full bg-white dark:bg-slate-800 border-none rounded-lg h-12 px-3 text-sm focus:ring-2 ring-primary">
+            <input type="date" class="w-full bg-white border-none rounded-lg h-12 px-3 text-sm text-slate-900 font-medium focus:ring-2 ring-primary">
           </div>
           <div class="text-left space-y-1">
             <span class="text-white/80 text-[10px] font-bold uppercase pl-1 tracking-widest">Guests</span>
-            <select class="w-full bg-white dark:bg-slate-800 border-none rounded-lg h-12 px-3 text-sm focus:ring-2 ring-primary appearance-none">
+            <select class="w-full bg-white border-none rounded-lg h-12 px-3 text-sm text-slate-900 font-medium focus:ring-2 ring-primary appearance-none cursor-pointer">
               <option selected>2 Guests</option>
               <option>1 Guest</option>
               <option>4 Guests</option>
@@ -109,19 +109,19 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div *ngFor="let room of rooms"
-          class="room-card group rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border border-primary/10 shadow-lg hover:shadow-2xl transition-all duration-300">
+          class="room-card group rounded-2xl overflow-hidden bg-white shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-100">
           <div class="relative aspect-video overflow-hidden">
             <img [src]="room.image" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-            <div class="absolute top-4 right-4 bg-background-dark/80 backdrop-blur-md text-primary px-3 py-1 rounded-full text-sm font-bold border border-primary/20">
-              ${{room.price}} <span class="text-[10px] text-slate-400">/night</span>
+            <div class="absolute top-4 right-4 bg-slate-900/90 backdrop-blur-md text-primary px-3 py-1 rounded-full text-sm font-bold border border-primary/30">
+              {{room.price | vnd}} <span class="text-[10px] text-slate-300">/đêm</span>
             </div>
           </div>
           <div class="p-6">
-            <h3 class="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{{room.title}}</h3>
+            <h3 class="text-xl font-bold mb-2 text-slate-900 group-hover:text-primary transition-colors">{{room.title}}</h3>
             <div class="flex gap-3 mb-4">
               <span *ngFor="let feat of room.features" class="material-symbols-outlined text-primary text-lg">{{feat}}</span>
             </div>
-            <p class="text-slate-600 dark:text-slate-400 text-sm mb-6 line-clamp-2 leading-relaxed">{{room.desc}}</p>
+            <p class="text-slate-600 text-sm mb-6 line-clamp-2 leading-relaxed">{{room.desc}}</p>
 
             <button 
               [routerLink]="isLoggedIn ? ['/checkout', room.id] : '/login'"

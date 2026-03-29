@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.services';
 import { RoomService } from '../../services/room.services';
+import { VndPipe } from '../../core/vnd.pipe';
 
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, VndPipe],
   templateUrl: './landing-page.component.html',
   styleUrls: ['./landing-page.component.css']
 })

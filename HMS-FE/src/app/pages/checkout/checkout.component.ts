@@ -3,14 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { CheckoutService } from '../../services/checkout.services'; 
-import { AuthService } from '../../services/auth.services'; // Thêm AuthService
+import { AuthService } from '../../services/auth.services';
 import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { VndPipe } from '../../core/vnd.pipe';
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule, RouterModule],
+  imports: [CommonModule, FormsModule, HttpClientModule, RouterModule, VndPipe],
   templateUrl: './checkout.component.html',
   styleUrls: ['./checkout.component.css']
 })

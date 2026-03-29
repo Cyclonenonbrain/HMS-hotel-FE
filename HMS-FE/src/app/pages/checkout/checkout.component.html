@@ -161,26 +161,25 @@
 
                         <div class="space-y-4 text-sm">
                             <div class="flex justify-between text-slate-500 font-medium">
-                                <span>${{room.price}} × 3 nights</span>
-                                <span class="font-bold text-slate-900">${{room.price * 3}}</span>
+                                <span>{{room.price | vnd}} × 3 đêm</span>
+                                <span class="font-bold text-slate-900">{{room.price * 3 | vnd}}</span>
                             </div>
                             <div class="flex justify-between text-slate-500 font-medium">
-                                <span>Taxes (8%)</span>
-                                <span class="font-bold text-slate-900">${{taxAmount | number:'1.2-2'}}</span>
+                                <span>Thuế (8%)</span>
+                                <span class="font-bold text-slate-900">{{taxAmount | vnd}}</span>
                             </div>
                             <div class="flex justify-between text-slate-500 font-medium">
-                                <span>Service Fee</span>
-                                <span class="font-bold text-slate-900">$27.00</span>
+                                <span>Phí dịch vụ</span>
+                                <span class="font-bold text-slate-900">270.000₫</span>
                             </div>
 
                             <div
                                 class="mt-6 border-t border-dashed border-slate-200 pt-6 flex justify-between items-end">
                                 <div>
-                                    <p class="text-[11px] font-bold text-slate-400 uppercase">Total Amount</p>
-                                    <p class="text-[10px] text-slate-300">Includes all taxes and fees</p>
+                                    <p class="text-[11px] font-bold text-slate-400 uppercase">Tổng cộng</p>
+                                    <p class="text-[10px] text-slate-300">Đã bao gồm thuế và phí</p>
                                 </div>
-                                <span class="text-4xl font-black text-slate-900 tracking-tighter">${{totalAmount |
-                                    number:'1.2-2'}}</span>
+                                <span class="text-4xl font-black text-slate-900 tracking-tighter">{{totalAmount | vnd}}</span>
                             </div>
                         </div>
 

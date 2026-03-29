@@ -33,4 +33,9 @@ export const routes: Routes = [
     path: 'room-detail/:id',
     loadComponent: () => import('./pages/rooms/room-details.component').then(m => m.RoomDetailComponent)
   },
+  {
+    path: 'my-bookings',
+    loadComponent: () => import('./pages/my-bookings/my-bookings.component').then(m => m.MyBookingsComponent),
+    canActivate: [authGuard]
+  }
 ];
