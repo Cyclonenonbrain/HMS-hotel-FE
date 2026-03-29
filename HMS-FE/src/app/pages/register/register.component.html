@@ -30,7 +30,7 @@
       <h2 class="text-3xl font-bold mb-2 dark:text-white">Create Account</h2>
       <p class="text-slate-500 dark:text-slate-400 mb-8">Please fill in the details below to register.</p>
 
-      <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="space-y-5">
+      <form [formGroup]="registerForm" (ngSubmit)="onRegister()" (keydown.enter)="onRegister()" class="space-y-5">
         <div class="flex gap-4">
           <div class="flex-1">
             <input formControlName="firstName" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="firstName" placeholder="First Name" type="text"/>

@@ -37,13 +37,13 @@
 
     <div class="max-w-md w-full mx-auto lg:mx-0">
       <h2 class="text-3xl font-bold mb-2 dark:text-white text-slate-900">Welcome Back</h2>
-      <p class="text-slate-500 dark:text-slate-400 mb-8">Sign in to manage your property portfolio.</p>
+      <p class="text-slate-500 dark:text-slate-400 mb-8">Sign in to start using our services.</p>
 
       <div *ngIf="errorMessage" class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded">
         {{ errorMessage }}
       </div>
 
-      <form [formGroup]="loginForm" class="space-y-5">
+      <form [formGroup]="loginForm" class="space-y-5" (keydown.enter)="onSignIn()">
         <div>
           <input formControlName="email" type="email" id="email" placeholder="Email Address"
             class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" />

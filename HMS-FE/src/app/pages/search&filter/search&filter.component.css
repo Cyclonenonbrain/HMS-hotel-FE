@@ -85,6 +85,27 @@ input[type="range"]::-webkit-slider-thumb {
     transition: transform 0.1s ease;
 }
 
+/* ngx-slider two-thumb style */
+ngx-slider .ngx-slider-track {
+    background-color: #475569 !important;
+    height: 8px !important;
+}
+
+ngx-slider .ngx-slider-interval {
+    background-color: #f59e0b !important;
+}
+
+ngx-slider .ngx-slider-pointer {
+    border-color: #ffffff !important;
+    background-color: #fbbf24 !important;
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+}
+
+ngx-slider .ngx-slider-pointer::after {
+    border-color: #fbbf24 !important;
+}
+
+
 input[type="range"]::-webkit-slider-thumb:hover {
     transform: scale(1.1);
 }

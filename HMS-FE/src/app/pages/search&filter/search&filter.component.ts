@@ -5,11 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { RoomService } from '../../services/room.services';
 import { AuthService } from '../../services/auth.services';
+import { NgxSliderModule, Options } from '@angular-slider/ngx-slider';
 
 @Component({
     selector: 'app-room-list',
     standalone: true,
-    imports: [CommonModule, RouterModule, FormsModule],
+    imports: [CommonModule, RouterModule, FormsModule, NgxSliderModule],
     templateUrl: 'search&filter.component.html',
     styleUrls: ['search&filter.component.css']
 })
@@ -24,13 +25,22 @@ export class RoomListComponent implements OnInit, OnDestroy {
 
     filters = {
         searchQuery: '',
-        priceRange: 400000000, // Để mặc định max để hiện hết phòng lúc đầu
+        priceMin: 1000000,
+        priceMax: 15000000,
         guests: 2,
         amenities: {
             oceanView: false,
             privateBalcony: false,
             kingBed: false
         }
+    };
+
+    priceOptions: Options = {
+        floor: 1000000,
+        ceil: 15000000,
+        step: 1000000,
+        showTicks: false,
+        translate: (value: number): string => `${Math.round(value / 1000000)}M ₫`
     };
 
     constructor(
@@ -86,8 +96,7 @@ export class RoomListComponent implements OnInit, OnDestroy {
 
     applyFilters() {
         this.filteredRooms = this.allRooms.filter(room => {
-            const isSliderAtMax = this.filters.priceRange >= 400000000;
-            const matchPrice = isSliderAtMax ? true : room.displayPrice <= this.filters.priceRange;
+            const matchPrice = room.displayPrice >= this.filters.priceMin && room.displayPrice <= this.filters.priceMax;
             const matchGuests = (room.capacity || 2) >= this.filters.guests;
             const matchSearch = !this.filters.searchQuery ||
                 room.displayName.toLowerCase().includes(this.filters.searchQuery.toLowerCase());
@@ -125,7 +134,8 @@ export class RoomListComponent implements OnInit, OnDestroy {
     clearAllFilters() {
         this.filters = {
             searchQuery: '',
-            priceRange: 400000000,
+            priceMin: 1000000,
+            priceMax: 15000000,
             guests: 2,
             amenities: { oceanView: false, privateBalcony: false, kingBed: false }
         };
@@ -140,7 +150,7 @@ export class RoomListComponent implements OnInit, OnDestroy {
                     let finalName = room.name;
                     if (room.name.toLowerCase().includes('deluxe')) finalName = "Executive Deluxe Room";
                     
-                    const price = this.convertToLuxuryPrice(parseFloat(room.basePrice || 0));
+                    const price = this.roomService.getDisplayPrice(room.name, parseFloat(room.basePrice || 0));
                     return {
                         ...room,
                         displayName: finalName,

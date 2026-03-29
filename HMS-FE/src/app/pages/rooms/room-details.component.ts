@@ -128,7 +128,7 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
     this.roomService.getRoomById(id).subscribe({
       next: (res: any) => {
         const data = res.data;
-        const computedPrice = this.convertToLuxuryPrice(parseFloat(data.basePrice || data.base_price || 0));
+        const computedPrice = this.roomService.getDisplayPrice(data.name, parseFloat(data.basePrice || data.base_price || 0));
         this.room = {
           ...data,
           displayName: this.formatRoomName(data.name),

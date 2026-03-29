@@ -83,6 +83,7 @@ export class LandingPageComponent implements OnInit, OnDestroy {
           ...room,
           title: room.name,
           price: room.base_price,
+          displayPrice: this.roomService.getDisplayPrice(room.name, room.base_price),
           desc: room.description,
           features: this.getMockFeatures(room.name),
           image: this.getHardcodedImage(room.name)
