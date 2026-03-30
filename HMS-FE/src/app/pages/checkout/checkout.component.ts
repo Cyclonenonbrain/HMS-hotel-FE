@@ -48,6 +48,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     { id: 2, type: 'MASTERCARD', lastFour: '8899', expiry: '08/26' }
   ];
 
+  // Validation error messages
+  validationErrors = {
+    fullName: '',
+    email: '',
+    phone: '',
+    card: ''
+  };
+
   constructor(
     private checkoutService: CheckoutService, 
     private authService: AuthService, // Inject AuthService
@@ -151,11 +159,78 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   // Logic tính toán
   onConfirmPayment() {
-    if (!this.isLoggedIn) {
-      this.router.navigate(['/login']);
+    // Reset validation errors
+    this.validationErrors = {
+      fullName: '',
+      email: '',
+      phone: '',
+      card: ''
+    };
+
+    let hasErrors = false;
+
+    // Validate required fields
+    if (!this.bookingData.fullName || this.bookingData.fullName.trim() === '') {
+      this.validationErrors.fullName = 'Please enter your Full Name';
+      hasErrors = true;
+    }
+
+    if (!this.bookingData.phone || this.bookingData.phone.trim() === '') {
+      this.validationErrors.phone = 'Please enter your Phone Number';
+      hasErrors = true;
+    }
+
+    if (!this.bookingData.email || this.bookingData.email.trim() === '') {
+      this.validationErrors.email = 'Please enter your Email';
+      hasErrors = true;
+    }
+
+    if (this.selectedCardIndex === null || this.selectedCardIndex === undefined) {
+      this.validationErrors.card = 'Please select a payment card';
+      hasErrors = true;
+    }
+
+    if (hasErrors) {
       return;
     }
+
     this.isLoading = true;
-    // ... logic gửi API checkoutService.confirmBooking ...
+
+    // Generate booking code (format: HMS-YYYYMMDD-XXXXX)
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0].replace(/-/g, '');
+    const randomNum = Math.floor(Math.random() * 90000) + 10000;
+    const bookingCode = `HMS-${dateStr}-${randomNum}`;
+
+    // Prepare booking summary data to pass to confirmation page
+    const bookingSummary = {
+      id: bookingCode,
+      bookingCode: bookingCode,
+      fullName: this.bookingData.fullName,
+      email: this.bookingData.email,
+      phone: this.bookingData.phone,
+      roomName: this.room.name,
+      roomType: this.room.type,
+      checkIn: this.bookingData.checkIn,
+      checkOut: this.bookingData.checkOut,
+      numberOfGuests: this.bookingData.numberOfGuests,
+      roomPrice: this.room.price,
+      nights: this.nights,
+      roomTotal: this.room.price * this.nights,
+      taxAmount: this.taxAmount,
+      serviceFee: this.room.serviceFee,
+      totalPrice: this.totalAmount,
+      paymentCard: this.cards[this.selectedCardIndex]
+    };
+
+    // Navigate to confirmation page with all data in queryParams
+    this.router.navigate(['/booking-confirmation', bookingCode], {
+      queryParams: {
+        bookingData: JSON.stringify(bookingSummary)
+      },
+      state: { bookingData: bookingSummary }
+    }).finally(() => {
+      this.isLoading = false;
+    });
   }
 }

@@ -59,16 +59,24 @@
                             <input type="text" [(ngModel)]="bookingData.fullName"
                                 class="peer w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-primary focus:outline-none"
                                 placeholder="Full Name">
+                            <p *ngIf="validationErrors.fullName" class="text-red-500 text-xs mt-1">{{ validationErrors.fullName }}</p>
                         </div>
                         <div class="relative">
-                            <input type="number" [(ngModel)]="bookingData.numberOfGuests"
+                            <input type="email" [(ngModel)]="bookingData.email"
                                 class="peer w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-primary focus:outline-none"
-                                placeholder="Number of Guests">
+                                placeholder="Email Address">
+                            <p *ngIf="validationErrors.email" class="text-red-500 text-xs mt-1">{{ validationErrors.email }}</p>
                         </div>
                         <div class="relative">
                             <input type="tel" [(ngModel)]="bookingData.phone"
                                 class="peer w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-primary focus:outline-none"
                                 placeholder="Phone Number">
+                            <p *ngIf="validationErrors.phone" class="text-red-500 text-xs mt-1">{{ validationErrors.phone }}</p>
+                        </div>
+                        <div class="relative">
+                            <input type="number" [(ngModel)]="bookingData.numberOfGuests"
+                                class="peer w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-primary focus:outline-none"
+                                placeholder="Number of Guests">
                         </div>
                     </div>
                 </section>
@@ -98,6 +106,7 @@
                             </div>
                         </div>
                     </div>
+                    <p *ngIf="validationErrors.card" class="text-red-500 text-xs mt-4">{{ validationErrors.card }}</p>
                 </section>
             </div>
 
