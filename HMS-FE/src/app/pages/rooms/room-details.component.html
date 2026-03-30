@@ -112,7 +112,7 @@
         <div class="sticky top-28 bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-200/50 border border-slate-100">
           <div class="flex items-end justify-between mb-8 pb-8 border-b border-slate-100">
             <div>
-              <span class="text-4xl font-black text-slate-900">${{ room.displayPrice }}</span>
+              <span class="text-4xl font-black text-slate-900">{{ room.displayPrice | vnd }}</span>
               <span class="text-slate-400 font-bold text-sm"> / night</span>
             </div>
             <div class="flex items-center gap-1 text-sm font-bold text-primary">
@@ -153,28 +153,28 @@
 
           <div class="space-y-4">
             <div class="flex justify-between text-sm">
-              <span class="text-slate-500 font-medium underline decoration-slate-200">${{ room.displayPrice }} x {{ invoice.nights }} nights</span>
-              <span class="font-bold text-slate-900">${{ invoice.roomTotal | number }}</span>
+              <span class="text-slate-500 font-medium underline decoration-slate-200">{{ room.displayPrice | vnd }} x {{ invoice.nights }} nights</span>
+              <span class="font-bold text-slate-900">{{ invoice.roomTotal | vnd }}</span>
             </div>
             <div class="flex justify-between text-sm">
               <span class="text-slate-500 font-medium underline decoration-slate-200">Cleaning fee</span>
-              <span class="font-bold text-slate-900">${{ CLEANING_FEE }}</span>
+              <span class="font-bold text-slate-900">{{ CLEANING_FEE | vnd }}</span>
             </div>
             <div class="flex justify-between text-sm">
               <span class="text-slate-500 font-medium underline decoration-slate-200">Service fee</span>
-              <span class="font-bold text-slate-900">${{ SERVICE_FEE }}</span>
+              <span class="font-bold text-slate-900">{{ SERVICE_FEE | vnd }}</span>
             </div>
             <div class="flex justify-between text-sm">
               <span class="text-slate-500 font-medium underline decoration-slate-200">Taxes</span>
-              <span class="font-bold text-slate-900">${{ invoice.taxes | number }}</span>
+              <span class="font-bold text-slate-900">{{ invoice.taxes | vnd }}</span>
             </div>
             <div class="flex justify-between items-center pt-6 border-t-2 border-slate-50">
               <span class="font-black text-xl text-slate-900">Total</span>
-              <span class="font-black text-3xl text-primary">${{ invoice.finalTotal | number }}</span>
+              <span class="font-black text-3xl text-primary">{{ invoice.finalTotal | vnd }}</span>
             </div>
           </div>
 
-          <button class="w-full bg-primary hover:bg-yellow-500 text-slate-900 font-black text-lg py-5 rounded-2xl mt-8 transition-all shadow-xl shadow-primary/20 active:scale-95">
+          <button (click)="onReserve()" class="w-full bg-primary hover:bg-yellow-500 text-slate-900 font-black text-lg py-5 rounded-2xl mt-8 transition-all shadow-xl shadow-primary/20 active:scale-95">
             Reserve
           </button>
           <p class="text-center text-slate-400 text-[11px] mt-4 font-bold">You won't be charged yet</p>

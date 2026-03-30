@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { CheckoutService } from '../../services/checkout.services'; 
 import { AuthService } from '../../services/auth.services';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { VndPipe } from '../../core/vnd.pipe';
 
@@ -25,10 +25,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   // Mock dữ liệu phòng (Bạn có thể lấy từ ActivatedRoute nếu cần)
   room = {
-    id: '550e8400-e29b-41d4-a716-446655440000', 
+    id: '550e8400-e29b-41d4-a716-446655440000',
     name: 'Executive Suite',
-    price: 450.00, 
-    serviceFee: 27.00,
+    type: 'Premium Suite',
+    price: 450.00,
+    serviceFee: 270000.00,
     image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80'
   };
 
@@ -50,12 +51,15 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   constructor(
     private checkoutService: CheckoutService, 
     private authService: AuthService, // Inject AuthService
+    private route: ActivatedRoute,
     private router: Router,
     private eRef: ElementRef,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    this.readQueryParams();
+
     // ĐỒNG BỘ LOGIC: Theo dõi trạng thái đăng nhập y hệt LandingPage/RoomList
     this.authSub = this.authService.isLoggedIn$.subscribe(status => {
       this.isLoggedIn = status;
@@ -85,6 +89,45 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     });
   }
 
+  private readQueryParams() {
+    this.route.queryParamMap.subscribe(params => {
+      const roomId = params.get('roomId');
+      const roomName = params.get('roomName');
+      const roomType = params.get('roomType');
+      const price = Number(params.get('price'));
+      const checkIn = params.get('checkIn');
+      const checkOut = params.get('checkOut');
+      const guests = Number(params.get('guests'));
+
+      if (roomId) this.room.id = roomId;
+      if (roomName) this.room.name = roomName;
+      if (roomType) this.room.type = roomType;
+      if (!isNaN(price) && price > 0) this.room.price = price;
+      if (checkIn) this.bookingData.checkIn = checkIn;
+      if (checkOut) this.bookingData.checkOut = checkOut;
+      if (!isNaN(guests) && guests > 0) this.bookingData.numberOfGuests = guests;
+
+      // Nếu chưa có giá dịch vụ từ query thì giữ giá mặc định
+      this.cdr.detectChanges();
+    });
+  }
+
+  get nights(): number {
+    const start = new Date(this.bookingData.checkIn);
+    const end = new Date(this.bookingData.checkOut);
+    const diff = end.getTime() - start.getTime();
+    const days = Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 1);
+    return days;
+  }
+
+  get taxAmount(): number {
+    return Math.round((this.room.price * this.nights) * 0.08);
+  }
+
+  get totalAmount(): number {
+    return (this.room.price * this.nights) + this.taxAmount + this.room.serviceFee;
+  }
+
   ngOnDestroy(): void {
     if (this.authSub) this.authSub.unsubscribe();
   }
@@ -107,9 +150,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   // Logic tính toán
-  get taxAmount(): number { return (this.room.price * 3) * 0.08; }
-  get totalAmount(): number { return (this.room.price * 3) + this.taxAmount + this.room.serviceFee; }
-
   onConfirmPayment() {
     if (!this.isLoggedIn) {
       this.router.navigate(['/login']);

@@ -5,11 +5,12 @@ import { FormsModule } from '@angular/forms'; // Quan trọng để dùng ngMode
 import { Subscription } from 'rxjs';
 import { RoomService } from '../../services/room.services';
 import { AuthService } from '../../services/auth.services';
+import { VndPipe } from '../../core/vnd.pipe';
 
 @Component({
   selector: 'app-room-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, VndPipe],
   templateUrl: './room-details.component.html',
   styleUrls: ['./room-details.component.css']
 })
@@ -175,6 +176,24 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
       ];
     }
     return [{ icon: 'bed', label: 'Queen Bed' }, ...common];
+  }
+
+  onReserve() {
+    if (!this.room) {
+      return;
+    }
+
+    this.router.navigate(['/checkout'], {
+      queryParams: {
+        roomId: this.room.id,
+        roomName: this.room.displayName || this.room.name,
+        roomType: this.room.name || this.room.displayName,
+        checkIn: this.bookingForm.checkIn,
+        checkOut: this.bookingForm.checkOut,
+        guests: this.bookingForm.guests,
+        price: this.room.displayPrice
+      }
+    });
   }
 
   logout() {

@@ -1,12 +1,14 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; // Thêm ChangeDetectorRef ở đây
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
-import { BookingService, ApiResponse } from '../../services/booking.services'; 
+import { BookingService, ApiResponse } from '../../services/booking.services';
+import { VndPipe } from '../../core/vnd.pipe';
+
 
 @Component({
   selector: 'app-booking-confirmation',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, VndPipe],
   templateUrl: './booking-confirmation.component.html', // Thêm ./
   styleUrls: ['./booking-confirmation.component.css']    // Thêm ./
 })
