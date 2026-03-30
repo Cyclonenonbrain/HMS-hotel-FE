@@ -25,6 +25,31 @@ export const adminRoutes: Routes = [
         path: 'rooms',
         loadComponent: () => import('./rooms/rooms.component').then(m => m.RoomsComponent),
         data: { breadcrumb: 'Rooms' }
+      },
+      {
+        path: 'services',
+        loadComponent: () => import('./services/services.component').then(m => m.ServicesComponent),
+        data: { breadcrumb: 'Services' }
+      },
+      {
+        path: 'pricing',
+        loadComponent: () => import('./pricing/pricing.component').then(m => m.PricingComponent),
+        data: { breadcrumb: 'Pricing Rules' }
+      },
+      {
+        path: 'coupons',
+        loadComponent: () => import('./coupons/coupons.component').then(m => m.CouponsComponent),
+        data: { breadcrumb: 'Coupons' }
+      },
+      {
+        path: 'users',
+        loadComponent: () => import('./users/users.component').then(m => m.UsersComponent),
+        data: { breadcrumb: 'Users' }
+      },
+      {
+        path: 'reviews',
+        loadComponent: () => import('./reviews/reviews.component').then(m => m.ReviewsComponent),
+        data: { breadcrumb: 'Reviews' }
       }
     ]
   }
