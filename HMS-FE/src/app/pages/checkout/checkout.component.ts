@@ -43,10 +43,27 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     stayType: 'daily'
   };
 
-  cards = [
-    { id: 1, type: 'VISA', lastFour: '4242', expiry: '12/25' },
-    { id: 2, type: 'MASTERCARD', lastFour: '8899', expiry: '08/26' }
-  ];
+  paymentMethods = ['VISA', 'MASTERCARD'];
+  selectedMethod: string | null = null;
+
+  paymentForms: Record<string, {
+    cardNumber: string;
+    cardHolder: string;
+    expiry: string;
+    cvv: string;
+  }> = {
+    VISA: { cardNumber: '', cardHolder: '', expiry: '', cvv: '' },
+    MASTERCARD: { cardNumber: '', cardHolder: '', expiry: '', cvv: '' }
+  };
+
+  savedPaymentInfo: Record<string, {
+    cardNumber: string;
+    cardHolder: string;
+    expiry: string;
+  } | null> = {
+    VISA: null,
+    MASTERCARD: null
+  };
 
   // Discount / coupon state
   discountEnabled = false;
@@ -193,6 +210,21 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.router.navigate(['/']);
   }
 
+  confirmPaymentMethod(method: string) {
+    const form = this.paymentForms[method];
+    if (!form.cardHolder || !form.cardNumber || !form.expiry || !form.cvv) {
+      this.validationErrors.card = 'Please fill all payment fields for ' + method;
+      return;
+    }
+    this.savedPaymentInfo[method] = {
+      cardHolder: form.cardHolder,
+      cardNumber: form.cardNumber,
+      expiry: form.expiry
+    };
+    this.selectedMethod = null;
+    this.validationErrors.card = '';
+  }
+
   // Logic tính toán
   onConfirmPayment() {
     // Reset validation errors
@@ -221,8 +253,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       hasErrors = true;
     }
 
-    if (this.selectedCardIndex === null || this.selectedCardIndex === undefined) {
-      this.validationErrors.card = 'Please select a payment card';
+    // Ensure at least one payment was confirmed
+    const usableMethod = this.paymentMethods.find(m => !!this.savedPaymentInfo[m]);
+    if (!usableMethod) {
+      this.validationErrors.card = 'Please confirm a payment method first';
       hasErrors = true;
     }
 
@@ -239,7 +273,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     const bookingCode = `HMS-${dateStr}-${randomNum}`;
 
     // Prepare booking summary data to pass to confirmation page
-    const bookingSummary = {
+    const bookingSummary: any = {
       id: bookingCode,
       bookingCode: bookingCode,
       fullName: this.bookingData.fullName,
@@ -255,9 +289,15 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       roomTotal: this.room.price * this.nights,
       taxAmount: this.taxAmount,
       serviceFee: this.room.serviceFee,
-      totalPrice: this.totalAmount,
-      paymentCard: this.cards[this.selectedCardIndex]
+      totalPrice: this.totalAmount
     };
+
+    // include selected payment info in booking summary
+    const selectedMethod = this.paymentMethods.find(m => !!this.savedPaymentInfo[m]);
+    if (selectedMethod && this.savedPaymentInfo[selectedMethod]) {
+      bookingSummary.paymentMethod = selectedMethod;
+      bookingSummary.paymentInfo = this.savedPaymentInfo[selectedMethod];
+    }
 
     // Navigate to confirmation page with all data in queryParams
     this.router.navigate(['/booking-confirmation', bookingCode], {

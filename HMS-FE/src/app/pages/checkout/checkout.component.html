@@ -86,23 +86,29 @@
                         <span class="material-symbols-outlined text-primary">credit_card</span> Payment Method
                     </h2>
                     <div class="space-y-4">
-                        <div *ngFor="let card of cards; let i = index" (click)="selectedCardIndex = i"
-                            [ngClass]="{'border-primary bg-yellow-50/30 ring-1 ring-primary': selectedCardIndex === i}"
-                            class="flex cursor-pointer items-center justify-between rounded-xl border border-neutral-200 p-5 transition-all hover:border-primary/50">
-                            <div class="flex items-center gap-4">
-                                <div class="flex h-6 w-6 items-center justify-center rounded-full border-2"
-                                    [ngClass]="selectedCardIndex === i ? 'border-primary' : 'border-neutral-300'">
-                                    <div class="h-3 w-3 rounded-full"
-                                        [ngClass]="{'bg-primary': selectedCardIndex === i}"></div>
+                        <div *ngFor="let method of paymentMethods" class="rounded-xl border border-neutral-200 p-5">
+                            <div class="flex items-center justify-between cursor-pointer" (click)="selectedMethod = (selectedMethod === method ? null : method)">
+                                <span class="font-bold">{{ method }}</span>
+                                <span [ngClass]="{ 'text-green-600': savedPaymentInfo[method], 'text-slate-400': !savedPaymentInfo[method] }">
+                                    {{ savedPaymentInfo[method] ? 'Saved' : 'Select' }}
+                                </span>
+                            </div>
+
+                            <div *ngIf="selectedMethod === method" class="mt-3 p-3 rounded-xl border border-slate-200">
+                                <div *ngIf="savedPaymentInfo[method]; else methodForm">
+                                    <p class="text-sm"><strong>Cardholder:</strong> {{ savedPaymentInfo[method]?.cardHolder }}</p>
+                                    <p class="text-sm"><strong>Card:</strong> **** **** **** {{ savedPaymentInfo[method]?.cardNumber ? savedPaymentInfo[method]?.cardNumber?.slice(-4) : '' }}</p>
+                                    <p class="text-sm"><strong>Expiry:</strong> {{ savedPaymentInfo[method]?.expiry }}</p>
                                 </div>
-                                <div class="px-3 py-1 bg-white border border-slate-100 rounded-md shadow-sm">
-                                    <span class="text-[10px] font-black italic text-blue-800">{{card.type}}</span>
-                                </div>
-                                <div>
-                                    <p class="font-bold text-sm text-slate-900">{{card.type}} ending in
-                                        {{card.lastFour}}</p>
-                                    <p class="text-[11px] text-slate-400 font-medium">Expires {{card.expiry}}</p>
-                                </div>
+                                <ng-template #methodForm>
+                                    <input type="text" [(ngModel)]="paymentForms[method].cardHolder" placeholder="Cardholder name" class="w-full rounded-xl border border-slate-200 p-2" />
+                                    <input type="text" [(ngModel)]="paymentForms[method].cardNumber" placeholder="Card number" class="w-full rounded-xl border border-slate-200 p-2 mt-2" />
+                                    <div class="grid grid-cols-2 gap-2 mt-2">
+                                        <input type="text" [(ngModel)]="paymentForms[method].expiry" placeholder="MM/YY" class="rounded-xl border border-slate-200 p-2" />
+                                        <input type="text" [(ngModel)]="paymentForms[method].cvv" placeholder="CVV" class="rounded-xl border border-slate-200 p-2" />
+                                    </div>
+                                    <button (click)="confirmPaymentMethod(method)" class="w-full mt-3 rounded-xl bg-primary py-2 font-bold text-slate-900">Confirm {{ method }}</button>
+                                </ng-template>
                             </div>
                         </div>
                     </div>
