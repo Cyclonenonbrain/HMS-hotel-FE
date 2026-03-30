@@ -53,7 +53,7 @@
         </div>
 
         <div>
-          <input formControlName="confirmPassword" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="confirmPassword" placeholder="Confirm Password" type="password"/>
+          <input formControlName="confirmPassword" (keydown.enter)="onRegister()" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="confirmPassword" placeholder="Confirm Password" type="password"/>
           <p *ngIf="registerForm.hasError('mismatch') && registerForm.get('confirmPassword')?.touched" class="text-red-500 text-xs mt-1">Mật khẩu không khớp!</p>
         </div>
 

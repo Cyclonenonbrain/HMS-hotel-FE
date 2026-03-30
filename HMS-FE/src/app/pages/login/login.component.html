@@ -54,6 +54,7 @@
 
         <div class="relative">
           <input formControlName="password" [type]="showPassword ? 'text' : 'password'" id="password" placeholder="Password"
+            (keydown.enter)="onSignIn()"
             class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 pr-12 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" />
           <button (click)="togglePassword()" type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors">
             <span class="material-symbols-outlined">{{ showPassword ? "visibility_off" : "visibility" }}</span>
