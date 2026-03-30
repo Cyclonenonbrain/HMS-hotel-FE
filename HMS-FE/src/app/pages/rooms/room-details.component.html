@@ -1,0 +1,185 @@
+<div class="min-h-screen bg-[#f8f8f5] font-display text-slate-900 antialiased" *ngIf="!loading && room">
+    <header
+        class="sticky top-0 z-50 flex items-center justify-between border-b border-primary/20 bg-white/90 backdrop-blur-md px-10 py-4 shadow-sm">
+        <div class="flex items-center gap-2 cursor-pointer" routerLink="/">
+            <span class="material-symbols-outlined text-3xl text-primary">hotel_class</span>
+            <h2 class="text-xl font-bold tracking-tight text-primary">Luxecore</h2>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-9">
+            <a routerLink="/" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Home</a>
+            <a routerLink="/search" class="text-sm font-bold text-slate-900 border-b-2 border-primary pb-1">Rooms</a>
+            <a *ngIf="isLoggedIn" routerLink="/my-bookings"
+                class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">My Bookings</a>
+        </nav>
+
+        <div class="flex items-center gap-4">
+            <ng-container *ngIf="!isLoggedIn">
+                <button routerLink="/login"
+                    class="h-10 px-6 border border-primary text-primary rounded-lg font-bold text-sm hover:bg-primary/10 transition-all">
+                    Login
+                </button>
+                <button routerLink="/register"
+                    class="h-10 px-6 bg-primary text-slate-900 rounded-lg font-bold text-sm hover:bg-primary/90 transition-all">
+                    Sign Up
+                </button>
+            </ng-container>
+
+            <div *ngIf="isLoggedIn" class="flex items-center gap-3 group relative cursor-pointer">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-bold">{{ user?.fullName }}</p>
+                    <p class="text-[10px] text-primary font-bold uppercase tracking-wider">{{ user?.role || 'Member' }}
+                        Member</p>
+                </div>
+
+                <div
+                    class="size-10 rounded-full border-2 border-primary overflow-hidden shadow-lg transition-transform group-hover:scale-105">
+                    <img [src]="'https://ui-avatars.com/api/?name=' + user?.fullName + '&background=random&color=fff'"
+                        alt="Avatar">
+                </div>
+
+                <div class="absolute top-full right-0 pt-2 w-44 hidden group-hover:block drop-shadow-2xl z-[60]">
+                    <div
+                        class="bg-white border border-primary/20 rounded-xl py-2 shadow-xl animate-in fade-in slide-in-from-top-2">
+                        <a class="block px-4 py-2 text-xs font-medium hover:bg-primary/10 transition-colors">
+                            <span class="flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-sm">person</span> Profile Setting</span>
+                        </a>
+                        <hr class="my-1 border-primary/10">
+                        <button (click)="logout()"
+                            class="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 transition-colors">
+                            <span class="flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-sm">logout</span> Sign Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+  <section class="relative h-[65vh] w-full pt-20">
+    <img [src]="room.images[0]" class="absolute inset-0 w-full h-full object-cover" alt="Hero">
+    <div class="absolute inset-0 bg-black/30"></div>
+    <div class="absolute inset-0 flex items-center justify-center text-center">
+      <div class="bg-white/95 backdrop-blur-md p-10 rounded-2xl max-w-2xl mx-4 shadow-2xl border border-white/50">
+        <div class="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary text-[10px] font-black tracking-widest uppercase mb-4 border border-primary/30">
+          Premium Experience
+        </div>
+        <h1 class="text-4xl md:text-5xl font-black text-slate-900 mb-4">{{ room.displayName }}</h1>
+      </div>
+    </div>
+  </section>
+
+  <main class="max-w-7xl mx-auto px-6 py-16">
+    <div class="flex flex-col lg:flex-row gap-12">
+      <div class="lg:w-2/3 space-y-16">
+        <section>
+          <h2 class="text-2xl font-bold mb-6">Room Overview</h2>
+          <p class="text-slate-500 leading-relaxed text-lg">{{ room.description }}</p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold mb-8">Room Amenities</h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div *ngFor="let am of room.amenities" class="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md group transition-all">
+              <span class="material-symbols-outlined text-4xl text-primary mb-3 group-hover:scale-110">{{ am.icon }}</span>
+              <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wide">{{ am.label }}</span>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-bold">Gallery</h2>
+            <button class="text-primary font-bold text-sm hover:underline">View All Photos →</button>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="h-80 overflow-hidden rounded-3xl"><img [src]="room.images[1]" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500"></div>
+            <div class="h-80 overflow-hidden rounded-3xl"><img [src]="room.images[2]" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500"></div>
+            <div class="h-80 overflow-hidden rounded-3xl col-span-1"><img [src]="room.images[3]" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500"></div>
+            <div class="h-80 overflow-hidden rounded-3xl relative group cursor-pointer">
+              <img [src]="room.images[0]" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+              <div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white">
+                <span class="material-symbols-outlined text-4xl mb-2">image</span>
+                <span class="font-bold">+12 Photos</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="lg:w-1/3">
+        <div class="sticky top-28 bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-200/50 border border-slate-100">
+          <div class="flex items-end justify-between mb-8 pb-8 border-b border-slate-100">
+            <div>
+              <span class="text-4xl font-black text-slate-900">{{ room.displayPrice | vnd }}</span>
+              <span class="text-slate-400 font-bold text-sm"> / night</span>
+            </div>
+            <div class="flex items-center gap-1 text-sm font-bold text-primary">
+              <span class="material-symbols-outlined text-base">star</span> 4.9
+              <span class="text-slate-400 font-medium ml-1">(128 reviews)</span>
+            </div>
+          </div>
+
+          <div class="border border-slate-200 rounded-2xl overflow-hidden mb-6">
+            <div class="grid grid-cols-2 border-b border-slate-200">
+              <div class="p-3 border-r border-slate-200 hover:bg-slate-50 transition-colors">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">Check-in</label>
+                <div class="relative flex items-center">
+                   <input type="date" [(ngModel)]="bookingForm.checkIn" (change)="updateInvoice()" class="booking-date-input">
+                </div>
+              </div>
+              <div class="p-3 hover:bg-slate-50 transition-colors">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">Check-out</label>
+                <div class="relative flex items-center">
+                   <input type="date" [(ngModel)]="bookingForm.checkOut" (change)="updateInvoice()" class="booking-date-input">
+                </div>
+              </div>
+            </div>
+
+            <div class="p-4 hover:bg-slate-50 transition-colors relative">
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">Guests</label>
+              <div class="relative flex items-center">
+                <span class="material-symbols-outlined absolute left-0 text-slate-400 text-lg">group</span>
+                <select [(ngModel)]="bookingForm.guests" class="guest-select">
+                  <option [value]="1">1 Adult</option>
+                  <option [value]="2">2 Adults, 0 Children</option>
+                  <option [value]="4">4 Adults, 0 Children</option>
+                </select>
+                <span class="material-symbols-outlined absolute right-0 text-slate-400 pointer-events-none text-xl">expand_more</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div class="flex justify-between text-sm">
+              <span class="text-slate-500 font-medium underline decoration-slate-200">{{ room.displayPrice | vnd }} x {{ invoice.nights }} nights</span>
+              <span class="font-bold text-slate-900">{{ invoice.roomTotal | vnd }}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-slate-500 font-medium underline decoration-slate-200">Cleaning fee</span>
+              <span class="font-bold text-slate-900">{{ CLEANING_FEE | vnd }}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-slate-500 font-medium underline decoration-slate-200">Service fee</span>
+              <span class="font-bold text-slate-900">{{ SERVICE_FEE | vnd }}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-slate-500 font-medium underline decoration-slate-200">Taxes</span>
+              <span class="font-bold text-slate-900">{{ invoice.taxes | vnd }}</span>
+            </div>
+            <div class="flex justify-between items-center pt-6 border-t-2 border-slate-50">
+              <span class="font-black text-xl text-slate-900">Total</span>
+              <span class="font-black text-3xl text-primary">{{ invoice.finalTotal | vnd }}</span>
+            </div>
+          </div>
+
+          <button (click)="onReserve()" class="w-full bg-primary hover:bg-yellow-500 text-slate-900 font-black text-lg py-5 rounded-2xl mt-8 transition-all shadow-xl shadow-primary/20 active:scale-95">
+            Reserve
+          </button>
+          <p class="text-center text-slate-400 text-[11px] mt-4 font-bold">You won't be charged yet</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

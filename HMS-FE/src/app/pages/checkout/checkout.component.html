@@ -1,0 +1,206 @@
+<div class="min-h-screen bg-[#f8f8f5] font-display text-slate-900 antialiased">
+    <header
+        class="sticky top-0 z-50 flex items-center justify-between border-b border-primary/20 bg-white/90 backdrop-blur-md px-10 py-4 shadow-sm">
+        <div class="flex items-center gap-2 cursor-pointer" routerLink="/">
+            <span class="material-symbols-outlined text-3xl text-primary">hotel_class</span>
+            <h2 class="text-xl font-bold tracking-tight text-primary">Luxecore</h2>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-9">
+            <a routerLink="/" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Home</a>
+            <a routerLink="/search" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Rooms</a>
+            <a routerLink="/my-bookings" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">My Bookings</a>
+        </nav>
+
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3 group relative cursor-pointer">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-bold">{{ user?.fullName || 'Guest' }}</p>
+                    <p class="text-[10px] text-primary font-bold uppercase tracking-wider">{{ user?.role || 'Member' }}
+                        Member</p>
+                </div>
+
+                <div
+                    class="size-10 rounded-full border-2 border-primary overflow-hidden shadow-lg transition-transform group-hover:scale-105">
+                    <img [src]="'https://ui-avatars.com/api/?name=' + (user?.fullName || 'U') + '&background=random&color=fff'"
+                        alt="Avatar">
+                </div>
+
+                <div class="absolute top-full right-0 pt-2 w-44 hidden group-hover:block drop-shadow-2xl z-[60]">
+                    <div
+                        class="bg-white border border-primary/20 rounded-xl py-2 shadow-xl animate-in fade-in slide-in-from-top-2">
+                        <a class="block px-4 py-2 text-xs font-medium hover:bg-primary/10 transition-colors">
+                            <span class="flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-sm">person</span> Profile Setting</span>
+                        </a>
+                        <hr class="my-1 border-primary/10">
+                        <button (click)="onLogout()"
+                            class="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 transition-colors">
+                            <span class="flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-sm">logout</span> Sign Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-8 lg:py-12">
+        
+
+        <div class="flex flex-col gap-8 lg:flex-row lg:gap-12">
+            <div class="flex flex-1 flex-col gap-8">
+                <section class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm lg:p-8">
+                    <h2 class="mb-6 flex items-center gap-2 text-xl font-bold">
+                        <span class="material-symbols-outlined text-primary">person</span> Guest Information
+                    </h2>
+                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <div class="relative md:col-span-2">
+                            <input type="text" [(ngModel)]="bookingData.fullName"
+                                class="peer w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-primary focus:outline-none"
+                                placeholder="Full Name">
+                            <p *ngIf="validationErrors.fullName" class="text-red-500 text-xs mt-1">{{ validationErrors.fullName }}</p>
+                        </div>
+                        <div class="relative">
+                            <input type="email" [(ngModel)]="bookingData.email"
+                                class="peer w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-primary focus:outline-none"
+                                placeholder="Email Address">
+                            <p *ngIf="validationErrors.email" class="text-red-500 text-xs mt-1">{{ validationErrors.email }}</p>
+                        </div>
+                        <div class="relative">
+                            <input type="tel" [(ngModel)]="bookingData.phone"
+                                class="peer w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-primary focus:outline-none"
+                                placeholder="Phone Number">
+                            <p *ngIf="validationErrors.phone" class="text-red-500 text-xs mt-1">{{ validationErrors.phone }}</p>
+                        </div>
+                        <div class="relative">
+                            <input type="number" [(ngModel)]="bookingData.numberOfGuests"
+                                class="peer w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-primary focus:outline-none"
+                                placeholder="Number of Guests">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm lg:p-8">
+                    <h2 class="mb-6 flex items-center gap-2 text-xl font-bold">
+                        <span class="material-symbols-outlined text-primary">credit_card</span> Payment Method
+                    </h2>
+                    <div class="space-y-4">
+                        <div *ngFor="let method of paymentMethods" class="rounded-xl border border-neutral-200 p-5">
+                            <div class="flex items-center justify-between cursor-pointer" (click)="selectedMethod = (selectedMethod === method ? null : method)">
+                                <span class="font-bold">{{ method }}</span>
+                                <span [ngClass]="{ 'text-green-600': savedPaymentInfo[method], 'text-slate-400': !savedPaymentInfo[method] }">
+                                    {{ savedPaymentInfo[method] ? 'Saved' : 'Select' }}
+                                </span>
+                            </div>
+
+                            <div *ngIf="selectedMethod === method" class="mt-3 p-3 rounded-xl border border-slate-200">
+                                <div *ngIf="savedPaymentInfo[method]; else methodForm">
+                                    <p class="text-sm"><strong>Cardholder:</strong> {{ savedPaymentInfo[method]?.cardHolder }}</p>
+                                    <p class="text-sm"><strong>Card:</strong> **** **** **** {{ savedPaymentInfo[method]?.cardNumber ? savedPaymentInfo[method]?.cardNumber?.slice(-4) : '' }}</p>
+                                    <p class="text-sm"><strong>Expiry:</strong> {{ savedPaymentInfo[method]?.expiry }}</p>
+                                </div>
+                                <ng-template #methodForm>
+                                    <input type="text" [(ngModel)]="paymentForms[method].cardHolder" placeholder="Cardholder name" class="w-full rounded-xl border border-slate-200 p-2" />
+                                    <input type="text" [(ngModel)]="paymentForms[method].cardNumber" placeholder="Card number" class="w-full rounded-xl border border-slate-200 p-2 mt-2" />
+                                    <div class="grid grid-cols-2 gap-2 mt-2">
+                                        <input type="text" [(ngModel)]="paymentForms[method].expiry" placeholder="MM/YY" class="rounded-xl border border-slate-200 p-2" />
+                                        <input type="text" [(ngModel)]="paymentForms[method].cvv" placeholder="CVV" class="rounded-xl border border-slate-200 p-2" />
+                                    </div>
+                                    <button (click)="confirmPaymentMethod(method)" class="w-full mt-3 rounded-xl bg-primary py-2 font-bold text-slate-900">Confirm {{ method }}</button>
+                                </ng-template>
+                            </div>
+                        </div>
+                    </div>
+                    <p *ngIf="validationErrors.card" class="text-red-500 text-xs mt-4">{{ validationErrors.card }}</p>
+                </section>
+            </div>
+
+            <aside class="w-full lg:w-[380px]">
+                <div class="sticky top-24 overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-xl">
+                    <div class="relative h-52 bg-cover bg-center" [style.backgroundImage]="'url(' + room.image + ')'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-5 left-5">
+                            <span
+                                class="mb-2 inline-block rounded-full bg-white/20 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-white backdrop-blur-md border border-white/30">{{ room.type || 'Premium Suite' }}</span>
+                            <h3 class="text-xl font-bold text-white">{{room.name}}</h3>
+                        </div>
+                    </div>
+
+                    <div class="p-8">
+                        <div class="mb-6 flex items-center justify-between border-b border-neutral-100 pb-6">
+                            <div>
+                                <p class="text-[10px] uppercase text-neutral-400 font-bold tracking-wider">Check-in</p>
+                                <p class="font-bold text-sm text-slate-900">{{bookingData.checkIn}}</p>
+                            </div>
+                            <div
+                                class="flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-600">
+                                <span class="material-symbols-outlined text-xs">dark_mode</span> {{ nights }} Nights
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] uppercase text-neutral-400 font-bold tracking-wider">Check-out</p>
+                                <p class="font-bold text-sm text-slate-900">{{bookingData.checkOut}}</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 text-sm">
+                            <div class="flex justify-between text-slate-500 font-medium">
+                                <span>{{room.price | vnd}} × {{ nights }} nights</span>
+                                <span class="font-bold text-slate-900">{{ (room.price * nights) | vnd }}</span>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <input id="discountToggle" type="checkbox" [(ngModel)]="discountEnabled" [disabled]="availableCoupons.length === 0" class="w-4 h-4" />
+                                <label for="discountToggle" [ngClass]="{'text-slate-400': !discountEnabled, 'text-slate-900': discountEnabled}">Apply Discount</label>
+                            </div>
+
+                            <div *ngIf="discountEnabled" class="flex flex-col gap-2">
+                                <select [(ngModel)]="selectedCouponCode" class="rounded-xl border border-slate-200 p-2">
+                                    <option value="" disabled>Select coupon</option>
+                                    <option *ngFor="let c of availableCoupons" [value]="c.code">
+                                        {{c.code}} - {{c.description}} ({{c.type === 'percent' ? c.value + '%' : (c.value | vnd)}})
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="flex justify-between text-slate-500 font-medium">
+                                <span>Discount</span>
+                                <span class="font-bold text-slate-900">{{ discountAmount | vnd }}</span>
+                            </div>
+                            <div class="flex justify-between text-slate-500 font-medium">
+                                <span>Tax (8%)</span>
+                                <span class="font-bold text-slate-900">{{taxAmount | vnd}}</span>
+                            </div>
+                            <div class="flex justify-between text-slate-500 font-medium">
+                                <span>Service Fee</span>
+                                <span class="font-bold text-slate-900">{{ room.serviceFee | vnd }}</span>
+                            </div>
+
+                            <div
+                                class="mt-6 border-t border-dashed border-slate-200 pt-6 flex justify-between items-end">
+                                <div>
+                                    <p class="text-[11px] font-bold text-slate-400 uppercase">Total</p>
+                                    <p class="text-[10px] text-slate-300">Includes tax and fees</p>
+                                </div>
+                                <span class="text-4xl font-black text-slate-900 tracking-tighter">{{totalAmount | vnd}}</span>
+                            </div>
+                        </div>
+
+                        <button (click)="onConfirmPayment()" [disabled]="isLoading"
+                            class="mt-8 w-full rounded-2xl bg-primary py-5 font-bold text-slate-900 shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50">
+                            <span *ngIf="!isLoading"
+                                class="flex items-center justify-center gap-2 uppercase tracking-widest text-xs">
+                                <span class="material-symbols-outlined text-sm">lock</span> Confirm & Pay
+                            </span>
+                            <span *ngIf="isLoading" class="flex items-center justify-center gap-2">
+                                <div
+                                    class="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent">
+                                </div> Processing...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+</div>

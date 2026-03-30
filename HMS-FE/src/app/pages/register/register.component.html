@@ -23,7 +23,7 @@
   <div class="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 lg:px-24 py-12 overflow-y-auto">
     <header class="flex items-center gap-3 mb-12">
       <span class="material-symbols-outlined text-primary text-3xl">hotel_class</span>
-      <h2 class="text-2xl font-bold tracking-wide dark:text-white text-slate-900">LUXE HOTELS</h2>
+      <h2 class="text-2xl font-bold tracking-wide dark:text-white text-slate-900">LUXECORE</h2>
     </header>
 
     <div class="max-w-md w-full mx-auto lg:mx-0">
@@ -32,29 +32,28 @@
 
       <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="space-y-5">
         <div class="flex gap-4">
-          <div class="relative flex-1">
-            <input formControlName="firstName" class="peer w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-transparent focus:border-primary focus:ring-0 transition-colors" id="firstName" placeholder="First Name" type="text"/>
-            <label class="absolute left-4 -top-2.5 bg-background-light dark:bg-background-dark px-1 text-sm text-slate-500 dark:text-slate-400 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-primary" for="firstName">First Name</label>
+          <div class="flex-1">
+            <input formControlName="firstName" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="firstName" placeholder="First Name" type="text"/>
           </div>
-          <div class="relative flex-1">
-            <input formControlName="lastName" class="peer w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-transparent focus:border-primary focus:ring-0 transition-colors" id="lastName" placeholder="Last Name" type="text"/>
-            <label class="absolute left-4 -top-2.5 bg-background-light dark:bg-background-dark px-1 text-sm text-slate-500 dark:text-slate-400 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-primary" for="lastName">Last Name</label>
+          <div class="flex-1">
+            <input formControlName="lastName" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="lastName" placeholder="Last Name" type="text"/>
           </div>
         </div>
 
-        <div class="relative">
-          <input formControlName="email" class="peer w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-transparent focus:border-primary focus:ring-0 transition-colors" id="email" placeholder="Email Address" type="email"/>
-          <label class="absolute left-4 -top-2.5 bg-background-light dark:bg-background-dark px-1 text-sm text-slate-500 dark:text-slate-400 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-primary" for="email">Email Address</label>
+        <div>
+          <input formControlName="email" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="email" placeholder="Email Address" type="email"/>
         </div>
 
-        <div class="relative">
-          <input formControlName="password" class="peer w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-transparent focus:border-primary focus:ring-0 transition-colors" id="password" placeholder="Password" type="password"/>
-          <label class="absolute left-4 -top-2.5 bg-background-light dark:bg-background-dark px-1 text-sm text-slate-500 dark:text-slate-400 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-primary" for="password">Password</label>
+        <div>
+          <input formControlName="phone" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="phone" placeholder="Phone Number (e.g. 0909123456)" type="tel"/>
         </div>
 
-        <div class="relative">
-          <input formControlName="confirmPassword" class="peer w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-transparent focus:border-primary focus:ring-0 transition-colors" id="confirmPassword" placeholder="Confirm Password" type="password"/>
-          <label class="absolute left-4 -top-2.5 bg-background-light dark:bg-background-dark px-1 text-sm text-slate-500 dark:text-slate-400 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-primary" for="confirmPassword">Confirm Password</label>
+        <div>
+          <input formControlName="password" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="password" placeholder="Password" type="password"/>
+        </div>
+
+        <div>
+          <input formControlName="confirmPassword" (keydown.enter)="onRegister()" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="confirmPassword" placeholder="Confirm Password" type="password"/>
           <p *ngIf="registerForm.hasError('mismatch') && registerForm.get('confirmPassword')?.touched" class="text-red-500 text-xs mt-1">Mật khẩu không khớp!</p>
         </div>
 
@@ -65,9 +64,15 @@
           </label>
         </div>
 
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
+          <p class="text-red-600 dark:text-red-400 text-sm">{{ errorMessage }}</p>
+        </div>
+
         <div class="pt-4">
-          <button [disabled]="registerForm.invalid" class="w-full h-14 rounded-lg bg-gradient-to-r from-[#0a1128] to-[#d4af37] text-white font-semibold text-lg hover:opacity-90 transition-opacity shadow-lg shadow-primary/20 flex items-center justify-center disabled:opacity-50" type="submit">
-            Create Account
+          <button [disabled]="registerForm.invalid || isLoading" class="w-full h-14 rounded-lg bg-gradient-to-r from-[#0a1128] to-[#d4af37] text-white font-semibold text-lg hover:opacity-90 transition-opacity shadow-lg shadow-primary/20 flex items-center justify-center disabled:opacity-50" type="submit">
+            <span *ngIf="isLoading" class="material-symbols-outlined animate-spin mr-2">progress_activity</span>
+            {{ isLoading ? 'Creating Account...' : 'Create Account' }}
           </button>
         </div>
       </form>

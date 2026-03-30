@@ -24,6 +24,30 @@ h1 {
   animation: fadeInUp 0.8s ease-out;
 }
 
+/* Fix Date Picker Styling */
+input[type="date"] {
+  color-scheme: light;
+  background-color: white;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0);
+}
+
+/* Dark mode override for date inputs */
+.dark input[type="date"] {
+  color-scheme: dark;
+  background-color: #1e293b;
+  color: white;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
 .stat-card {
     @apply flex flex-col items-center justify-center gap-2 rounded-xl p-8 bg-background-light dark:bg-background-dark border border-primary/20 shadow-lg text-center transform transition-transform hover:-translate-y-1;
 }

@@ -1,0 +1,464 @@
+<div class="flex flex-col max-w-7xl mx-auto gap-10 p-6 md:p-8">
+  <!-- ── Toast Notification ─────────────────────────────── -->
+  <div
+    *ngIf="notification"
+    class="fixed top-6 right-6 z-[9999] flex items-center gap-3 px-5 py-4 rounded-xl shadow-xl border text-sm font-medium animate-slide-in"
+    [ngClass]="
+      notification.type === 'success'
+        ? 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-700 dark:text-green-300'
+        : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/30 dark:border-red-700 dark:text-red-300'
+    "
+  >
+    <span class="material-symbols-outlined text-[20px]">{{
+      notification.type === "success" ? "check_circle" : "error"
+    }}</span>
+    {{ notification.message }}
+  </div>
+
+  <!-- ── Page Header ────────────────────────────────────── -->
+  <div
+    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+  >
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Rooms</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        Manage individual rooms across all room types.
+      </p>
+    </div>
+    <button
+      (click)="openAddModal()"
+      class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-slate-900 hover:bg-primary/90 font-medium rounded-lg transition-colors shadow-sm whitespace-nowrap"
+    >
+      <span class="material-symbols-outlined text-[20px]">add</span>
+      Add Room
+    </button>
+  </div>
+
+  <!-- ── Grouped Room Type Sections ────────────────────── -->
+  <div *ngFor="let group of groupedRooms" class="flex flex-col gap-5">
+    <!-- Section Header -->
+    <div class="flex items-center gap-4">
+      <h2
+        class="text-lg font-bold text-slate-900 dark:text-white whitespace-nowrap"
+      >
+        {{ group.typeName }}
+      </h2>
+      <div class="h-px flex-1 bg-slate-200 dark:bg-slate-700"></div>
+      <span
+        class="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap"
+        >{{ group.rooms.length }} room{{
+          group.rooms.length !== 1 ? "s" : ""
+        }}</span
+      >
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div
+        *ngFor="let room of group.rooms"
+        class="flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+      >
+        <!-- Image with price badge -->
+        <div
+          class="relative h-48 overflow-hidden bg-slate-200 dark:bg-slate-800"
+        >
+          <img
+            *ngIf="room.imageUrl"
+            [src]="room.imageUrl"
+            [alt]="room.roomTypeName"
+            class="w-full h-full object-cover"
+          />
+          <div
+            *ngIf="!room.imageUrl"
+            class="absolute inset-0 flex items-center justify-center"
+          >
+            <span class="material-symbols-outlined text-5xl text-slate-400"
+              >bed</span
+            >
+          </div>
+          <!-- Price badge -->
+          <div
+            class="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-bold"
+          >
+            {{ room.price | vnd
+            }}<span class="text-xs font-normal text-slate-300">/đêm</span>
+          </div>
+          <!-- Status badge -->
+          <div
+            class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5"
+            [ngClass]="{
+              'bg-green-500/90 text-white': room.status === 'Available',
+              'bg-blue-500/90 text-white': room.status === 'Occupied',
+              'bg-yellow-500/90 text-slate-900': room.status === 'Maintenance',
+            }"
+          >
+            <span class="size-1.5 rounded-full bg-white/80"></span>
+            {{ room.status }}
+          </div>
+          <!-- Room number chip -->
+          <div
+            class="absolute bottom-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined text-[14px] text-primary"
+              >meeting_room</span
+            >
+            Room {{ room.roomNumber }}
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-5 flex flex-col gap-3 flex-1">
+          <!-- Name & Floor -->
+          <div class="flex items-start justify-between gap-2">
+            <h3
+              class="font-bold text-slate-900 dark:text-white text-base leading-tight"
+            >
+              {{ room.roomTypeName }}
+            </h3>
+            <span
+              class="text-xs text-slate-400 whitespace-nowrap flex items-center gap-1 mt-0.5"
+            >
+              <span class="material-symbols-outlined text-[14px]">stairs</span>
+              Floor {{ room.floor }}
+            </span>
+          </div>
+
+          <!-- Amenities -->
+          <div class="flex flex-wrap gap-2" *ngIf="room.amenities.length > 0">
+            <span
+              *ngFor="let amenity of room.amenities"
+              class="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400"
+            >
+              <span
+                class="material-symbols-outlined text-[15px] text-primary"
+                >{{ getAmenityIcon(amenity) }}</span
+              >
+              {{ amenity }}
+            </span>
+          </div>
+
+          <!-- Description -->
+          <p
+            class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2 flex-1"
+          >
+            {{ room.description }}
+          </p>
+
+          <!-- Capacity -->
+          <div
+            class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400"
+          >
+            <span class="material-symbols-outlined text-[15px]">group</span>
+            Up to {{ room.capacity }} guests
+          </div>
+
+          <!-- Actions -->
+          <div
+            class="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 mt-auto"
+          >
+            <button
+              class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
+            >
+              <span class="material-symbols-outlined text-[18px]"
+                >visibility</span
+              >
+              View
+            </button>
+            <button
+              (click)="openEditModal(room)"
+              class="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+              title="Edit"
+            >
+              <span class="material-symbols-outlined text-[18px]">edit</span>
+            </button>
+            <button
+              (click)="openDeleteDialog(room)"
+              class="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              title="Delete"
+            >
+              <span class="material-symbols-outlined text-[18px]">delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div
+    *ngIf="rooms.length === 0"
+    class="flex flex-col items-center justify-center py-20"
+  >
+    <div class="bg-slate-100 dark:bg-slate-800 p-5 rounded-full mb-4">
+      <span class="material-symbols-outlined text-5xl text-slate-400"
+        >meeting_room</span
+      >
+    </div>
+    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">
+      No Rooms Yet
+    </h3>
+    <p
+      class="text-slate-500 dark:text-slate-400 text-sm text-center max-w-xs mb-5"
+    >
+      Add your first room to get started.
+    </p>
+    <button
+      (click)="openAddModal()"
+      class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-slate-900 hover:bg-primary/90 font-medium rounded-lg text-sm"
+    >
+      <span class="material-symbols-outlined text-[18px]">add</span> Add Room
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     Add / Edit Modal
+══════════════════════════════════════════════════════════ -->
+<div
+  *ngIf="showModal"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4"
+>
+  <div
+    class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+    (click)="closeModal()"
+  ></div>
+
+  <div
+    class="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-modal-in"
+  >
+    <!-- Header -->
+    <div
+      class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800"
+    >
+      <div class="flex items-center gap-3">
+        <div class="bg-primary/10 p-2 rounded-lg">
+          <span class="material-symbols-outlined text-primary text-[22px]">{{
+            modalMode === "add" ? "add_home" : "edit"
+          }}</span>
+        </div>
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white">
+            {{ modalMode === "add" ? "Add New Room" : "Edit Room" }}
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            {{
+              modalMode === "add"
+                ? "Fill in the details to create a new room."
+                : "Update the room details."
+            }}
+          </p>
+        </div>
+      </div>
+      <button
+        (click)="closeModal()"
+        class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
+      >
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="px-6 py-5 flex flex-col gap-5 max-h-[70vh] overflow-y-auto">
+      <!-- Room Number + Floor -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label
+            class="text-sm font-semibold text-slate-700 dark:text-slate-300"
+            >Room Number <span class="text-red-500">*</span></label
+          >
+          <input
+            type="text"
+            [(ngModel)]="formData.roomNumber"
+            placeholder="e.g., 201"
+            class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+          />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label
+            class="text-sm font-semibold text-slate-700 dark:text-slate-300"
+            >Floor</label
+          >
+          <input
+            type="number"
+            [(ngModel)]="formData.floor"
+            min="1"
+            placeholder="1"
+            class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+          />
+        </div>
+      </div>
+
+      <!-- Room Type -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-semibold text-slate-700 dark:text-slate-300"
+          >Room Type</label
+        >
+        <select
+          [(ngModel)]="formData.roomTypeId"
+          (ngModelChange)="onRoomTypeChange()"
+          class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all appearance-none"
+        >
+          <option *ngFor="let rt of roomTypes" [value]="rt.id">
+            {{ rt.name }} — {{ rt.price | vnd }}/đêm ({{ rt.capacity }} khách)
+          </option>
+        </select>
+      </div>
+
+      <!-- Description -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-semibold text-slate-700 dark:text-slate-300"
+          >Description</label
+        >
+        <textarea
+          [(ngModel)]="formData.description"
+          rows="2"
+          placeholder="Custom description (optional)..."
+          class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all resize-none"
+        ></textarea>
+      </div>
+
+      <!-- Image URL -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-semibold text-slate-700 dark:text-slate-300"
+          >Image URL</label
+        >
+        <input
+          type="url"
+          [(ngModel)]="formData.imageUrl"
+          placeholder="https://..."
+          class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+        />
+      </div>
+
+      <!-- Amenities -->
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-slate-700 dark:text-slate-300"
+          >Amenities</label
+        >
+        <div class="flex flex-wrap gap-2">
+          <button
+            *ngFor="let amenity of allAmenities"
+            type="button"
+            (click)="toggleAmenity(amenity.name)"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all"
+            [ngClass]="
+              amenitySet.has(amenity.name)
+                ? 'bg-primary/15 border-primary text-slate-900 dark:text-white'
+                : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-primary/50'
+            "
+          >
+            <span
+              class="material-symbols-outlined text-[15px]"
+              [class.text-primary]="amenitySet.has(amenity.name)"
+              >{{ amenity.icon }}</span
+            >
+            {{ amenity.name }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-semibold text-slate-700 dark:text-slate-300"
+          >Status</label
+        >
+        <div class="flex gap-3">
+          <label
+            *ngFor="let s of ['Available', 'Occupied', 'Maintenance']"
+            class="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer text-sm font-medium transition-all"
+            [ngClass]="
+              formData.status === s
+                ? 'border-primary bg-primary/10 text-slate-900 dark:text-white'
+                : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-primary/40'
+            "
+          >
+            <input
+              type="radio"
+              [value]="s"
+              [(ngModel)]="formData.status"
+              class="hidden"
+            />
+            <span
+              class="size-2 rounded-full"
+              [ngClass]="{
+                'bg-green-500': s === 'Available',
+                'bg-blue-500': s === 'Occupied',
+                'bg-yellow-500': s === 'Maintenance',
+              }"
+            ></span>
+            {{ s }}
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div
+      class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900"
+    >
+      <button
+        (click)="closeModal()"
+        class="px-5 py-2.5 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+      >
+        Cancel
+      </button>
+      <button
+        (click)="saveModal()"
+        class="px-5 py-2.5 text-sm font-medium rounded-lg bg-primary text-slate-900 hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2"
+      >
+        <span class="material-symbols-outlined text-[18px]">{{
+          modalMode === "add" ? "add" : "save"
+        }}</span>
+        {{ modalMode === "add" ? "Add Room" : "Save Changes" }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     Delete Confirmation Dialog
+══════════════════════════════════════════════════════════ -->
+<div
+  *ngIf="showDeleteDialog"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4"
+>
+  <div
+    class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+    (click)="closeDeleteDialog()"
+  ></div>
+  <div
+    class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 animate-modal-in text-center"
+  >
+    <div class="flex justify-center mb-4">
+      <div class="bg-red-100 dark:bg-red-900/30 p-4 rounded-full">
+        <span class="material-symbols-outlined text-red-500 text-3xl"
+          >delete_forever</span
+        >
+      </div>
+    </div>
+    <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-2">
+      Delete Room?
+    </h2>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">
+      Are you sure you want to delete
+      <span class="font-semibold text-slate-700 dark:text-slate-300"
+        >Room {{ roomToDelete?.roomNumber }}</span
+      >? This action cannot be undone.
+    </p>
+    <div class="flex gap-3">
+      <button
+        (click)="closeDeleteDialog()"
+        class="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+      >
+        Cancel
+      </button>
+      <button
+        (click)="confirmDelete()"
+        class="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm flex items-center justify-center gap-2"
+      >
+        <span class="material-symbols-outlined text-[18px]">delete</span>
+        Delete
+      </button>
+    </div>
+  </div>
+</div>

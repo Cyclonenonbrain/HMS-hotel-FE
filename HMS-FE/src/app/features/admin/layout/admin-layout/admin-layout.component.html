@@ -1,0 +1,19 @@
+<div
+  class="flex h-screen w-full overflow-hidden text-slate-900 dark:text-slate-100 font-display bg-background-light dark:bg-background-dark"
+>
+  <app-admin-sidebar
+    class="z-20 shrink-0 bg-slate-900 dark:bg-slate-950"
+  ></app-admin-sidebar>
+  <div
+    class="flex flex-col flex-1 min-w-0 h-screen overflow-hidden bg-slate-50 dark:bg-slate-900"
+  >
+    <app-admin-header class="z-10 shrink-0"></app-admin-header>
+    <main class="flex-1 overflow-hidden w-full relative">
+      <app-admin-scrollbar>
+        <div class="flex flex-col w-full h-full">
+          <router-outlet></router-outlet>
+        </div>
+      </app-admin-scrollbar>
+    </main>
+  </div>
+</div>

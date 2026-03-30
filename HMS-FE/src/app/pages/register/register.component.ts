@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
+import { AuthService } from '../../services/auth.services';
 
 @Component({
   selector: 'app-register',
@@ -12,8 +13,14 @@ import { RouterModule } from '@angular/router';
 })
 export class RegisterComponent implements OnInit {
   registerForm!: FormGroup;
+  isLoading = false;
+  errorMessage = '';
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.registerForm = this.fb.group({
@@ -35,8 +42,33 @@ export class RegisterComponent implements OnInit {
 
   onRegister(): void {
     if (this.registerForm.valid) {
-      console.log('Dữ liệu đăng ký:', this.registerForm.value);
-      alert('Đăng ký thành công!');
+      this.isLoading = true;
+      this.errorMessage = '';
+
+      const formValue = this.registerForm.value;
+      const registerData = {
+        email: formValue.email,
+        password: formValue.password,
+        full_name: `${formValue.firstName} ${formValue.lastName}`,
+        phone: formValue.phone
+      };
+
+      this.authService.register(registerData).subscribe({
+        next: (res) => {
+          this.isLoading = false;
+          if (res && res.success) {
+            alert('Đăng ký thành công! Vui lòng đăng nhập.');
+            this.router.navigate(['/login']);
+          } else {
+            this.errorMessage = res.message || 'Đăng ký thất bại!';
+          }
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.errorMessage = err.error?.message || 'Có lỗi xảy ra, vui lòng thử lại!';
+          console.error('Register error:', err);
+        }
+      });
     } else {
       this.registerForm.markAllAsTouched();
     }
