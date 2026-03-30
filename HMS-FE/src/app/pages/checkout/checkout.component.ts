@@ -48,6 +48,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     { id: 2, type: 'MASTERCARD', lastFour: '8899', expiry: '08/26' }
   ];
 
+  // Discount / coupon state
+  discountEnabled = false;
+  availableCoupons: Array<{ code: string; description: string; type: 'amount' | 'percent'; value: number }> = [];
+  selectedCouponCode: string | null = null;
+
   // Validation error messages
   validationErrors = {
     fullName: '',
@@ -67,6 +72,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.readQueryParams();
+    this.detectAvailableCoupons();
 
     // ĐỒNG BỘ LOGIC: Theo dõi trạng thái đăng nhập y hệt LandingPage/RoomList
     this.authSub = this.authService.isLoggedIn$.subscribe(status => {
@@ -128,12 +134,42 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return days;
   }
 
+  detectAvailableCoupons() {
+    // Mock behavior: auto-detect coupons for current user/room.
+    // Replace with API call to backend endpoint (e.g., /api/coupons/available) when ready.
+    this.availableCoupons = [
+      { code: 'HMS10', description: '10% off for loyalty', type: 'percent', value: 10 },
+      { code: 'HMS50K', description: '50,000₫ off', type: 'amount', value: 50000 }
+    ];
+  }
+
+  get discountAmount(): number {
+    if (!this.discountEnabled || !this.selectedCouponCode) {
+      return 0;
+    }
+
+    const coupon = this.availableCoupons.find(c => c.code === this.selectedCouponCode);
+    if (!coupon) {
+      return 0;
+    }
+
+    if (coupon.type === 'percent') {
+      return Math.round((this.room.price * this.nights) * (coupon.value / 100));
+    }
+
+    return coupon.value;
+  }
+
   get taxAmount(): number {
-    return Math.round((this.room.price * this.nights) * 0.08);
+    const baseAmount = this.room.price * this.nights;
+    const afterDiscount = Math.max(baseAmount - this.discountAmount, 0);
+    return Math.round(afterDiscount * 0.08);
   }
 
   get totalAmount(): number {
-    return (this.room.price * this.nights) + this.taxAmount + this.room.serviceFee;
+    const baseAmount = this.room.price * this.nights;
+    const discounted = Math.max(baseAmount - this.discountAmount, 0);
+    return discounted + this.taxAmount + this.room.serviceFee;
   }
 
   ngOnDestroy(): void {

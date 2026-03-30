@@ -142,6 +142,25 @@
                                 <span>{{room.price | vnd}} × {{ nights }} nights</span>
                                 <span class="font-bold text-slate-900">{{ (room.price * nights) | vnd }}</span>
                             </div>
+
+                            <div class="flex items-center gap-2">
+                                <input id="discountToggle" type="checkbox" [(ngModel)]="discountEnabled" [disabled]="availableCoupons.length === 0" class="w-4 h-4" />
+                                <label for="discountToggle" [ngClass]="{'text-slate-400': !discountEnabled, 'text-slate-900': discountEnabled}">Apply Discount</label>
+                            </div>
+
+                            <div *ngIf="discountEnabled" class="flex flex-col gap-2">
+                                <select [(ngModel)]="selectedCouponCode" class="rounded-xl border border-slate-200 p-2">
+                                    <option value="" disabled>Select coupon</option>
+                                    <option *ngFor="let c of availableCoupons" [value]="c.code">
+                                        {{c.code}} - {{c.description}} ({{c.type === 'percent' ? c.value + '%' : (c.value | vnd)}})
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="flex justify-between text-slate-500 font-medium">
+                                <span>Discount</span>
+                                <span class="font-bold text-slate-900">{{ discountAmount | vnd }}</span>
+                            </div>
                             <div class="flex justify-between text-slate-500 font-medium">
                                 <span>Tax (8%)</span>
                                 <span class="font-bold text-slate-900">{{taxAmount | vnd}}</span>
