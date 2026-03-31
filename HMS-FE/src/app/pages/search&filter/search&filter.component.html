@@ -89,12 +89,40 @@
                     </button>
                 </div>
 
+                <!-- DATE PICKERS SECTION -->
+                <div class="flex flex-col gap-4 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                    <label class="text-[11px] font-bold text-primary uppercase tracking-widest flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">calendar_month</span>
+                        Stay Dates
+                        <span class="ml-auto text-slate-600 normal-case font-semibold">{{ numberOfNights }} {{ numberOfNights === 1 ? 'night' : 'nights' }}</span>
+                    </label>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] font-semibold text-slate-500">Check-in</label>
+                            <input type="date" 
+                                [(ngModel)]="checkIn" 
+                                (change)="onCheckInChange()"
+                                [min]="minCheckInDate"
+                                class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] font-semibold text-slate-500">Check-out</label>
+                            <input type="date" 
+                                [(ngModel)]="checkOut" 
+                                (change)="onCheckOutChange()"
+                                [min]="checkIn"
+                                class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex flex-col gap-3">
                     <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Keyword Search</label>
                     <div class="relative">
                         <span
                             class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-                        <input type="text" name="search" [(ngModel)]="filters.searchQuery" (input)="applyFilters()"
+                        <input type="text" name="search" [(ngModel)]="filters.searchQuery" (input)="onSearchInput()"
                             placeholder="e.g. Ocean, Suite..."
                             class="w-full pl-10 pr-4 py-3 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20">
                     </div>
@@ -106,7 +134,7 @@
                         Khoảng giá: {{filters.priceRange | vnd}}
                     </label>
                     <input type="range" name="price" min="50000" max="100000000" step="10000" [(ngModel)]="filters.priceRange"
-                        (input)="applyFilters()"
+                        (change)="loadRooms()"
                         class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-yellow-500">
                     <div class="flex justify-between font-bold text-xs text-slate-600">
                         <span>50.000₫</span>
@@ -150,7 +178,7 @@
                     <div class="space-y-3">
                         <div class="flex items-center gap-3">
                             <input type="checkbox" id="oceanView" name="oceanView"
-                                [(ngModel)]="filters.amenities.oceanView" (change)="applyFilters()"
+                                [(ngModel)]="filters.amenities.oceanView" (change)="loadRooms()"
                                 class="size-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer">
                             <label for="oceanView"
                                 class="text-sm font-medium text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
@@ -160,7 +188,7 @@
 
                         <div class="flex items-center gap-3">
                             <input type="checkbox" id="balcony" name="balcony"
-                                [(ngModel)]="filters.amenities.privateBalcony" (change)="applyFilters()"
+                                [(ngModel)]="filters.amenities.privateBalcony" (change)="loadRooms()"
                                 class="size-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer">
                             <label for="balcony"
                                 class="text-sm font-medium text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
@@ -170,7 +198,7 @@
 
                         <div class="flex items-center gap-3">
                             <input type="checkbox" id="kingBed" name="kingBed" [(ngModel)]="filters.amenities.kingBed"
-                                (change)="applyFilters()"
+                                (change)="loadRooms()"
                                 class="size-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer">
                             <label for="kingBed"
                                 class="text-sm font-medium text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
@@ -180,27 +208,47 @@
                     </div>
                 </div>
 
-                <button type="button" (click)="applyFilters()"
+                <button type="button" (click)="loadRooms()"
                     class="w-full mt-2 py-3.5 bg-slate-900 text-white font-bold text-xs rounded-xl hover:bg-slate-800 transition-all uppercase tracking-widest shadow-lg shadow-slate-200">
                     Apply Filters
                 </button>
             </aside>
 
             <div class="w-3/4 flex flex-col gap-8">
-                <article *ngFor="let room of filteredRooms"
-                    class="flex bg-white rounded-[2rem] overflow-hidden group shadow-sm border border-slate-50">
-                    <div class="w-[42%] relative overflow-hidden">
-                        <img [src]="room.image"
-                            class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            [alt]="room.displayName">
-                        <div
-                            [class]="room.displayName.includes('Executive') ? 'badge badge-popular' : 'badge badge-limited'">
-                            {{ room.displayName.includes('Executive') ? 'Popular Choice' : 'Only 2 Left' }}
-                        </div>
-                    </div>
+                <!-- LOADING STATE -->
+                <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-24 bg-white rounded-[2rem] border border-slate-100">
+                    <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
+                    <p class="text-slate-500 font-medium">Đang tìm phòng trống...</p>
+                </div>
 
-                    <div class="w-[58%] p-10 flex flex-col">
-                        <div class="flex justify-between items-start mb-3">
+                <!-- ERROR STATE -->
+                <div *ngIf="errorMessage && !isLoading" 
+                    class="flex flex-col items-center justify-center py-24 bg-red-50 rounded-[2rem] border-2 border-dashed border-red-200">
+                    <span class="material-symbols-outlined text-6xl text-red-300 mb-4">error</span>
+                    <p class="text-red-500 font-bold tracking-wide text-sm mb-4">{{ errorMessage }}</p>
+                    <button (click)="loadRooms()" 
+                        class="px-6 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors">
+                        Thử lại
+                    </button>
+                </div>
+
+                <!-- ROOM CARDS - Chỉ hiển thị khi không loading và không có lỗi -->
+                <ng-container *ngIf="!isLoading && !errorMessage">
+                    <article *ngFor="let room of filteredRooms"
+                        [class.opacity-60]="!isRoomAvailable(room)"
+                        class="flex bg-white rounded-[2rem] overflow-hidden group shadow-sm border border-slate-50 transition-opacity">
+                        <div class="w-[42%] relative overflow-hidden">
+                            <img [src]="room.image"
+                                class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                [alt]="room.displayName">
+                            <!-- AVAILABILITY BADGE -->
+                            <div [class]="'badge ' + getAvailabilityBadgeClass(room)">
+                                {{ getAvailabilityText(room) }}
+                            </div>
+                        </div>
+
+                        <div class="w-[58%] p-10 flex flex-col">
+                            <div class="flex justify-between items-start mb-3">
                             <h3
                                 class="text-2xl font-extrabold text-slate-900 group-hover:text-primary transition-colors">
                                 {{ room.displayName }}</h3>
@@ -227,22 +275,29 @@
                                     <span class="text-3xl font-black text-slate-900">{{ room.displayPrice | vnd }}</span>
                                     <span class="text-sm font-bold text-slate-400">/ đêm</span>
                                 </div>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">Miễn phí hủy phòng</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">
+                                    {{ numberOfNights }} {{ numberOfNights === 1 ? 'đêm' : 'đêm' }} · Miễn phí hủy phòng
+                                </p>
                             </div>
 
-                            <button (click)="goToDetail(room.id)"
-                                class="bg-primary hover:bg-slate-900 hover:text-white text-slate-900 font-bold py-3.5 px-10 rounded-2xl transition-all shadow-xl shadow-primary/20 active:scale-95">
-                                Book Now
+                            <button (click)="goToDetail(room.id, room)"
+                                [disabled]="!isRoomAvailable(room)"
+                                [class]="isRoomAvailable(room) 
+                                    ? 'bg-primary hover:bg-slate-900 hover:text-white text-slate-900 font-bold py-3.5 px-10 rounded-2xl transition-all shadow-xl shadow-primary/20 active:scale-95'
+                                    : 'bg-slate-200 text-slate-400 font-bold py-3.5 px-10 rounded-2xl cursor-not-allowed'">
+                                {{ isRoomAvailable(room) ? 'Book Now' : 'Sold Out' }}
                             </button>
                         </div>
                     </div>
                 </article>
+                </ng-container>
 
-                <div *ngIf="filteredRooms.length === 0"
+                <div *ngIf="filteredRooms.length === 0 && !isLoading && !errorMessage"
                     class="flex flex-col items-center justify-center py-24 bg-white rounded-[2rem] border-2 border-dashed border-slate-100">
                     <span class="material-symbols-outlined text-6xl text-slate-200 mb-4">bedtime</span>
                     <p class="text-slate-400 font-bold tracking-widest uppercase text-sm">No rooms match your criteria
                     </p>
+                    <p class="text-slate-300 text-sm mt-2">Thử thay đổi ngày hoặc bộ lọc</p>
                 </div>
             </div>
         </div>

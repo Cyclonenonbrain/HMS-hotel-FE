@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { RoomService } from '../../services/room.services';
 import { AuthService } from '../../services/auth.services';
+import { RoomSearchService, RoomSearchResult } from '../../services/room-search.service';
 import { VndPipe } from '../../core/vnd.pipe';
 
 @Component({
@@ -22,6 +23,16 @@ export class RoomListComponent implements OnInit, OnDestroy {
     selectedSort: string = 'recommended';
     private authSub!: Subscription;
 
+    // --- DATE PICKER STATE ---
+    checkIn: string = RoomSearchService.getToday();
+    checkOut: string = RoomSearchService.getTomorrow();
+    numberOfNights: number = 1;
+    minCheckInDate: string = RoomSearchService.getToday();
+
+    // --- LOADING & ERROR STATE ---
+    isLoading: boolean = false;
+    errorMessage: string = '';
+
     // --- PHẦN QUẢN LÝ FILTER ---
     filters = {
         searchQuery: '',
@@ -36,6 +47,7 @@ export class RoomListComponent implements OnInit, OnDestroy {
 
     constructor(
         private roomService: RoomService,
+        private roomSearchService: RoomSearchService,
         private authService: AuthService,
         private cdr: ChangeDetectorRef,
         private router: Router
@@ -73,60 +85,76 @@ export class RoomListComponent implements OnInit, OnDestroy {
         if (this.authSub) this.authSub.unsubscribe();
     }
 
-    // --- LOGIC LỌC PHÒNG ---
+    // --- DATE VALIDATION & HANDLERS ---
+    onCheckInChange(): void {
+        // Ensure check-out is at least 1 day after check-in
+        if (this.checkOut <= this.checkIn) {
+            const nextDay = new Date(this.checkIn);
+            nextDay.setDate(nextDay.getDate() + 1);
+            this.checkOut = nextDay.toISOString().split('T')[0];
+        }
+        this.updateNights();
+        this.loadRooms();
+    }
+
+    onCheckOutChange(): void {
+        // Validate check-out is after check-in
+        if (this.checkOut <= this.checkIn) {
+            const nextDay = new Date(this.checkIn);
+            nextDay.setDate(nextDay.getDate() + 1);
+            this.checkOut = nextDay.toISOString().split('T')[0];
+        }
+        this.updateNights();
+        this.loadRooms();
+    }
+
+    updateNights(): void {
+        this.numberOfNights = RoomSearchService.calculateNights(this.checkIn, this.checkOut);
+    }
+
+    isDateValid(): boolean {
+        return this.checkIn < this.checkOut && this.numberOfNights >= 1;
+    }
+
+    // --- LOGIC LỌC PHÒNG (Client-side cho keyword search) ---
     applyFilters() {
+        // Reload từ API khi filter chính thay đổi (price, guests, amenities)
+        this.loadRooms();
+    }
+
+    // Client-side filter chỉ cho keyword search (nhanh hơn, không cần gọi API)
+    applyClientFilters() {
         this.filteredRooms = this.allRooms.filter(room => {
-            // Lọc theo giá: Nếu thanh trượt ở mức Max (100,000,000) thì coi như không lọc giá
-            const isSliderAtMax = this.filters.priceRange >= 100000000;
-            const matchPrice = isSliderAtMax ? true : room.displayPrice <= this.filters.priceRange;
-
-            // Lọc theo số lượng khách
-            const matchGuests = (room.capacity || 2) >= this.filters.guests;
-
-            // Lọc theo từ khóa (Tên hoặc Mô tả)
+            // Lọc theo từ khóa (Tên hoặc Mô tả) - client side
             const matchSearch = !this.filters.searchQuery ||
                 room.displayName.toLowerCase().includes(this.filters.searchQuery.toLowerCase()) ||
                 room.displayDesc.toLowerCase().includes(this.filters.searchQuery.toLowerCase());
 
-            // Lọc theo tiện ích (Amenities)
-            let matchAmenities = true;
-            if (this.filters.amenities.oceanView) {
-                matchAmenities = matchAmenities && room.icons.some((i: any) => i.label === 'Ocean View');
-            }
-            if (this.filters.amenities.kingBed) {
-                matchAmenities = matchAmenities && room.icons.some((i: any) => i.label === 'King Bed');
-            }
-            if (this.filters.amenities.privateBalcony) {
-                matchAmenities = matchAmenities && room.icons.some((i: any) => i.label === 'Balcony');
-            }
-
-            return matchPrice && matchSearch && matchGuests && matchAmenities;
+            return matchSearch;
         });
 
-        this.applySort();
+        // Sort đã được BE handle, chỉ sort lại nếu là "recommended"
+        if (this.selectedSort === 'recommended') {
+            this.filteredRooms.sort((a, b) => a.id.localeCompare(b.id));
+        }
+        this.cdr.detectChanges();
     }
 
     applySort() {
-        switch (this.selectedSort) {
-            case 'low-to-high':
-                this.filteredRooms.sort((a, b) => a.displayPrice - b.displayPrice);
-                break;
-            case 'high-to-high':
-                this.filteredRooms.sort((a, b) => b.displayPrice - a.displayPrice);
-                break;
-            default:
-                // Sắp xếp mặc định (Recommended)
-                this.filteredRooms.sort((a, b) => a.id.localeCompare(b.id));
-                break;
-        }
-        this.cdr.detectChanges();
+        // Reload với sort mới từ BE
+        this.loadRooms();
+    }
+
+    // Chỉ filter keyword - không gọi API
+    onSearchInput() {
+        this.applyClientFilters();
     }
 
     updateGuests(amount: number) {
         const newValue = this.filters.guests + amount;
         if (newValue >= 1 && newValue <= 10) {
             this.filters.guests = newValue;
-            this.applyFilters();
+            this.loadRooms(); // Reload từ API
         }
     }
 
@@ -137,15 +165,45 @@ export class RoomListComponent implements OnInit, OnDestroy {
             guests: 2,
             amenities: { oceanView: false, privateBalcony: false, kingBed: false }
         };
-        this.applyFilters();
+        this.selectedSort = 'recommended';
+        this.loadRooms();
     }
 
     // --- DỮ LIỆU API ---
     loadRooms() {
-        this.roomService.getAllRooms().subscribe({
-            next: (response: any) => {
-                const roomArray = response.data || [];
-                this.allRooms = roomArray.map((room: any) => {
+        if (!this.isDateValid()) {
+            return;
+        }
+
+        this.isLoading = true;
+        this.errorMessage = '';
+        // Clear danh sách cũ khi bắt đầu load
+        this.filteredRooms = [];
+
+        // Build amenities array from filters
+        const amenities: string[] = [];
+        if (this.filters.amenities.oceanView) amenities.push('Ocean View');
+        if (this.filters.amenities.privateBalcony) amenities.push('Balcony');
+        if (this.filters.amenities.kingBed) amenities.push('King Bed');
+
+        // Map sort option to BE format
+        let sortBy: 'price_asc' | 'price_desc' | undefined;
+        if (this.selectedSort === 'low-to-high') {
+            sortBy = 'price_asc';
+        } else if (this.selectedSort === 'high-to-high') {
+            sortBy = 'price_desc';
+        }
+
+        this.roomSearchService.searchRooms({
+            checkIn: this.checkIn,
+            checkOut: this.checkOut,
+            adults: this.filters.guests,
+            maxPrice: this.filters.priceRange < 100000000 ? this.filters.priceRange : undefined,
+            amenities: amenities.length > 0 ? amenities : undefined,
+            sortBy: sortBy
+        }).subscribe({
+            next: (rooms: RoomSearchResult[]) => {
+                this.allRooms = rooms.map((room: RoomSearchResult) => {
                     let finalName = room.name;
                     const lowerName = room.name.toLowerCase();
 
@@ -159,29 +217,87 @@ export class RoomListComponent implements OnInit, OnDestroy {
                     }
 
                     return {
-                        ...room,
+                        id: room.roomTypeId,
                         displayName: finalName,
-                        displayPrice: parseFloat(room.basePrice || room.base_price || 0),
-                        capacity: room.capacity || 2,
+                        displayPrice: room.pricePerNight,
+                        capacity: room.capacity,
                         displayDesc: room.description || "Trải nghiệm không gian sang trọng với đầy đủ tiện nghi cao cấp.",
-                        image: this.getImageByRoomName(room.name),
-                        icons: this.getIconsByRoomName(room.name)
+                        image: room.thumbnailUrl || this.getImageByRoomName(room.name),
+                        icons: room.amenities?.length > 0 ? this.mapAmenitiesToIcons(room.amenities) : this.getIconsByRoomName(room.name),
+                        rating: room.rating || 4.9,
+                        availableRooms: room.availableRooms
                     };
                 });
 
                 this.filteredRooms = [...this.allRooms];
+                this.applyClientFilters();
+                this.isLoading = false;
                 this.cdr.detectChanges();
             },
-            error: (err) => console.error("Không thể tải danh sách phòng:", err)
+            error: (err) => {
+                console.error("Không thể tải danh sách phòng:", err);
+                this.errorMessage = 'Không thể tải danh sách phòng. Vui lòng thử lại.';
+                this.isLoading = false;
+                this.cdr.detectChanges();
+            }
         });
     }
 
-    // Thêm vào trong class RoomListComponent
+    // Map amenities from BE to icon format for UI
+    mapAmenitiesToIcons(amenities: string[]): any[] {
+        const iconMap: { [key: string]: { icon: string, label: string } } = {
+            'wifi': { icon: 'wifi', label: 'Free WiFi' },
+            'WiFi': { icon: 'wifi', label: 'Free WiFi' },
+            'balcony': { icon: 'balcony', label: 'Balcony' },
+            'Balcony': { icon: 'balcony', label: 'Balcony' },
+            'ocean_view': { icon: 'water', label: 'Ocean View' },
+            'Ocean View': { icon: 'water', label: 'Ocean View' },
+            'king_bed': { icon: 'king_bed', label: 'King Bed' },
+            'King Bed': { icon: 'king_bed', label: 'King Bed' },
+            'queen_bed': { icon: 'bed', label: 'Queen Bed' },
+            'Queen Bed': { icon: 'bed', label: 'Queen Bed' },
+            'AC': { icon: 'ac_unit', label: 'AC' },
+            'TV': { icon: 'tv', label: 'TV' }
+        };
 
-    goToDetail(roomId: string): void {
+        return amenities
+            .map(a => iconMap[a] || { icon: 'check_circle', label: a })
+            .filter((v, i, arr) => arr.findIndex(x => x.label === v.label) === i); // Remove duplicates
+    }
+
+    // --- AVAILABILITY BADGE HELPERS ---
+    getAvailabilityBadgeClass(room: any): string {
+        if (room.availableRooms === 0) {
+            return 'badge-soldout';
+        } else if (room.availableRooms <= 5) {
+            return 'badge-limited';
+        }
+        return 'badge-available';
+    }
+
+    getAvailabilityText(room: any): string {
+        if (room.availableRooms === 0) {
+            return 'Sold out';
+        } else if (room.availableRooms <= 5) {
+            return `Only ${room.availableRooms} left`;
+        }
+        return `${room.availableRooms} available`;
+    }
+
+    isRoomAvailable(room: any): boolean {
+        return room.availableRooms > 0;
+    }
+
+    goToDetail(roomId: string, room?: any): void {
         if (roomId) {
-            // Điều hướng sang route /room-detail/ID_CUA_PHONG
-            this.router.navigate(['/room-detail', roomId]);
+            // Navigate với query params cho check-in/check-out
+            this.router.navigate(['/room-detail', roomId], {
+                queryParams: {
+                    checkIn: this.checkIn,
+                    checkOut: this.checkOut,
+                    guests: this.filters.guests
+                }
+            });
         } else {
             console.error("Room ID không tồn tại!");
         }

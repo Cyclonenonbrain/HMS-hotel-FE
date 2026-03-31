@@ -81,6 +81,15 @@ article:hover {
     @apply bg-slate-900/80 text-white;
 }
 
+/* Availability Badges */
+.badge-soldout {
+    @apply bg-red-500/90 text-white;
+}
+
+.badge-available {
+    @apply bg-emerald-500/90 text-white;
+}
+
 /* Line Clamp cho Description */
 .line-clamp-3 {
     display: -webkit-box;
