@@ -11,6 +11,41 @@
     </div>
   </div>
 
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="onFilterChange()"
+      placeholder="Search by comment/guest..."
+      class="h-10 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-200"
+    />
+    <select
+      [(ngModel)]="ratingFilter"
+      (ngModelChange)="onFilterChange()"
+      class="h-10 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-200"
+    >
+      <option value="ALL">All ratings</option>
+      <option [ngValue]="5">5 stars</option>
+      <option [ngValue]="4">4 stars</option>
+      <option [ngValue]="3">3 stars</option>
+      <option [ngValue]="2">2 stars</option>
+      <option [ngValue]="1">1 star</option>
+    </select>
+    <select
+      [(ngModel)]="statusFilter"
+      (ngModelChange)="onFilterChange()"
+      class="h-10 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-200"
+    >
+      <option value="ALL">All status</option>
+      <option value="PUBLISHED">Published</option>
+      <option value="HIDDEN">Hidden</option>
+    </select>
+  </div>
+
+  <div *ngIf="loading" class="border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center text-slate-500 dark:text-slate-400">
+    Loading reviews...
+  </div>
+
   <div class="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
     <div class="overflow-x-auto w-full">
       <table class="w-full text-left border-collapse">
@@ -27,20 +62,25 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 dark:divide-slate-800/50">
+          <tr *ngIf="!loading && reviews.length === 0">
+            <td colspan="8" class="py-10 px-6 text-center text-sm text-slate-500 dark:text-slate-400">
+              No reviews found.
+            </td>
+          </tr>
           <tr *ngFor="let r of reviews" class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
             <td class="py-4 px-6 text-sm font-mono font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">{{ r.id }}</td>
-            <td class="py-4 px-6 text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">{{ r.guestName }}</td>
-            <td class="py-4 px-6 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">{{ r.roomType }}</td>
+            <td class="py-4 px-6 text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">{{ r.userName || 'Anonymous' }}</td>
+            <td class="py-4 px-6 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">{{ r.roomId || '-' }}</td>
             <td class="py-4 px-6 text-sm text-primary flex items-center whitespace-nowrap">
               <span class="material-symbols-outlined text-[16px]" *ngFor="let s of getArray(r.rating)">star</span>
               <span class="material-symbols-outlined text-[16px] text-slate-300 dark:text-slate-600" *ngFor="let s of getEmptyArray(r.rating)">star</span>
             </td>
             <td class="py-4 px-6 text-sm text-slate-600 dark:text-slate-300 italic">"{{ r.comment }}"</td>
-            <td class="py-4 px-6 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">{{ r.date }}</td>
+            <td class="py-4 px-6 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">{{ r.createdAt | date:'yyyy-MM-dd' }}</td>
             <td class="py-4 px-6 text-sm whitespace-nowrap">
               <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider" 
-                    [ngClass]="r.status === 'Published' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'">
-                {{ r.status }}
+                    [ngClass]="statusLabel(r) === 'Published' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'">
+                {{ statusLabel(r) }}
               </span>
             </td>
             <td class="py-4 px-6 text-sm whitespace-nowrap text-right">
@@ -52,6 +92,26 @@
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between gap-3 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl px-4 py-3">
+    <p class="text-sm text-slate-500 dark:text-slate-400">
+      Showing <span class="font-semibold text-slate-700 dark:text-slate-200">{{ reviews.length }}</span>
+      of <span class="font-semibold text-slate-700 dark:text-slate-200">{{ totalElements }}</span> reviews
+    </p>
+    <div class="flex items-center gap-1.5">
+      <button (click)="prevPage()" [disabled]="currentPage === 1" class="h-9 px-3 rounded-lg border border-slate-300 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 disabled:opacity-50">Prev</button>
+      <ng-container *ngFor="let page of visiblePages">
+        <button *ngIf="page !== '...'; else ellipsisTpl" (click)="goToPage(page)" class="h-9 min-w-9 px-2 rounded-lg text-sm border"
+          [ngClass]="page === currentPage ? 'bg-primary text-slate-900 border-primary' : 'border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300'">
+          {{ page }}
+        </button>
+      </ng-container>
+      <ng-template #ellipsisTpl>
+        <span class="px-2 text-slate-400">...</span>
+      </ng-template>
+      <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="h-9 px-3 rounded-lg border border-slate-300 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 disabled:opacity-50">Next</button>
     </div>
   </div>
 </div>
@@ -75,8 +135,8 @@
       </div>
       <div class="flex flex-col gap-1.5">
         <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Review Status</label>
-        <select [(ngModel)]="formData.status" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all">
-          <option>Published</option><option>Hidden</option>
+        <select [(ngModel)]="formData.isVisible" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all">
+          <option [ngValue]="true">Published</option><option [ngValue]="false">Hidden</option>
         </select>
       </div>
     </div>

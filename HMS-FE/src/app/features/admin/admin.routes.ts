@@ -38,11 +38,6 @@ export const adminRoutes: Routes = [
         data: { breadcrumb: 'Amenities' }
       },
       {
-        path: 'pricing',
-        loadComponent: () => import('./pricing/pricing.component').then(m => m.PricingComponent),
-        data: { breadcrumb: 'Pricing Rules' }
-      },
-      {
         path: 'coupons',
         loadComponent: () => import('./coupons/coupons.component').then(m => m.CouponsComponent),
         data: { breadcrumb: 'Coupons' }

@@ -25,6 +25,8 @@ export class RoomsComponent implements OnInit {
 
   currentPage = 1;
   pageSize = 10;
+  totalElements = 0;
+  totalPages = 1;
 
   showModal = false;
   modalMode: 'add' | 'edit' = 'add';
@@ -60,10 +62,19 @@ export class RoomsComponent implements OnInit {
 
   loadRooms(): void {
     this.loading = true;
-    this.roomService.getRooms().subscribe({
+    this.roomService.getRooms({
+      q: this.searchTerm.trim() || undefined,
+      roomTypeId: this.typeFilter === 'ALL' ? undefined : this.typeFilter,
+      status: this.statusFilter === 'ALL' ? undefined : this.statusFilter,
+      page: this.currentPage - 1,
+      size: this.pageSize,
+      sort: 'roomNumber,asc'
+    }).subscribe({
       next: (response) => {
-        this.rooms = response?.data || [];
-        this.syncCurrentPage();
+        const page = response?.data;
+        this.rooms = page?.content || [];
+        this.totalElements = page?.totalElements ?? 0;
+        this.totalPages = Math.max(1, page?.totalPages ?? 1);
         this.loading = false;
       },
       error: (error) => {
@@ -75,28 +86,11 @@ export class RoomsComponent implements OnInit {
   }
 
   get filteredRooms(): RoomResponse[] {
-    const search = this.searchTerm.trim().toLowerCase();
-    return this.rooms.filter((room) => {
-      const matchesSearch =
-        !search ||
-        room.roomNumber.toLowerCase().includes(search) ||
-        room.roomTypeName.toLowerCase().includes(search) ||
-        room.id.toLowerCase().includes(search);
-      const matchesStatus =
-        this.statusFilter === 'ALL' || room.status === this.statusFilter;
-      const matchesType =
-        this.typeFilter === 'ALL' || room.roomTypeId === this.typeFilter;
-      return matchesSearch && matchesStatus && matchesType;
-    });
-  }
-
-  get totalPages(): number {
-    return Math.max(1, Math.ceil(this.filteredRooms.length / this.pageSize));
+    return this.rooms;
   }
 
   get paginatedRooms(): RoomResponse[] {
-    const startIndex = (this.currentPage - 1) * this.pageSize;
-    return this.filteredRooms.slice(startIndex, startIndex + this.pageSize);
+    return this.rooms;
   }
 
   get visiblePages(): (number | string)[] {
@@ -114,19 +108,28 @@ export class RoomsComponent implements OnInit {
 
   onFilterChange(): void {
     this.currentPage = 1;
+    this.loadRooms();
   }
 
   goToPage(page: number | string): void {
     if (typeof page !== 'number') return;
+    if (page === this.currentPage) return;
     this.currentPage = page;
+    this.loadRooms();
   }
 
   prevPage(): void {
-    if (this.currentPage > 1) this.currentPage--;
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.loadRooms();
+    }
   }
 
   nextPage(): void {
-    if (this.currentPage < this.totalPages) this.currentPage++;
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.loadRooms();
+    }
   }
 
   openAddModal(): void {
@@ -174,6 +177,7 @@ export class RoomsComponent implements OnInit {
       this.roomService.createRoom(request).subscribe({
         next: () => {
           this.showNotification('success', 'Room added successfully!');
+          this.currentPage = 1;
           this.loadRooms();
           this.closeModal();
         },
@@ -218,6 +222,9 @@ export class RoomsComponent implements OnInit {
     this.roomService.deleteRoom(this.roomToDelete.id).subscribe({
       next: () => {
         this.showNotification('success', `Room ${this.roomToDelete?.roomNumber} has been deleted.`);
+        if (this.rooms.length === 1 && this.currentPage > 1) {
+          this.currentPage--;
+        }
         this.loadRooms();
         this.closeDeleteDialog();
       },
@@ -260,15 +267,6 @@ export class RoomsComponent implements OnInit {
         return 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/30 dark:text-red-300';
       default:
         return 'bg-slate-50 text-slate-700 ring-slate-600/20';
-    }
-  }
-
-  private syncCurrentPage(): void {
-    if (this.currentPage > this.totalPages) {
-      this.currentPage = this.totalPages;
-    }
-    if (this.currentPage < 1) {
-      this.currentPage = 1;
     }
   }
 

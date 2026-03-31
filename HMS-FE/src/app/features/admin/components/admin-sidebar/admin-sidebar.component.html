@@ -188,35 +188,6 @@
                 Amenities
               </p>
             </a>
-            <!-- Pricing -->
-            <a
-              class="flex items-center rounded-lg whitespace-nowrap group transition-all duration-300"
-              [routerLink]="['/admin/pricing']"
-              routerLinkActive="bg-primary/20 text-primary"
-              [class.text-slate-300]="true"
-              [class.hover:text-white]="true"
-              [class.hover:bg-slate-800]="true"
-              [title]="isCollapsed ? 'Pricing' : ''"
-              [ngClass]="
-                isCollapsed
-                  ? 'py-2 px-0 justify-center w-12 mx-auto'
-                  : 'py-2 px-3 gap-4 w-full'
-              "
-            >
-              <span class="material-symbols-outlined shrink-0 text-[22px]"
-                >payments</span
-              >
-              <p
-                class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
-                [ngClass]="
-                  isCollapsed
-                    ? 'max-w-0 opacity-0'
-                    : 'max-w-[200px] opacity-100'
-                "
-              >
-                Pricing
-              </p>
-            </a>
             <!-- Coupons -->
             <a
               class="flex items-center rounded-lg whitespace-nowrap group transition-all duration-300"
@@ -307,55 +278,6 @@
           </div>
         </div>
 
-        <!-- Bottom Group -->
-        <div
-          class="flex flex-col gap-2 mt-auto pt-6 border-t border-slate-800 w-full mb-4"
-        >
-          <a
-            class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap transition-all duration-300"
-            href="#"
-            [title]="isCollapsed ? 'Profile' : ''"
-            [ngClass]="
-              isCollapsed
-                ? 'py-2 px-0 justify-center w-12 mx-auto'
-                : 'py-2 px-3 gap-4 w-full'
-            "
-          >
-            <span class="material-symbols-outlined shrink-0 text-[22px]"
-              >person</span
-            >
-            <p
-              class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
-              [ngClass]="
-                isCollapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
-              "
-            >
-              Profile
-            </p>
-          </a>
-          <a
-            class="flex items-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg whitespace-nowrap transition-all duration-300"
-            href="#"
-            [title]="isCollapsed ? 'Settings' : ''"
-            [ngClass]="
-              isCollapsed
-                ? 'py-2 px-0 justify-center w-12 mx-auto'
-                : 'py-2 px-3 gap-4 w-full'
-            "
-          >
-            <span class="material-symbols-outlined shrink-0 text-[22px]"
-              >settings</span
-            >
-            <p
-              class="text-sm font-medium leading-normal transition-all duration-300 overflow-hidden"
-              [ngClass]="
-                isCollapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
-              "
-            >
-              Settings
-            </p>
-          </a>
-        </div>
       </div>
     </app-admin-scrollbar>
   </div>

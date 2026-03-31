@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environment/environment';
 import { ApiResponse } from './models/api-response.model';
-import { RoomCreateRequest, RoomQuery, RoomResponse, RoomStatus } from './models/room.model';
+import { PageResponse, RoomCreateRequest, RoomQuery, RoomResponse, RoomStatus } from './models/room.model';
 
 @Injectable({
   providedIn: 'root'
@@ -14,16 +14,20 @@ export class RoomService {
 
   constructor(private http: HttpClient) {}
 
-  getRooms(query?: RoomQuery): Observable<ApiResponse<RoomResponse[]>> {
+  getRooms(query?: RoomQuery): Observable<ApiResponse<PageResponse<RoomResponse>>> {
     let params = new HttpParams();
     if (query?.roomTypeId) params = params.set('room_type_id', query.roomTypeId);
     if (query?.status) params = params.set('status', query.status);
     if (query?.floor !== undefined && query.floor !== null) params = params.set('floor', query.floor);
+    if (query?.q) params = params.set('q', query.q);
+    if (query?.page !== undefined) params = params.set('page', query.page);
+    if (query?.size !== undefined) params = params.set('size', query.size);
+    if (query?.sort) params = params.set('sort', query.sort);
 
-    return this.http.get<ApiResponse<any[]>>(this.apiUrl, { params }).pipe(
+    return this.http.get<ApiResponse<any>>(this.apiUrl, { params }).pipe(
       map((res) => ({
         ...res,
-        data: (res.data || []).map((item: any) => this.mapRoomResponse(item))
+        data: this.mapRoomPageResponse(res.data)
       }))
     );
   }
@@ -71,6 +75,18 @@ export class RoomService {
       floor: Number(item?.floor ?? 0),
       createdAt: item?.createdAt ?? item?.created_at,
       updatedAt: item?.updatedAt ?? item?.updated_at
+    };
+  }
+
+  private mapRoomPageResponse(page: any): PageResponse<RoomResponse> {
+    return {
+      content: (page?.content || []).map((item: any) => this.mapRoomResponse(item)),
+      totalElements: Number(page?.totalElements ?? 0),
+      totalPages: Number(page?.totalPages ?? 0),
+      size: Number(page?.size ?? 0),
+      number: Number(page?.number ?? 0),
+      first: !!page?.first,
+      last: !!page?.last
     };
   }
 
