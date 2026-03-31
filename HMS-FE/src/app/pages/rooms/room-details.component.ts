@@ -27,14 +27,11 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
   // Form đặt phòng
   bookingForm = {
     checkIn: '',
-    checkOut: '',
-    guests: 2
+    checkOut: ''
   };
 
   // Cấu hình phí cố định
-  readonly CLEANING_FEE = 85;
-  readonly SERVICE_FEE = 120;
-  readonly TAX_RATE = 0.1;
+  readonly TAX_RATE = 0.08;
 
   // Kết quả tính toán hóa đơn
   invoice = {
@@ -146,7 +143,7 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
     this.invoice.nights = diffDays;
     this.invoice.roomTotal = this.room.displayPrice * diffDays;
     this.invoice.taxes = Math.round(this.invoice.roomTotal * this.TAX_RATE);
-    this.invoice.finalTotal = this.invoice.roomTotal + this.CLEANING_FEE + this.SERVICE_FEE + this.invoice.taxes;
+    this.invoice.finalTotal = this.invoice.roomTotal + this.invoice.taxes;
     
     this.cdr.detectChanges();
   }
@@ -189,7 +186,7 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
         roomType: this.room.name || this.room.displayName,
         checkIn: this.bookingForm.checkIn,
         checkOut: this.bookingForm.checkOut,
-        guests: this.bookingForm.guests,
+        guests: this.room.capacity || 1,
         price: this.room.displayPrice
       }
     });

@@ -6,6 +6,7 @@ import { RoomListComponent } from './pages/search&filter/search&filter.component
 import { CheckoutComponent } from './pages/checkout/checkout.component';
 import { BookingConfirmationComponent } from './pages/payment/booking-confirmation.component';
 import { RoomDetailComponent } from './pages/rooms/room-details.component';
+import { MyBookingsComponent } from './pages/my-bookings/my-bookings.component';
 
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
@@ -41,7 +42,7 @@ export const routes: Routes = [
   },
   {
     path: 'my-bookings',
-    loadComponent: () => import('./pages/my-bookings/my-bookings.component').then(m => m.MyBookingsComponent),
+    component: MyBookingsComponent,
     canActivate: [authGuard]
   }
 ];

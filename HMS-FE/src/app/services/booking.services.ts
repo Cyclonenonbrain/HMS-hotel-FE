@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 // Cấu trúc ApiResponse dùng chung của dự án
 export interface ApiResponse<T> {
@@ -9,11 +10,23 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export interface MyBookingItem {
+  bookingId: string;
+  roomTypeName: string;
+  thumbnailUrl: string | null;
+  checkIn: string;
+  checkOut: string;
+  nights: number;
+  totalAmount: number;
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'FAILED' | 'CHECKED_IN' | 'COMPLETED' | 'NO_SHOW';
+  paymentStatus: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class BookingService {
-  private readonly API_URL = 'http://localhost:8081/api/v1/bookings';
+  private readonly API_URL = `${environment.apiUrl}/bookings`;
 
   constructor(private http: HttpClient) {}
 
@@ -29,6 +42,14 @@ export class BookingService {
       });
     }
     return this.http.get<ApiResponse<any[]>>(this.API_URL, { params });
+  }
+
+  /**
+   * Lấy danh sách booking của customer hiện tại
+   * GET /api/v1/bookings/my
+   */
+  getMyBookings(): Observable<ApiResponse<MyBookingItem[]>> {
+    return this.http.get<ApiResponse<MyBookingItem[]>>(`${this.API_URL}/my`);
   }
 
   /**

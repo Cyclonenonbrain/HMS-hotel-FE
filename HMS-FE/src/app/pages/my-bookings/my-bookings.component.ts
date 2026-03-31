@@ -1,72 +1,41 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { VndPipe } from '../../core/vnd.pipe';
 import { AuthService } from '../../services/auth.services';
+import { BookingService, MyBookingItem } from '../../services/booking.services';
+import { ReviewService } from '../../services/review.service';
 
 @Component({
   selector: 'app-my-bookings',
   standalone: true,
-  imports: [CommonModule, RouterModule, VndPipe],
+  imports: [CommonModule, FormsModule, RouterModule, VndPipe],
   templateUrl: './my-bookings.component.html',
   styleUrls: ['./my-bookings.component.css']
 })
 export class MyBookingsComponent implements OnInit {
   user: any = null;
   isLoggedIn: boolean = false;
-
-  activeTab: 'upcoming' | 'completed' | 'cancelled' = 'upcoming';
-
-  // Mock data — sẽ thay bằng BookingService.getBookings() khi backend sẵn sàng
-  bookings = [
-    {
-      id: 'BKG-10294',
-      roomName: 'Executive Ocean View Suite',
-      checkIn: '2026-04-15',
-      checkOut: '2026-04-18',
-      guests: 2,
-      totalPrice: 4500000,
-      status: 'confirmed',
-      image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
-      type: 'upcoming'
-    },
-    {
-      id: 'BKG-09382',
-      roomName: 'Premium Family Room',
-      checkIn: '2026-05-02',
-      checkOut: '2026-05-05',
-      guests: 4,
-      totalPrice: 6200000,
-      status: 'pending',
-      image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80',
-      type: 'upcoming'
-    },
-    {
-      id: 'BKG-08112',
-      roomName: 'Standard Double Room',
-      checkIn: '2026-01-10',
-      checkOut: '2026-01-12',
-      guests: 2,
-      totalPrice: 1200000,
-      status: 'completed',
-      image: 'https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=800&q=80',
-      type: 'completed'
-    },
-    {
-      id: 'BKG-07441',
-      roomName: 'Presidential Suite',
-      checkIn: '2025-11-20',
-      checkOut: '2025-11-25',
-      guests: 2,
-      totalPrice: 25000000,
-      status: 'cancelled',
-      image: 'https://images.unsplash.com/photo-1582719478250-c89af14bcfcb?auto=format&fit=crop&w=800&q=80',
-      type: 'cancelled'
-    }
-  ];
+  isLoading: boolean = false;
+  errorMessage: string = '';
+  bookings: MyBookingItem[] = [];
+  selectedStatusFilter: 'ALL' | 'WAITING' | 'CONFIRMED' | 'COMPLETED' = 'ALL';
+  reviewedBookingIds = new Set<string>();
+  reviewModalOpen = false;
+  reviewSubmitting = false;
+  reviewError = '';
+  selectedBookingForReview: MyBookingItem | null = null;
+  reviewForm = {
+    reviewId: '',
+    rating: 5,
+    comment: ''
+  };
 
   constructor(
     private authService: AuthService,
+    private bookingService: BookingService,
+    private reviewService: ReviewService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
@@ -83,6 +52,7 @@ export class MyBookingsComponent implements OnInit {
             fullName: parsedUser.full_name || parsedUser.fullName
           };
         }
+        this.loadMyBookings();
       } else {
         this.user = null;
         this.router.navigate(['/login']);
@@ -91,12 +61,158 @@ export class MyBookingsComponent implements OnInit {
     });
   }
 
-  get filteredBookings() {
-    return this.bookings.filter(b => b.type === this.activeTab);
+  private loadMyBookings() {
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.bookingService.getMyBookings().subscribe({
+      next: (res) => {
+        this.bookings = res?.data || [];
+        this.loadReviewedState();
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.message || 'Không thể tải danh sách booking.';
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
-  setTab(tab: 'upcoming' | 'completed' | 'cancelled') {
-    this.activeTab = tab;
+  private loadReviewedState() {
+    this.reviewedBookingIds.clear();
+    const completedBookings = this.bookings.filter(b => (b.status || '').toUpperCase() === 'COMPLETED');
+    completedBookings.forEach(booking => {
+      this.reviewService.getReviewByBooking(booking.bookingId).subscribe({
+        next: (res) => {
+          if (res?.data?.id) {
+            this.reviewedBookingIds.add(booking.bookingId);
+            this.cdr.detectChanges();
+          }
+        },
+        error: () => {
+          // no review yet -> ignore
+        }
+      });
+    });
+  }
+
+  getStatusBadgeClass(status: string): string {
+    switch ((status || '').toUpperCase()) {
+      case 'CONFIRMED':
+        return 'bg-status-green text-white';
+      case 'PENDING':
+        return 'bg-primary text-slate-900';
+      case 'CANCELLED':
+        return 'bg-status-grey text-white';
+      case 'FAILED':
+        return 'bg-status-red text-white';
+      default:
+        return 'bg-slate-200 text-slate-700';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch ((status || '').toUpperCase()) {
+      case 'CONFIRMED':
+        return 'Confirmed';
+      case 'PENDING':
+        return 'Waiting for confirmation';
+      case 'CANCELLED':
+        return 'Cancelled';
+      case 'FAILED':
+        return 'Failed';
+      case 'CHECKED_IN':
+        return 'Checked in';
+      case 'COMPLETED':
+        return 'Completed';
+      case 'NO_SHOW':
+        return 'No show';
+      default:
+        return status || 'Unknown';
+    }
+  }
+
+  getFallbackImage(): string {
+    return 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
+  }
+
+  get filteredBookings(): MyBookingItem[] {
+    if (this.selectedStatusFilter === 'ALL') return this.bookings;
+
+    if (this.selectedStatusFilter === 'WAITING') {
+      return this.bookings.filter(b => (b.status || '').toUpperCase() === 'PENDING');
+    }
+
+    if (this.selectedStatusFilter === 'CONFIRMED') {
+      return this.bookings.filter(b => (b.status || '').toUpperCase() === 'CONFIRMED');
+    }
+
+    return this.bookings.filter(b => (b.status || '').toUpperCase() === 'COMPLETED');
+  }
+
+  setStatusFilter(filter: 'ALL' | 'WAITING' | 'CONFIRMED' | 'COMPLETED') {
+    this.selectedStatusFilter = filter;
+  }
+
+  setRating(star: number) {
+    this.reviewForm.rating = star;
+  }
+
+  canReview(booking: MyBookingItem): boolean {
+    const status = (booking.status || '').toUpperCase();
+    return status === 'COMPLETED' && !this.reviewedBookingIds.has(booking.bookingId);
+  }
+
+  isReviewed(booking: MyBookingItem): boolean {
+    return this.reviewedBookingIds.has(booking.bookingId);
+  }
+
+  openReviewModal(booking: MyBookingItem) {
+    if (!this.canReview(booking)) return;
+    this.selectedBookingForReview = booking;
+    this.reviewModalOpen = true;
+    this.reviewSubmitting = false;
+    this.reviewError = '';
+    this.reviewForm = { reviewId: '', rating: 5, comment: '' };
+  }
+
+  closeReviewModal() {
+    this.reviewModalOpen = false;
+    this.selectedBookingForReview = null;
+    this.reviewError = '';
+  }
+
+  submitReview() {
+    if (!this.selectedBookingForReview) return;
+    if (!this.reviewForm.comment || this.reviewForm.comment.trim().length < 10) {
+      this.reviewError = 'Nhận xét tối thiểu 10 ký tự.';
+      return;
+    }
+
+    this.reviewSubmitting = true;
+    this.reviewError = '';
+
+    const bookingId = this.selectedBookingForReview.bookingId;
+    const req$ = this.reviewService.createReview({
+      bookingId: bookingId,
+      rating: this.reviewForm.rating,
+      comment: this.reviewForm.comment.trim()
+    });
+
+    req$.subscribe({
+      next: () => {
+        this.reviewSubmitting = false;
+        this.reviewedBookingIds.add(bookingId);
+        this.closeReviewModal();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.reviewSubmitting = false;
+        this.reviewError = err?.error?.message || 'Không thể gửi đánh giá.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   onLogout() {

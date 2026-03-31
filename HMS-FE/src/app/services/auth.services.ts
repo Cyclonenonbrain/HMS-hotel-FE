@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, BehaviorSubject } from 'rxjs';
+import { isJwtTokenValid } from '../core/jwt-token.util';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly API_URL = 'http://localhost:8081/api/v1/auth';
   
   // Dùng key 'access_token' thống nhất cho toàn hệ thống
-  private authStatus = new BehaviorSubject<boolean>(!!localStorage.getItem('access_token'));
+  private authStatus = new BehaviorSubject<boolean>(isJwtTokenValid(localStorage.getItem('access_token')));
   isLoggedIn$ = this.authStatus.asObservable();
 
   constructor(private http: HttpClient) {}

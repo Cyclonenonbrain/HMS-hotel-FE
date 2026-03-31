@@ -271,6 +271,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       isValid = false;
     }
 
+    if (!this.bookingData.numberOfGuests || this.bookingData.numberOfGuests < 1) {
+      this.errorMessage = 'Số lượng khách phải lớn hơn hoặc bằng 1.';
+      isValid = false;
+    }
+
     return isValid;
   }
 

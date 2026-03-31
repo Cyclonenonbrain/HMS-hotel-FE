@@ -141,13 +141,7 @@
               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">Guests</label>
               <div class="relative flex items-center">
                 <span class="material-symbols-outlined absolute left-0 text-slate-400 text-lg">group</span>
-                <select [(ngModel)]="bookingForm.guests" class="guest-select">
-                  <option [value]="1">1 person</option>
-                  <option [value]="2">2 people</option>
-                  <option [value]="3">3 people</option>
-                  <option [value]="4">4 people</option>
-                </select>
-                <span class="material-symbols-outlined absolute right-0 text-slate-400 pointer-events-none text-xl">expand_more</span>
+                <div class="guest-select">{{ room.capacity || 1 }} {{ (room.capacity || 1) > 1 ? 'people' : 'person' }}</div>
               </div>
             </div>
           </div>
@@ -158,15 +152,7 @@
               <span class="font-bold text-slate-900">{{ invoice.roomTotal | vnd }}</span>
             </div>
             <div class="flex justify-between text-sm">
-              <span class="text-slate-500 font-medium underline decoration-slate-200">Cleaning fee</span>
-              <span class="font-bold text-slate-900">{{ CLEANING_FEE | vnd }}</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-500 font-medium underline decoration-slate-200">Service fee</span>
-              <span class="font-bold text-slate-900">{{ SERVICE_FEE | vnd }}</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-500 font-medium underline decoration-slate-200">Taxes</span>
+              <span class="text-slate-500 font-medium underline decoration-slate-200">Thuế VAT (8%)</span>
               <span class="font-bold text-slate-900">{{ invoice.taxes | vnd }}</span>
             </div>
             <div class="flex justify-between items-center pt-6 border-t-2 border-slate-50">
