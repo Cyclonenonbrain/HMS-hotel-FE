@@ -89,4 +89,8 @@ export class BookingService {
   checkInBooking(id: string, payload: BookingCheckInRequest): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.API_URL}/${id}/check-in`, payload);
   }
+
+  checkOutBooking(id: string): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.API_URL}/${id}/check-out`, {});
+  }
 }

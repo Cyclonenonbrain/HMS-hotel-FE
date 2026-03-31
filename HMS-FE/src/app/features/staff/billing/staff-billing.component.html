@@ -1,154 +1,193 @@
 <div class="flex-1 flex flex-col h-screen overflow-y-auto">
   <header class="flex items-center justify-between border-b border-slate-200 px-8 py-4 bg-white sticky top-0 z-10 shadow-sm">
-    <div class="flex items-center gap-4">
-      <h2 class="text-2xl font-bold leading-tight">Billing Operations</h2>
-      <span class="text-slate-500 text-sm">Oct 24, 2023</span>
-    </div>
-    <div class="flex items-center gap-4">
-      <button (click)="exportData()" class="flex items-center gap-2 px-4 py-2 bg-primary text-slate-900 rounded-lg font-bold text-sm hover:bg-primary/90 transition-colors">
-        <span class="material-symbols-outlined text-sm">download</span>
-        Export Data
-      </button>
-    </div>
+    <h2 class="text-2xl font-bold leading-tight">Billing Operations</h2>
   </header>
-  
-  <div class="p-8 flex flex-col gap-8 max-w-[1200px] w-full mx-auto">
-    <!-- KPI Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="flex flex-col gap-2 rounded-xl p-6 bg-white shadow-sm border border-slate-100">
-        <p class="text-slate-500 text-sm font-medium">Today's Revenue</p>
-        <p class="text-3xl font-bold tracking-tight">$12,450</p>
-        <div class="flex items-center gap-1 mt-2">
-          <span class="material-symbols-outlined text-green-500 text-sm">trending_up</span>
-          <span class="text-green-500 text-sm font-semibold">+5.2%</span>
-          <span class="text-slate-400 text-xs ml-1">vs yesterday</span>
-        </div>
-      </div>
-      <div class="flex flex-col gap-2 rounded-xl p-6 bg-white shadow-sm border border-slate-100">
-        <p class="text-slate-500 text-sm font-medium">Pending Payments</p>
-        <p class="text-3xl font-bold tracking-tight">$3,200</p>
-        <div class="flex items-center gap-1 mt-2">
-          <span class="material-symbols-outlined text-red-500 text-sm">trending_down</span>
-          <span class="text-red-500 text-sm font-semibold">-1.1%</span>
-          <span class="text-slate-400 text-xs ml-1">vs yesterday</span>
-        </div>
-      </div>
-      <div class="flex flex-col gap-2 rounded-xl p-6 bg-white shadow-sm border border-slate-100">
-        <p class="text-slate-500 text-sm font-medium">Refunds Issued</p>
-        <p class="text-3xl font-bold tracking-tight">$450</p>
-        <div class="flex items-center gap-1 mt-2">
-          <span class="material-symbols-outlined text-green-500 text-sm">trending_up</span>
-          <span class="text-green-500 text-sm font-semibold">+0.5%</span>
-          <span class="text-slate-400 text-xs ml-1">vs yesterday</span>
-        </div>
-      </div>
-      <div class="flex flex-col gap-2 rounded-xl p-6 bg-white shadow-sm border border-slate-100">
-        <p class="text-slate-500 text-sm font-medium">Avg RevPAR</p>
-        <p class="text-3xl font-bold tracking-tight">$240</p>
-        <div class="flex items-center gap-1 mt-2">
-          <span class="material-symbols-outlined text-green-500 text-sm">trending_up</span>
-          <span class="text-green-500 text-sm font-semibold">+2.4%</span>
-          <span class="text-slate-400 text-xs ml-1">vs yesterday</span>
-        </div>
-      </div>
+
+  <div class="p-8 flex flex-col gap-6 max-w-[1200px] w-full mx-auto">
+    <div class="flex items-center gap-3">
+      <input
+        class="w-full max-w-md rounded-lg border border-slate-200 px-3 py-2 text-sm"
+        placeholder="Search booking ID or guest..."
+        type="text"
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onFilterChange()"
+      />
     </div>
-    
-    <!-- Invoices Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 flex flex-col">
-      <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h3 class="text-xl font-bold">Recent Invoices</h3>
-        <div class="flex items-center gap-3">
-          <div class="relative w-64">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
-            <input class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" 
-                   placeholder="Search invoice or guest..." 
-                   type="text"
-                   [(ngModel)]="searchQuery"
-                   (ngModelChange)="onFilterChange()" />
-          </div>
-          <button class="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
-            <span class="material-symbols-outlined text-sm">calendar_today</span>
-            Date Range
-          </button>
-        </div>
-      </div>
-      
+
+    <div *ngIf="errorMessage" class="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+      {{ errorMessage }}
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm whitespace-nowrap">
           <thead class="bg-slate-50 text-slate-500">
             <tr>
               <th class="px-6 py-4 font-medium">Invoice #</th>
-              <th class="px-6 py-4 font-medium">Guest Name</th>
-              <th class="px-6 py-4 font-medium">Booking Ref</th>
-              <th class="px-6 py-4 font-medium">Amount</th>
-              <th class="px-6 py-4 font-medium">Date</th>
+              <th class="px-6 py-4 font-medium">Guest</th>
+              <th class="px-6 py-4 font-medium">Booking</th>
+              <th class="px-6 py-4 font-medium">Total</th>
+              <th class="px-6 py-4 font-medium">Balance</th>
               <th class="px-6 py-4 font-medium">Status</th>
               <th class="px-6 py-4 font-medium text-right">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            <tr *ngFor="let invoice of paginatedInvoices" class="hover:bg-slate-50 transition-colors">
-              <td class="px-6 py-4 font-medium">
-                {{ invoice.id }}
+            <tr *ngIf="isLoading">
+              <td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500">Loading billing records...</td>
+            </tr>
+
+            <tr *ngFor="let row of rows" class="hover:bg-slate-50 transition-colors">
+              <td class="px-6 py-4 font-medium">{{ row.invoiceNumber || '-' }}</td>
+              <td class="px-6 py-4">{{ row.guestName }}</td>
+              <td class="px-6 py-4 text-slate-500">{{ row.bookingId }}</td>
+              <td class="px-6 py-4 font-semibold">{{ row.amount | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</td>
+              <td class="px-6 py-4" [ngClass]="row.balanceDue > 0 ? 'text-rose-600 font-semibold' : 'text-emerald-600 font-semibold'">
+                {{ row.balanceDue | currency:'VND':'symbol':'1.0-0':'vi-VN' }}
               </td>
-              <td class="px-6 py-4">{{ invoice.guestName }}</td>
-              <td class="px-6 py-4 text-slate-500">{{ invoice.bookingRef }}</td>
-              <td class="px-6 py-4 font-semibold">${{ invoice.amount | number:'1.2-2' }}</td>
-              <td class="px-6 py-4 text-slate-500">{{ invoice.date }}</td>
               <td class="px-6 py-4">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                      [ngClass]="getStatusClasses(invoice.status)">
-                  {{ invoice.status }}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" [ngClass]="getStatusClasses(row.status)">
+                  {{ row.status }}
                 </span>
               </td>
-              <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
-                <button *ngIf="invoice.status === 'Pending'" 
-                        (click)="markPaid(invoice)"
-                        class="px-3 py-1 text-xs font-medium border border-slate-200 rounded hover:bg-slate-50 transition-colors">
-                  Mark Paid
-                </button>
-                <button (click)="downloadInvoice(invoice)" class="text-slate-400 hover:text-primary transition-colors p-1" title="Download PDF">
-                  <span class="material-symbols-outlined text-xl">picture_as_pdf</span>
-                </button>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button
+                    (click)="viewInvoice(row)"
+                    [disabled]="!row.invoiceId || row.isLoadingInvoice"
+                    class="px-3 py-1 text-xs font-medium border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    View
+                  </button>
+                  <button
+                    (click)="printInvoice(row)"
+                    [disabled]="!row.invoiceId || row.isLoadingInvoice"
+                    class="px-3 py-1 text-xs font-medium border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Print Invoice
+                  </button>
+                  <button
+                    *ngIf="row.balanceDue > 0 && row.invoiceId"
+                    (click)="markPaid(row)"
+                    class="px-3 py-1 text-xs font-medium border border-slate-200 rounded hover:bg-slate-50"
+                  >
+                    Mark Paid
+                  </button>
+                </div>
               </td>
             </tr>
-            
-            <tr *ngIf="paginatedInvoices.length === 0">
-              <td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500">
-                No invoices found matching your criteria.
-              </td>
+
+            <tr *ngIf="!isLoading && rows.length === 0">
+              <td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500">No billing data found.</td>
             </tr>
           </tbody>
         </table>
       </div>
-      
-      <!-- Custom Pagination Logic -->
-      <div *ngIf="totalPages > 1" class="p-4 border-t border-slate-100 flex items-center justify-between text-sm">
-        <span class="text-slate-500">
-          Showing <span class="font-medium text-slate-900">{{ (currentPage - 1) * pageSize + 1 }}</span> to <span class="font-medium text-slate-900">{{ (currentPage * pageSize) > filteredInvoices.length ? filteredInvoices.length : (currentPage * pageSize) }}</span> of <span class="font-medium text-slate-900">{{ filteredInvoices.length }}</span> entries
-        </span>
-        <div class="flex gap-1">
-          <button [disabled]="currentPage === 1" (click)="prevPage()" class="px-3 py-1 border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
-            Prev
-          </button>
-          
-          <ng-container *ngFor="let page of visiblePages">
-            <button *ngIf="page !== '...'" 
-                    (click)="goToPage(page)" 
-                    [ngClass]="page === currentPage ? 'px-3 py-1 bg-primary text-slate-900 rounded font-medium' : 'px-3 py-1 border border-slate-200 rounded hover:bg-slate-50'">
-              {{ page }}
-            </button>
-            <span *ngIf="page === '...'" class="px-3 py-1 border border-slate-200 rounded bg-slate-50/50 text-slate-400">
-              ...
-            </span>
-          </ng-container>
 
-          <button [disabled]="currentPage === totalPages" (click)="nextPage()" class="px-3 py-1 border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
-            Next
-          </button>
+      <div *ngIf="totalPages > 1" class="p-4 border-t border-slate-100 flex items-center justify-end gap-2 text-sm">
+        <button [disabled]="currentPage === 1" (click)="prevPage()" class="px-3 py-1 border border-slate-200 rounded disabled:opacity-50">Prev</button>
+        <span>Page {{ currentPage }} / {{ totalPages }}</span>
+        <button [disabled]="currentPage === totalPages" (click)="nextPage()" class="px-3 py-1 border border-slate-200 rounded disabled:opacity-50">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="detailOpen" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white">
+        <h3 class="text-lg font-semibold">Invoice Detail</h3>
+        <button class="text-slate-500 hover:text-slate-700" (click)="closeInvoiceDetail()">Close</button>
+      </div>
+
+      <div class="p-6">
+        <div *ngIf="detailLoading" class="text-sm text-slate-500">Loading invoice detail...</div>
+        <div *ngIf="detailError" class="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {{ detailError }}
+        </div>
+
+        <div *ngIf="!detailLoading && selectedInvoice as inv" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded border border-slate-200 p-4">
+              <p><span class="text-slate-500">Invoice #:</span> <b>{{ inv.invoice_number || inv.id }}</b></p>
+              <p><span class="text-slate-500">Booking:</span> <b>{{ selectedBookingId || inv.booking_id }}</b></p>
+              <p><span class="text-slate-500">Status:</span> <b>{{ inv.status }}</b></p>
+              <p><span class="text-slate-500">Issued:</span> <b>{{ (inv.issued_at || inv.created_at) | date:'dd/MM/yyyy HH:mm' }}</b></p>
+            </div>
+            <div class="rounded border border-slate-200 p-4">
+              <p><span class="text-slate-500">Guest:</span> <b>{{ selectedGuestName || 'Walk-in guest' }}</b></p>
+              <p><span class="text-slate-500">Room Total:</span> <b>{{ inv.subtotal_room | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</b></p>
+              <p><span class="text-slate-500">Service Total:</span> <b>{{ inv.subtotal_service | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</b></p>
+              <p><span class="text-slate-500">Grand Total:</span> <b>{{ inv.total_amount | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</b></p>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="font-semibold mb-2">Room Charges</h4>
+            <div class="rounded border border-slate-200 overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-slate-50 text-slate-500">
+                  <tr>
+                    <th class="px-4 py-2 text-left">Room</th>
+                    <th class="px-4 py-2 text-left">Nights</th>
+                    <th class="px-4 py-2 text-left">Unit Price</th>
+                    <th class="px-4 py-2 text-left">Line Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of roomItems" class="border-t border-slate-100">
+                    <td class="px-4 py-2">
+                      {{ item.room_number ? ('Room ' + item.room_number) : item.description }}
+                      <span *ngIf="item.room_type_name" class="text-slate-500">({{ item.room_type_name }})</span>
+                    </td>
+                    <td class="px-4 py-2">{{ item.nights || item.quantity }}</td>
+                    <td class="px-4 py-2">{{ item.unit_price | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</td>
+                    <td class="px-4 py-2">{{ item.line_total | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</td>
+                  </tr>
+                  <tr *ngIf="roomItems.length === 0">
+                    <td colspan="4" class="px-4 py-3 text-slate-500 text-center">No room charges.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="font-semibold mb-2">Service Charges</h4>
+            <div class="rounded border border-slate-200 overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-slate-50 text-slate-500">
+                  <tr>
+                    <th class="px-4 py-2 text-left">Service</th>
+                    <th class="px-4 py-2 text-left">Qty</th>
+                    <th class="px-4 py-2 text-left">Unit Price</th>
+                    <th class="px-4 py-2 text-left">Line Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of serviceItems" class="border-t border-slate-100">
+                    <td class="px-4 py-2">{{ item.service_name || item.description }}</td>
+                    <td class="px-4 py-2">{{ item.quantity }}</td>
+                    <td class="px-4 py-2">{{ item.unit_price | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</td>
+                    <td class="px-4 py-2">{{ item.line_total | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</td>
+                  </tr>
+                  <tr *ngIf="serviceItems.length === 0">
+                    <td colspan="4" class="px-4 py-3 text-slate-500 text-center">No service charges.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="rounded border border-slate-200 p-4 text-sm space-y-1">
+            <div class="flex justify-between"><span>Room Total</span><b>{{ inv.subtotal_room | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</b></div>
+            <div class="flex justify-between"><span>Service Total</span><b>{{ inv.subtotal_service | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</b></div>
+            <div class="flex justify-between"><span>Discount</span><b>- {{ inv.discount_amount | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</b></div>
+            <div class="flex justify-between border-t border-slate-200 pt-2"><span>Grand Total</span><b>{{ inv.total_amount | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</b></div>
+            <div class="flex justify-between"><span>Paid</span><b>{{ inv.paid_amount | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</b></div>
+            <div class="flex justify-between"><span>Balance</span><b>{{ inv.balance_due | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</b></div>
+          </div>
         </div>
       </div>
-      
     </div>
   </div>
 </div>

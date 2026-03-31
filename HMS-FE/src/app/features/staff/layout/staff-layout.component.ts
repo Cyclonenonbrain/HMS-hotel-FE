@@ -27,11 +27,7 @@ import { RouterModule, Router } from '@angular/router';
               <span class="material-symbols-outlined text-[24px]">calendar_month</span>
               <p class="text-sm font-medium leading-normal">Bookings</p>
             </div>
-            <div routerLink="/staff/billing" routerLinkActive="bg-primary/10 text-primary" class="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors hover:bg-slate-800 text-slate-300 hover:text-white">
-              <span class="material-symbols-outlined text-[24px]">receipt_long</span>
-              <p class="text-sm font-medium leading-normal">Billing</p>
-            </div>
-           
+            
           </div>
         </div>
         <div class="p-4 border-t border-slate-800">
