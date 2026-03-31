@@ -16,6 +16,8 @@ export interface RoomSearchParams {
   size?: number;
 }
 
+export type BedConfig = 'SINGLE_BED' | 'TWIN_BEDS' | 'DOUBLE_BED';
+
 export interface RoomSearchResult {
   roomTypeId: string;
   name: string;
@@ -26,6 +28,7 @@ export interface RoomSearchResult {
   thumbnailUrl: string;
   capacity: number;
   availableRooms: number;
+  bedConfig: BedConfig | null;
 }
 
 export interface ApiResponse<T> {
@@ -119,7 +122,8 @@ export class RoomSearchService {
       amenities: this.extractAmenities(room),
       thumbnailUrl: this.getImageByRoomName(room.name),
       capacity: room.capacity || 2,
-      availableRooms: mockAvailable
+      availableRooms: mockAvailable,
+      bedConfig: room.bedConfig || room.bed_config || null
     };
   }
 

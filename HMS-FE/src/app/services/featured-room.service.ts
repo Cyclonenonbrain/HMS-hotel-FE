@@ -79,8 +79,8 @@ export class FeaturedRoomService {
   private extractAmenities(room: any): string[] {
     const name = (room.name || '').toLowerCase();
     if (name.includes('deluxe') || name.includes('suite') || name.includes('executive')) {
-      return ['wifi', 'king_bed', 'balcony', 'ocean_view'];
+      return ['TV', 'Balcony', 'Bathtub', 'Private Pool'];
     }
-    return ['wifi', 'queen_bed', 'tv'];
+    return ['TV', 'Sofa'];
   }
 }

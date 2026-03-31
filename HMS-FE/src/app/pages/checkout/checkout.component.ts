@@ -2,11 +2,15 @@ import { Component, OnInit, ElementRef, HostListener, OnDestroy, ChangeDetectorR
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { CheckoutService } from '../../services/checkout.services'; 
+import { CheckoutService, BookingCreateRequest } from '../../services/checkout.services'; 
+import { PaymentService } from '../../services/payment.service';
+import { CouponService, CouponValidationResponse } from '../../services/coupon.service';
 import { AuthService } from '../../services/auth.services';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { VndPipe } from '../../core/vnd.pipe';
+
+type PaymentMethod = 'ONLINE_DEPOSIT' | 'ONLINE_FULL' | 'AT_HOTEL';
 
 @Component({
   selector: 'app-checkout',
@@ -17,19 +21,20 @@ import { VndPipe } from '../../core/vnd.pipe';
 })
 export class CheckoutComponent implements OnInit, OnDestroy {
   user: any = null;
-  isLoggedIn: boolean = false; // Thêm biến này để đồng bộ logic
+  isLoggedIn: boolean = false;
   isProfileMenuOpen = false;
   isLoading = false;
-  selectedCardIndex = 0;
+  isProcessingPayment = false;
+  errorMessage = '';
   private authSub!: Subscription;
 
-  // Mock dữ liệu phòng (Bạn có thể lấy từ ActivatedRoute nếu cần)
+  // Room data from query params
   room = {
-    id: '550e8400-e29b-41d4-a716-446655440000',
+    id: '',                    // roomTypeId (UUID)
     name: 'Executive Suite',
     type: 'Premium Suite',
-    price: 450.00,
-    serviceFee: 270000.00,
+    price: 0,
+    serviceFee: 0,             // Sẽ tính từ backend hoặc = 0
     image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80'
   };
 
@@ -37,50 +42,35 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     fullName: '',
     email: '',
     phone: '',
-    checkIn: '2026-03-15',
-    checkOut: '2026-03-18',
-    numberOfGuests: 2,
-    stayType: 'daily'
+    checkIn: '',
+    checkOut: '',
+    numberOfGuests: 2
   };
 
-  paymentMethods = ['VISA', 'MASTERCARD'];
-  selectedMethod: string | null = null;
+  // Payment method selection
+  selectedPaymentMethod: PaymentMethod = 'ONLINE_DEPOSIT';
+  
+  // Deposit rate (30% of room total before VAT)
+  readonly DEPOSIT_RATE = 0.3;
 
-  paymentForms: Record<string, {
-    cardNumber: string;
-    cardHolder: string;
-    expiry: string;
-    cvv: string;
-  }> = {
-    VISA: { cardNumber: '', cardHolder: '', expiry: '', cvv: '' },
-    MASTERCARD: { cardNumber: '', cardHolder: '', expiry: '', cvv: '' }
-  };
-
-  savedPaymentInfo: Record<string, {
-    cardNumber: string;
-    cardHolder: string;
-    expiry: string;
-  } | null> = {
-    VISA: null,
-    MASTERCARD: null
-  };
-
-  // Discount / coupon state
-  discountEnabled = false;
-  availableCoupons: Array<{ code: string; description: string; type: 'amount' | 'percent'; value: number }> = [];
-  selectedCouponCode: string | null = null;
+  // Coupon state
+  couponCode = '';
+  couponLoading = false;
+  couponError = '';
+  appliedCoupon: CouponValidationResponse | null = null;
 
   // Validation error messages
   validationErrors = {
     fullName: '',
     email: '',
-    phone: '',
-    card: ''
+    phone: ''
   };
 
   constructor(
     private checkoutService: CheckoutService, 
-    private authService: AuthService, // Inject AuthService
+    private paymentService: PaymentService,
+    private couponService: CouponService,
+    private authService: AuthService,
     private route: ActivatedRoute,
     private router: Router,
     private eRef: ElementRef,
@@ -89,9 +79,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.readQueryParams();
-    this.detectAvailableCoupons();
 
-    // ĐỒNG BỘ LOGIC: Theo dõi trạng thái đăng nhập y hệt LandingPage/RoomList
+    // Subscribe to auth state
     this.authSub = this.authService.isLoggedIn$.subscribe(status => {
       this.isLoggedIn = status;
       if (status) {
@@ -99,22 +88,22 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         if (userData) {
           try {
             const parsedUser = JSON.parse(userData);
-            // Map dữ liệu chuẩn hóa giống RoomList
             this.user = {
               ...parsedUser,
               fullName: parsedUser.full_name || parsedUser.fullName || 'Guest Member'
             };
             
-            // Tự động điền form
+            // Auto-fill form with user data
             this.bookingData.fullName = this.user.fullName;
             this.bookingData.email = this.user.email || '';
+            this.bookingData.phone = this.user.phone || '';
           } catch (e) {
             console.error("Lỗi parse User tại Checkout:", e);
           }
         }
       } else {
         this.user = null;
-        this.router.navigate(['/login']); // Chưa login thì đẩy ra
+        this.router.navigate(['/login']);
       }
       this.cdr.detectChanges();
     });
@@ -138,12 +127,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       if (checkOut) this.bookingData.checkOut = checkOut;
       if (!isNaN(guests) && guests > 0) this.bookingData.numberOfGuests = guests;
 
-      // Nếu chưa có giá dịch vụ từ query thì giữ giá mặc định
       this.cdr.detectChanges();
     });
   }
 
   get nights(): number {
+    if (!this.bookingData.checkIn || !this.bookingData.checkOut) return 1;
     const start = new Date(this.bookingData.checkIn);
     const end = new Date(this.bookingData.checkOut);
     const diff = end.getTime() - start.getTime();
@@ -151,49 +140,56 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return days;
   }
 
-  detectAvailableCoupons() {
-    // Mock behavior: auto-detect coupons for current user/room.
-    // Replace with API call to backend endpoint (e.g., /api/coupons/available) when ready.
-    this.availableCoupons = [
-      { code: 'HMS10', description: '10% off for loyalty', type: 'percent', value: 10 },
-      { code: 'HMS50K', description: '50,000₫ off', type: 'amount', value: 50000 }
-    ];
+  get roomTotal(): number {
+    return this.room.price * this.nights;
   }
 
   get discountAmount(): number {
-    if (!this.discountEnabled || !this.selectedCouponCode) {
+    if (!this.appliedCoupon || !this.appliedCoupon.is_valid) {
       return 0;
     }
+    return this.appliedCoupon.discount_amount || 0;
+  }
 
-    const coupon = this.availableCoupons.find(c => c.code === this.selectedCouponCode);
-    if (!coupon) {
-      return 0;
-    }
-
-    if (coupon.type === 'percent') {
-      return Math.round((this.room.price * this.nights) * (coupon.value / 100));
-    }
-
-    return coupon.value;
+  // Room total after discount (before VAT)
+  get roomTotalAfterDiscount(): number {
+    return Math.max(this.roomTotal - this.discountAmount, 0);
   }
 
   get taxAmount(): number {
-    const baseAmount = this.room.price * this.nights;
-    const afterDiscount = Math.max(baseAmount - this.discountAmount, 0);
-    return Math.round(afterDiscount * 0.08);
+    return Math.round(this.roomTotalAfterDiscount * 0.08); // 8% VAT
   }
 
   get totalAmount(): number {
-    const baseAmount = this.room.price * this.nights;
-    const discounted = Math.max(baseAmount - this.discountAmount, 0);
-    return discounted + this.taxAmount + this.room.serviceFee;
+    return this.roomTotalAfterDiscount + this.taxAmount + this.room.serviceFee;
+  }
+
+  // Deposit = 30% of room total after discount (before VAT)
+  get depositAmount(): number {
+    return Math.round(this.roomTotalAfterDiscount * this.DEPOSIT_RATE);
+  }
+
+  // Amount to pay now depends on payment method
+  get amountToPay(): number {
+    if (this.selectedPaymentMethod === 'ONLINE_DEPOSIT') {
+      return this.depositAmount;
+    }
+    if (this.selectedPaymentMethod === 'ONLINE_FULL') {
+      return this.totalAmount;
+    }
+    return 0; // Pay at hotel = no upfront payment
+  }
+
+  // Remaining amount to pay at hotel
+  get remainingAmount(): number {
+    return this.totalAmount - this.depositAmount;
   }
 
   ngOnDestroy(): void {
     if (this.authSub) this.authSub.unsubscribe();
   }
 
-  // Các hàm xử lý giao diện
+  // UI handlers
   toggleProfileMenu() {
     this.isProfileMenuOpen = !this.isProfileMenuOpen;
   }
@@ -210,103 +206,187 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.router.navigate(['/']);
   }
 
-  confirmPaymentMethod(method: string) {
-    const form = this.paymentForms[method];
-    if (!form.cardHolder || !form.cardNumber || !form.expiry || !form.cvv) {
-      this.validationErrors.card = 'Please fill all payment fields for ' + method;
+  // Coupon handling
+  applyCoupon() {
+    if (!this.couponCode.trim()) {
+      this.couponError = 'Vui lòng nhập mã giảm giá';
       return;
     }
-    this.savedPaymentInfo[method] = {
-      cardHolder: form.cardHolder,
-      cardNumber: form.cardNumber,
-      expiry: form.expiry
-    };
-    this.selectedMethod = null;
-    this.validationErrors.card = '';
+
+    this.couponLoading = true;
+    this.couponError = '';
+
+    this.couponService.validateCoupon(this.couponCode, this.roomTotal).subscribe({
+      next: (response) => {
+        this.couponLoading = false;
+        if (response.success && response.data.is_valid) {
+          this.appliedCoupon = response.data;
+          this.couponError = '';
+        } else {
+          this.appliedCoupon = null;
+          this.couponError = response.data.reason || 'Mã giảm giá không hợp lệ';
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.couponLoading = false;
+        this.appliedCoupon = null;
+        this.couponError = err.message || 'Không thể kiểm tra mã giảm giá';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
-  // Logic tính toán
+  removeCoupon() {
+    this.appliedCoupon = null;
+    this.couponCode = '';
+    this.couponError = '';
+  }
+
+  // Form validation
+  private validateForm(): boolean {
+    this.validationErrors = { fullName: '', email: '', phone: '' };
+    let isValid = true;
+
+    if (!this.bookingData.fullName?.trim()) {
+      this.validationErrors.fullName = 'Vui lòng nhập họ tên';
+      isValid = false;
+    }
+
+    if (!this.bookingData.email?.trim()) {
+      this.validationErrors.email = 'Vui lòng nhập email';
+      isValid = false;
+    } else if (!this.isValidEmail(this.bookingData.email)) {
+      this.validationErrors.email = 'Email không hợp lệ';
+      isValid = false;
+    }
+
+    if (!this.bookingData.phone?.trim()) {
+      this.validationErrors.phone = 'Vui lòng nhập số điện thoại';
+      isValid = false;
+    }
+
+    if (!this.room.id) {
+      this.errorMessage = 'Không có thông tin phòng. Vui lòng quay lại chọn phòng.';
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  // Main booking submission
   onConfirmPayment() {
-    // Reset validation errors
-    this.validationErrors = {
-      fullName: '',
-      email: '',
-      phone: '',
-      card: ''
-    };
-
-    let hasErrors = false;
-
-    // Validate required fields
-    if (!this.bookingData.fullName || this.bookingData.fullName.trim() === '') {
-      this.validationErrors.fullName = 'Please enter your Full Name';
-      hasErrors = true;
-    }
-
-    if (!this.bookingData.phone || this.bookingData.phone.trim() === '') {
-      this.validationErrors.phone = 'Please enter your Phone Number';
-      hasErrors = true;
-    }
-
-    if (!this.bookingData.email || this.bookingData.email.trim() === '') {
-      this.validationErrors.email = 'Please enter your Email';
-      hasErrors = true;
-    }
-
-    // Ensure at least one payment was confirmed
-    const usableMethod = this.paymentMethods.find(m => !!this.savedPaymentInfo[m]);
-    if (!usableMethod) {
-      this.validationErrors.card = 'Please confirm a payment method first';
-      hasErrors = true;
-    }
-
-    if (hasErrors) {
+    if (!this.validateForm()) {
       return;
     }
 
     this.isLoading = true;
+    this.isProcessingPayment = true;
+    this.errorMessage = '';
 
-    // Generate booking code (format: HMS-YYYYMMDD-XXXXX)
-    const today = new Date();
-    const dateStr = today.toISOString().split('T')[0].replace(/-/g, '');
-    const randomNum = Math.floor(Math.random() * 90000) + 10000;
-    const bookingCode = `HMS-${dateStr}-${randomNum}`;
+    // Deposit amount depends on payment method
+    const depositForBooking =
+      this.selectedPaymentMethod === 'ONLINE_DEPOSIT'
+        ? this.depositAmount
+        : this.selectedPaymentMethod === 'ONLINE_FULL'
+          ? this.totalAmount
+          : 0;
 
-    // Prepare booking summary data to pass to confirmation page
-    const bookingSummary: any = {
-      id: bookingCode,
-      bookingCode: bookingCode,
-      fullName: this.bookingData.fullName,
-      email: this.bookingData.email,
-      phone: this.bookingData.phone,
-      roomName: this.room.name,
-      roomType: this.room.type,
-      checkIn: this.bookingData.checkIn,
-      checkOut: this.bookingData.checkOut,
-      numberOfGuests: this.bookingData.numberOfGuests,
-      roomPrice: this.room.price,
-      nights: this.nights,
-      roomTotal: this.room.price * this.nights,
-      taxAmount: this.taxAmount,
-      serviceFee: this.room.serviceFee,
-      totalPrice: this.totalAmount
+    // Step 1: Create booking
+    const bookingRequest: BookingCreateRequest = {
+      channel: 'WEB',
+      deposit: depositForBooking,
+      coupon_code: this.appliedCoupon?.code || undefined,
+      notes: `Guest: ${this.bookingData.fullName}, Phone: ${this.bookingData.phone}, Payment: ${
+        this.selectedPaymentMethod === 'ONLINE_DEPOSIT'
+          ? 'Online (30% deposit)'
+          : this.selectedPaymentMethod === 'ONLINE_FULL'
+            ? 'Online (full payment)'
+            : 'Pay at hotel'
+      }`,
+      booking_items: [{
+        room_type_id: this.room.id,
+        check_in: this.bookingData.checkIn,
+        check_out: this.bookingData.checkOut,
+        number_of_guests: this.bookingData.numberOfGuests
+      }]
     };
 
-    // include selected payment info in booking summary
-    const selectedMethod = this.paymentMethods.find(m => !!this.savedPaymentInfo[m]);
-    if (selectedMethod && this.savedPaymentInfo[selectedMethod]) {
-      bookingSummary.paymentMethod = selectedMethod;
-      bookingSummary.paymentInfo = this.savedPaymentInfo[selectedMethod];
-    }
-
-    // Navigate to confirmation page with all data in queryParams
-    this.router.navigate(['/booking-confirmation', bookingCode], {
-      queryParams: {
-        bookingData: JSON.stringify(bookingSummary)
+    this.checkoutService.createBooking(bookingRequest).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          const bookingId = response.data.id;
+          console.log('Booking created:', bookingId);
+          
+          if (
+            (this.selectedPaymentMethod === 'ONLINE_DEPOSIT' ||
+              this.selectedPaymentMethod === 'ONLINE_FULL') &&
+            depositForBooking > 0
+          ) {
+            // Online payment: Create PayOS payment link
+            this.createPaymentLink(bookingId);
+          } else {
+            // Pay at hotel: Go directly to success page
+            this.isLoading = false;
+            this.isProcessingPayment = false;
+            this.router.navigate(['/booking-success'], {
+              queryParams: { 
+                bookingId: bookingId,
+                paymentMethod: 'AT_HOTEL'
+              }
+            });
+          }
+        } else {
+          this.handleError('Không thể tạo đơn đặt phòng');
+        }
       },
-      state: { bookingData: bookingSummary }
-    }).finally(() => {
-      this.isLoading = false;
+      error: (err) => {
+        this.handleError(err.message || 'Lỗi khi tạo đơn đặt phòng');
+      }
     });
+  }
+
+  private createPaymentLink(bookingId: string) {
+    this.paymentService.createPayOsPaymentLink(bookingId).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        this.isProcessingPayment = false;
+
+        if (response.success && response.data?.checkout_url) {
+          // Redirect to PayOS checkout
+          console.log('Redirecting to PayOS:', response.data.checkout_url);
+          window.location.href = `${response.data.checkout_url}`;
+        } else {
+          // Nếu không có payment link (deposit = 0), navigate to success
+          this.router.navigate(['/booking-success'], {
+            queryParams: { bookingId: bookingId }
+          });
+        }
+      },
+      error: (err) => {
+        // Nếu lỗi tạo payment link, vẫn navigate to success với status pending
+        console.warn('Payment link error, navigating to pending:', err);
+        this.isLoading = false;
+        this.isProcessingPayment = false;
+        this.router.navigate(['/booking-success'], {
+          queryParams: { 
+            bookingId: bookingId,
+            status: 'pending'
+          }
+        });
+      }
+    });
+  }
+
+  private handleError(message: string) {
+    this.isLoading = false;
+    this.isProcessingPayment = false;
+    this.errorMessage = message;
+    this.cdr.detectChanges();
   }
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
-import { environment } from '../../environments/environment'; // Đảm bảo bạn có file environment.ts với apiUrl được cấu hình đúng
+import { environment } from '../../environments/environment';
 
 /**
  * Interface khớp với ApiResponse.java từ Backend
@@ -15,47 +15,91 @@ export interface ApiResponse<T> {
 }
 
 /**
- * DTO khớp với yêu cầu tạo Booking + Payment từ Backend
+ * Booking Item Request - khớp với BookingItemRequest DTO từ Backend
+ */
+export interface BookingItemRequest {
+  room_type_id: string;           // UUID
+  check_in: string;               // LocalDate (YYYY-MM-DD)
+  check_out: string;              // LocalDate (YYYY-MM-DD)
+  number_of_guests: number;       // Integer
+  pricing_mode?: string;          // Optional: NIGHTLY, HOURLY
+}
+
+/**
+ * DTO khớp với BookingCreateRequest từ Backend
  */
 export interface BookingCreateRequest {
-  roomId: string;           // UUID
-  checkIn: string;          // LocalDate (YYYY-MM-DD)
-  checkOut: string;         // LocalDate (YYYY-MM-DD)
-  numberOfGuests: number;   // Integer
-  snapshotRoomPrice: number; // BigDecimal
-  paymentMethod: string;    // String (VISA, MASTERCARD, etc.)
-  amount: number;           // BigDecimal
-  deposit?: number;         // Optional BigDecimal
+  channel: 'WEB' | 'COUNTER' | 'ADMIN';
+  deposit: number;                // BigDecimal - tổng tiền cọc (có thể = totalAmount)
+  notes?: string;                 // Optional notes
+  coupon_code?: string;           // Optional coupon code
+  booking_items: BookingItemRequest[];
+}
+
+/**
+ * Booking Response từ Backend
+ */
+export interface BookingResponse {
+  id: string;                     // UUID
+  user_id: string;
+  status: 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
+  channel: string;
+  deposit: number;
+  coupon_code_snapshot?: string;
+  discount_snapshot?: number;
+  booking_items: BookingItemResponse[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BookingItemResponse {
+  id: string;
+  room_type_id: string;
+  room_type_name: string;
+  check_in: string;
+  check_out: string;
+  number_of_guests: number;
+  snapshot_price: number;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class CheckoutService {
-  // Base URL lấy từ config backend: http://localhost:8081/api/v1
   private readonly API_URL = `${environment.apiUrl}`;
 
   constructor(private http: HttpClient) {}
 
   /**
-   * Gửi yêu cầu đặt phòng (Booking) và thanh toán (Payment)
-   * Endpoint này sẽ ánh xạ tới Controller xử lý @RequestBody BookingCreateRequest
+   * Tạo booking mới
+   * POST /api/v1/bookings
    */
-  confirmBooking(payload: BookingCreateRequest): Observable<ApiResponse<any>> {
+  createBooking(payload: BookingCreateRequest): Observable<ApiResponse<BookingResponse>> {
     return this.http
-      .post<ApiResponse<any>>(`${this.API_URL}/customer/bookings`, payload)
+      .post<ApiResponse<BookingResponse>>(`${this.API_URL}/bookings`, payload)
       .pipe(
-        retry(1), // Thử lại 1 lần nếu lỗi mạng
+        retry(1),
         catchError(this.handleError)
       );
   }
 
   /**
-   * Probe API để kiểm tra quyền CUSTOMER (như mô tả trong mục 4.3 của README)
+   * Lấy thông tin booking theo ID
+   * GET /api/v1/bookings/{id}
    */
-  checkCustomerProbe(): Observable<ApiResponse<string>> {
+  getBookingById(bookingId: string): Observable<ApiResponse<BookingResponse>> {
     return this.http
-      .get<ApiResponse<string>>(`${this.API_URL}/customer/probe`)
+      .get<ApiResponse<BookingResponse>>(`${this.API_URL}/bookings/${bookingId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Lấy danh sách bookings của user hiện tại
+   * GET /api/v1/bookings
+   */
+  getMyBookings(): Observable<ApiResponse<BookingResponse[]>> {
+    return this.http
+      .get<ApiResponse<BookingResponse[]>>(`${this.API_URL}/bookings`)
       .pipe(catchError(this.handleError));
   }
 
@@ -66,14 +110,16 @@ export class CheckoutService {
     let errorMessage = 'Đã có lỗi xảy ra, vui lòng thử lại sau.';
     
     if (error.error instanceof ErrorEvent) {
-      // Lỗi phía Client
       errorMessage = `Lỗi: ${error.error.message}`;
     } else {
-      // Lỗi phía Backend (trả về ApiErrorResponse)
       if (error.status === 401) {
         errorMessage = 'Phiên làm việc hết hạn, vui lòng đăng nhập lại.';
       } else if (error.status === 403) {
         errorMessage = 'Bạn không có quyền thực hiện thao tác này.';
+      } else if (error.status === 400) {
+        errorMessage = error.error?.message || 'Dữ liệu không hợp lệ.';
+      } else if (error.status === 409) {
+        errorMessage = error.error?.message || 'Phòng đã được đặt trong khoảng thời gian này.';
       } else {
         errorMessage = error.error?.message || `Mã lỗi: ${error.status}`;
       }

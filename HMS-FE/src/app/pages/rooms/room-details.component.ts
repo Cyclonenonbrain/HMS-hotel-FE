@@ -111,7 +111,7 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
           displayName: this.formatRoomName(data.name),
           displayPrice: parseFloat(data.basePrice || data.base_price || 0),
           description: data.description || "Step into an oasis of calm and luxury. Our suites offer an expansive living space, a private balcony with panoramic sea views, and premium comfort.",
-          amenities: this.getAmenitiesByRoom(data.name),
+          amenities: this.mapAmenitiesToIcons(data.amenities || []),
           images: this.mockGallery
         };
         this.updateInvoice();
@@ -159,23 +159,22 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
     return name;
   }
 
-  getAmenitiesByRoom(name: string) {
-    const common = [
-      { icon: 'wifi', label: 'Free Wi-Fi' },
-      { icon: 'tv', label: '65" Smart TV' },
-      { icon: 'coffee_maker', label: 'Espresso Machine' },
-      { icon: 'room_service', label: '24/7 Service' }
-    ];
-    if (name.toLowerCase().includes('deluxe') || name.toLowerCase().includes('suite')) {
-      return [
-        { icon: 'king_bed', label: 'King Bed' },
-        { icon: 'waves', label: 'Sea View' },
-        { icon: 'deck', label: 'Balcony' },
-        { icon: 'bathtub', label: 'Deep Soaking Tub' },
-        ...common
-      ];
-    }
-    return [{ icon: 'bed', label: 'Queen Bed' }, ...common];
+  private mapAmenitiesToIcons(amenities: string[]) {
+    const iconMap: Record<string, { icon: string; label: string }> = {
+      TV: { icon: 'tv', label: 'TV' },
+      BATHTUB: { icon: 'bathtub', label: 'Bathtub' },
+      BALCONY: { icon: 'balcony', label: 'Balcony' },
+      KITCHEN: { icon: 'kitchen', label: 'Kitchen' },
+      SOFA: { icon: 'weekend', label: 'Sofa' },
+      PRIVATE_POOL: { icon: 'pool', label: 'Private Pool' },
+      WIFI: { icon: 'wifi', label: 'WiFi' },
+      AC: { icon: 'ac_unit', label: 'AC' }
+    };
+
+    return amenities.map((name) => {
+      const normalized = String(name || '').toUpperCase().replace(/\s+/g, '_');
+      return iconMap[normalized] || { icon: 'check_circle', label: name };
+    });
   }
 
   onReserve() {

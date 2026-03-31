@@ -28,7 +28,13 @@ export const routes: Routes = [
   { path: '', component: LandingPageComponent },
   { path: 'search', component: RoomListComponent },
   { path: 'checkout', component: CheckoutComponent, canActivate: [authGuard] },
+  { path: 'booking-confirmation', component: BookingConfirmationComponent, canActivate: [authGuard] },
   { path: 'booking-confirmation/:id', component: BookingConfirmationComponent, canActivate: [authGuard] },
+  {
+    path: 'booking-success',
+    loadComponent: () => import('./pages/payment/booking-success.component').then(m => m.BookingSuccessComponent),
+    canActivate: [authGuard]
+  },
   {
     path: 'room-detail/:id',
     loadComponent: () => import('./pages/rooms/room-details.component').then(m => m.RoomDetailComponent)

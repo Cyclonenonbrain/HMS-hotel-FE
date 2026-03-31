@@ -1,6 +1,5 @@
-<div class="relative z-10 flex min-h-screen w-full flex-col group/design-root bg-background-light dark:bg-background-dark">
+<div class="relative z-10 flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark">
   <div class="layout-container flex h-full grow flex-col items-center justify-center p-6 sm:p-12">
-    
     <header class="mb-10 flex flex-col items-center gap-2 cursor-pointer" routerLink="/">
       <div class="size-12 text-primary">
         <span class="material-symbols-outlined text-5xl">hotel_class</span>
@@ -8,104 +7,66 @@
       <h2 class="text-3xl font-bold tracking-tight text-primary">Luxecore</h2>
     </header>
 
-    <div *ngIf="isLoading" class="text-primary font-bold animate-pulse">
-      Verifying your payment...
-    </div>
-
-    <div *ngIf="!isLoading && bookingData" class="glassmorphism flex w-full max-w-2xl flex-col rounded-2xl p-8 sm:p-12 shadow-2xl animate-in fade-in zoom-in duration-500">
-      
-      <div class="flex flex-col items-center text-center gap-4 mb-10">
-        <div class="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 mb-2">
+    <div class="glassmorphism flex w-full max-w-2xl flex-col rounded-2xl p-8 sm:p-12 shadow-2xl">
+      <div class="flex flex-col items-center text-center gap-4">
+        <div *ngIf="isLoading" class="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <div class="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+        <div *ngIf="!isLoading && !errorMessage" class="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-600">
           <span class="material-symbols-outlined text-5xl">check_circle</span>
         </div>
+        <div *ngIf="errorMessage" class="flex h-20 w-20 items-center justify-center rounded-full bg-red-100 text-red-600">
+          <span class="material-symbols-outlined text-5xl">error</span>
+        </div>
+
         <h1 class="text-3xl sm:text-4xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
-          Payment Successful!
+          <ng-container *ngIf="!errorMessage">Payment return</ng-container>
+          <ng-container *ngIf="errorMessage">Payment not confirmed</ng-container>
         </h1>
-        <p class="text-slate-600 dark:text-slate-300 text-lg">
-          Your booking has been confirmed and finalized.
+
+        <p *ngIf="isLoading" class="text-slate-600 dark:text-slate-300 text-lg">
+          Payment successful. Waiting for confirmation...
+        </p>
+        <p *ngIf="!isLoading && !errorMessage" class="text-slate-600 dark:text-slate-300 text-lg">
+          Booking confirmed. Redirecting to My Bookings...
+        </p>
+        <p *ngIf="errorMessage" class="text-red-600 text-lg">
+          {{ errorMessage }}
         </p>
       </div>
 
-      <div class="mb-10 rounded-xl bg-white/50 dark:bg-black/20 p-6 border border-slate-200/50 dark:border-slate-700/50">
-        <h3 class="mb-4 text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Itinerary Summary</h3>
-        <div class="space-y-4">
-          <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
-            <p class="text-slate-600 dark:text-slate-300 font-medium">Booking Reference</p>
-            <p class="text-slate-900 dark:text-white font-bold">#{{ bookingData.bookingCode || bookingData.id }}</p>
-          </div>
-          <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
-            <p class="text-slate-600 dark:text-slate-300 font-medium">Guest Name</p>
-            <p class="text-slate-900 dark:text-white font-bold">{{ bookingData.fullName }}</p>
-          </div>
-          <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
-            <p class="text-slate-600 dark:text-slate-300 font-medium">Email</p>
-            <p class="text-slate-900 dark:text-white font-bold text-sm">{{ bookingData.email }}</p>
-          </div>
-          <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
-            <p class="text-slate-600 dark:text-slate-300 font-medium">Phone</p>
-            <p class="text-slate-900 dark:text-white font-bold">{{ bookingData.phone }}</p>
-          </div>
-          <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
-            <p class="text-slate-600 dark:text-slate-300 font-medium">Room</p>
-            <p class="text-slate-900 dark:text-white font-bold">{{ bookingData.roomName }} ({{ bookingData.roomType }})</p>
-          </div>
-          <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
-            <p class="text-slate-600 dark:text-slate-300 font-medium">Number of Guests</p>
-            <p class="text-slate-900 dark:text-white font-bold">{{ bookingData.numberOfGuests }}</p>
-          </div>
-          <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
-            <p class="text-slate-600 dark:text-slate-300 font-medium">Check-in</p>
-            <p class="text-slate-900 dark:text-white font-bold">{{ bookingData.checkIn | date:'MMM d, yyyy' }}</p>
-          </div>
-          <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
-            <p class="text-slate-600 dark:text-slate-300 font-medium">Check-out</p>
-            <p class="text-slate-900 dark:text-white font-bold">{{ bookingData.checkOut | date:'MMM d, yyyy' }}</p>
-          </div>
-          <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
-            <p class="text-slate-600 dark:text-slate-300 font-medium">Length of Stay</p>
-            <p class="text-slate-900 dark:text-white font-bold">{{ bookingData.nights }} night(s)</p>
-          </div>
+      <div class="mt-8 rounded-xl bg-white/60 dark:bg-black/20 p-6 border border-slate-200/50 dark:border-slate-700/50">
+        <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
+          <p class="text-slate-600 dark:text-slate-300 font-medium">Booking ID</p>
+          <p class="text-slate-900 dark:text-white font-bold">{{ bookingId || '-' }}</p>
         </div>
-
-        <h3 class="mt-8 mb-4 text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Price Breakdown</h3>
-        <div class="space-y-3">
-          <div class="flex justify-between text-slate-600 dark:text-slate-300 font-medium">
-            <span>{{ bookingData.roomPrice | vnd }} × {{ bookingData.nights }} night(s)</span>
-            <span>{{ bookingData.roomTotal | vnd }}</span>
-          </div>
-          <div class="flex justify-between text-slate-600 dark:text-slate-300 font-medium">
-            <span>Service Fee</span>
-            <span>{{ bookingData.serviceFee | vnd }}</span>
-          </div>
-          <div class="flex justify-between text-slate-600 dark:text-slate-300 font-medium">
-            <span>Tax (8%)</span>
-            <span>{{ bookingData.taxAmount | vnd }}</span>
-          </div>
-          <div class="flex justify-between items-center pt-3 border-t border-slate-200/50 dark:border-slate-700/50">
-            <p class="text-slate-600 dark:text-slate-300 font-bold">Total Amount Paid</p>
-            <p class="text-primary text-2xl font-black">{{ bookingData.totalPrice | vnd }}</p>
-          </div>
+        <div class="mt-3 flex justify-between items-center border-b border-slate-200/50 dark:border-slate-700/50 pb-3">
+          <p class="text-slate-600 dark:text-slate-300 font-medium">Status</p>
+          <p class="font-bold"
+             [ngClass]="{
+               'text-yellow-600': statusText === 'PENDING',
+               'text-green-600': statusText === 'CONFIRMED',
+               'text-red-600': statusText === 'FAILED' || statusText === 'CANCELLED'
+             }">
+            {{ statusText || '-' }}
+          </p>
+        </div>
+        <div class="mt-3 flex justify-between items-center" *ngIf="isLoading">
+          <p class="text-slate-600 dark:text-slate-300 font-medium">Timeout</p>
+          <p class="text-slate-900 dark:text-white font-bold">{{ secondsLeft }}s</p>
         </div>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <button routerLink="/my-bookings" class="flex-1 flex cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-primary hover:bg-primary/90 text-slate-900 text-base font-bold shadow-lg shadow-primary/20 transition-all">
+      <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+        <button routerLink="/my-bookings"
+                class="flex-1 flex items-center justify-center rounded-lg h-12 px-6 bg-primary hover:bg-primary/90 text-slate-900 text-base font-bold shadow-lg shadow-primary/20 transition-all">
           View My Bookings
         </button>
-        <button (click)="downloadReceipt()" class="flex-1 flex cursor-pointer items-center justify-center rounded-lg h-12 px-6 border-2 border-slate-300 dark:border-slate-600 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-base font-bold transition-all">
-          <span class="material-symbols-outlined mr-2 text-xl">download</span>
-          Download Receipt
+        <button *ngIf="errorMessage" (click)="retryPolling()"
+                class="flex-1 flex items-center justify-center rounded-lg h-12 px-6 border-2 border-slate-300 bg-transparent hover:bg-slate-100 text-slate-700 text-base font-bold transition-all">
+          Retry
         </button>
       </div>
     </div>
-
-    <footer class="mt-12 flex flex-col items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
-      <div class="flex gap-6">
-        <a class="hover:text-primary transition-colors cursor-pointer">Privacy Policy</a>
-        <a class="hover:text-primary transition-colors cursor-pointer">Terms of Service</a>
-        <a class="hover:text-primary transition-colors cursor-pointer">Contact Us</a>
-      </div>
-      <p>© 2026 Lumina Resort. All rights reserved.</p>
-    </footer>
   </div>
 </div>

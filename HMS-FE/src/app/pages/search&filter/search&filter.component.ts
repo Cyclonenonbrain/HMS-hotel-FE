@@ -39,9 +39,12 @@ export class RoomListComponent implements OnInit, OnDestroy {
         priceRange: 100000000,
         guests: 2,
         amenities: {
-            oceanView: false,
-            privateBalcony: false,
-            kingBed: false
+            tv: false,
+            bathtub: false,
+            balcony: false,
+            kitchen: false,
+            sofa: false,
+            privatePool: false
         }
     };
 
@@ -182,7 +185,7 @@ export class RoomListComponent implements OnInit, OnDestroy {
             searchQuery: '',
             priceRange: 100000000,
             guests: 2,
-            amenities: { oceanView: false, privateBalcony: false, kingBed: false }
+            amenities: { tv: false, bathtub: false, balcony: false, kitchen: false, sofa: false, privatePool: false }
         };
         this.selectedSort = 'recommended';
         this.loadRooms();
@@ -199,11 +202,14 @@ export class RoomListComponent implements OnInit, OnDestroy {
         // Clear danh sách cũ khi bắt đầu load
         this.filteredRooms = [];
 
-        // Build amenities array from filters
+        // Build amenities array from filters (tên amenity khớp với BE)
         const amenities: string[] = [];
-        if (this.filters.amenities.oceanView) amenities.push('Ocean View');
-        if (this.filters.amenities.privateBalcony) amenities.push('Balcony');
-        if (this.filters.amenities.kingBed) amenities.push('King Bed');
+        if (this.filters.amenities.tv) amenities.push('TV');
+        if (this.filters.amenities.bathtub) amenities.push('Bathtub');
+        if (this.filters.amenities.balcony) amenities.push('Balcony');
+        if (this.filters.amenities.kitchen) amenities.push('Kitchen');
+        if (this.filters.amenities.sofa) amenities.push('Sofa');
+        if (this.filters.amenities.privatePool) amenities.push('Private Pool');
 
         // Map sort option to BE format
         let sortBy: 'price_asc' | 'price_desc' | undefined;
@@ -242,9 +248,9 @@ export class RoomListComponent implements OnInit, OnDestroy {
                         capacity: room.capacity,
                         displayDesc: room.description || "Trải nghiệm không gian sang trọng với đầy đủ tiện nghi cao cấp.",
                         image: room.thumbnailUrl || this.getImageByRoomName(room.name),
-                        icons: room.amenities?.length > 0 ? this.mapAmenitiesToIcons(room.amenities) : this.getIconsByRoomName(room.name),
-                        rating: room.rating || 4.9,
-                        availableRooms: room.availableRooms
+                        icons: this.mapAmenitiesToIcons(room.amenities || []),
+                        availableRooms: room.availableRooms,
+                        bedConfig: room.bedConfig
                     };
                 });
 
@@ -265,18 +271,22 @@ export class RoomListComponent implements OnInit, OnDestroy {
     // Map amenities from BE to icon format for UI
     mapAmenitiesToIcons(amenities: string[]): any[] {
         const iconMap: { [key: string]: { icon: string, label: string } } = {
-            'wifi': { icon: 'wifi', label: 'Free WiFi' },
-            'WiFi': { icon: 'wifi', label: 'Free WiFi' },
-            'balcony': { icon: 'balcony', label: 'Balcony' },
+            // Backend amenities (khớp với DB)
+            'TV': { icon: 'tv', label: 'TV' },
+            'Bathtub': { icon: 'bathtub', label: 'Bathtub' },
+            'BATHTUB': { icon: 'bathtub', label: 'Bathtub' },
             'Balcony': { icon: 'balcony', label: 'Balcony' },
-            'ocean_view': { icon: 'water', label: 'Ocean View' },
-            'Ocean View': { icon: 'water', label: 'Ocean View' },
-            'king_bed': { icon: 'king_bed', label: 'King Bed' },
-            'King Bed': { icon: 'king_bed', label: 'King Bed' },
-            'queen_bed': { icon: 'bed', label: 'Queen Bed' },
-            'Queen Bed': { icon: 'bed', label: 'Queen Bed' },
-            'AC': { icon: 'ac_unit', label: 'AC' },
-            'TV': { icon: 'tv', label: 'TV' }
+            'BALCONY': { icon: 'balcony', label: 'Balcony' },
+            'Kitchen': { icon: 'kitchen', label: 'Kitchen' },
+            'KITCHEN': { icon: 'kitchen', label: 'Kitchen' },
+            'Sofa': { icon: 'weekend', label: 'Sofa' },
+            'SOFA': { icon: 'weekend', label: 'Sofa' },
+            'Private Pool': { icon: 'pool', label: 'Private Pool' },
+            'PRIVATE_POOL': { icon: 'pool', label: 'Private Pool' },
+            // Legacy/fallback
+            'wifi': { icon: 'wifi', label: 'WiFi' },
+            'WiFi': { icon: 'wifi', label: 'WiFi' },
+            'AC': { icon: 'ac_unit', label: 'AC' }
         };
 
         return amenities
@@ -307,6 +317,25 @@ export class RoomListComponent implements OnInit, OnDestroy {
         return room.availableRooms > 0;
     }
 
+    // Bed config helpers
+    getBedConfigIcon(bedConfig: string | null): string {
+        const iconMap: { [key: string]: string } = {
+            'SINGLE_BED': 'single_bed',
+            'TWIN_BEDS': 'bed',
+            'DOUBLE_BED': 'king_bed'
+        };
+        return bedConfig ? (iconMap[bedConfig] || 'bed') : 'bed';
+    }
+
+    getBedConfigLabel(bedConfig: string | null): string {
+        const labelMap: { [key: string]: string } = {
+            'SINGLE_BED': 'Single Bed',
+            'TWIN_BEDS': 'Twin Beds',
+            'DOUBLE_BED': 'Double Bed'
+        };
+        return bedConfig ? (labelMap[bedConfig] || 'Bed') : 'Bed';
+    }
+
     goToDetail(roomId: string, room?: any): void {
         if (roomId) {
             // Navigate với query params cho check-in/check-out
@@ -326,22 +355,6 @@ export class RoomListComponent implements OnInit, OnDestroy {
         if (n.includes('deluxe')) return 'https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=1000';
         if (n.includes('suite')) return 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000';
         return 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=1000';
-    }
-
-    getIconsByRoomName(name: string): any[] {
-        const n = name.toLowerCase();
-        if (n.includes('deluxe') || n.includes('executive')) {
-            return [
-                { icon: 'king_bed', label: 'King Bed' },
-                { icon: 'water', label: 'Ocean View' },
-                { icon: 'balcony', label: 'Balcony' },
-                { icon: 'wifi', label: 'Free WiFi' }
-            ];
-        }
-        return [
-            { icon: 'bed', label: 'Queen Bed' },
-            { icon: 'wifi', label: 'Free WiFi' }
-        ];
     }
 
     logout() {
