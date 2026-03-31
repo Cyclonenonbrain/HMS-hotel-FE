@@ -21,6 +21,7 @@ export interface Booking {
 }
 
 export interface Room {
+  roomEntityId: string;
   id: string;
   type: string;
   overallStatus: 'Ready' | 'Not Ready' | 'Maintenance';
@@ -216,10 +217,12 @@ export class StaffDashboardComponent implements OnInit {
 
   private buildFloorTimeline() {
     const floorMap = new Map<number, Room[]>();
+    const roomById = new Map<string, Room>();
     const roomByType = new Map<string, Room[]>();
 
     this.roomsRaw.forEach((r) => {
       const room: Room = {
+        roomEntityId: r.id,
         id: r.roomNumber,
         type: r.roomTypeName,
         overallStatus: this.mapRoomStatus(r.status),
@@ -227,21 +230,39 @@ export class StaffDashboardComponent implements OnInit {
       };
       if (!floorMap.has(r.floor)) floorMap.set(r.floor, []);
       floorMap.get(r.floor)!.push(room);
+      roomById.set(r.id, room);
 
       const key = (r.roomTypeName || '').toLowerCase();
       if (!roomByType.has(key)) roomByType.set(key, []);
       roomByType.get(key)!.push(room);
     });
 
+    const placedKeys = new Set<string>();
     this.bookingsRaw.forEach((b) => {
       const items = Array.isArray(b?.booking_items) ? b.booking_items : [];
       if (!items.length) return;
 
-      items.forEach((item: any) => {
-        const roomTypeName = (item?.room_type_name ?? '').toLowerCase();
-        const candidates = roomByType.get(roomTypeName) ?? [];
-        const target = candidates.find((r) => r.bookings.length < 3) ?? candidates[0];
+      items.forEach((item: any, itemIndex: number) => {
+        const placementKey = `${b?.id ?? 'booking'}:${item?.id ?? itemIndex}`;
+        if (placedKeys.has(placementKey)) {
+          return;
+        }
+
+        const assignedRoomId = item?.room_id ? String(item.room_id) : null;
+        let target = assignedRoomId ? roomById.get(assignedRoomId) : undefined;
+
+        if (!target && b?.room_id) {
+          target = roomById.get(String(b.room_id));
+        }
+
+        if (!target) {
+          const roomTypeName = (item?.room_type_name ?? '').toLowerCase();
+          const candidates = roomByType.get(roomTypeName) ?? [];
+          target = candidates.find((r) => r.bookings.length < 3) ?? candidates[0];
+        }
+
         if (!target) return;
+        placedKeys.add(placementKey);
         target.bookings.push(this.mapBookingToTimeline(b, item));
       });
     });
