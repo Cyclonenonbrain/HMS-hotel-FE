@@ -79,21 +79,31 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           <div class="text-left space-y-1">
             <span class="text-white/80 text-[10px] font-bold uppercase pl-1 tracking-widest">Check-in</span>
-            <input type="date" class="w-full bg-white border-none rounded-lg h-12 px-3 text-sm text-slate-900 font-medium focus:ring-2 ring-primary">
+            <input type="date" 
+              [(ngModel)]="searchCheckIn"
+              (change)="onCheckInChange()"
+              [min]="minDate"
+              class="w-full bg-white border-none rounded-lg h-12 px-3 text-sm text-slate-900 font-medium focus:ring-2 ring-primary">
           </div>
           <div class="text-left space-y-1">
             <span class="text-white/80 text-[10px] font-bold uppercase pl-1 tracking-widest">Check-out</span>
-            <input type="date" class="w-full bg-white border-none rounded-lg h-12 px-3 text-sm text-slate-900 font-medium focus:ring-2 ring-primary">
+            <input type="date" 
+              [(ngModel)]="searchCheckOut"
+              [min]="searchCheckIn"
+              class="w-full bg-white border-none rounded-lg h-12 px-3 text-sm text-slate-900 font-medium focus:ring-2 ring-primary">
           </div>
           <div class="text-left space-y-1">
             <span class="text-white/80 text-[10px] font-bold uppercase pl-1 tracking-widest">Guests</span>
-            <select class="w-full bg-white border-none rounded-lg h-12 px-3 text-sm text-slate-900 font-medium focus:ring-2 ring-primary appearance-none cursor-pointer">
-              <option selected>2 Guests</option>
-              <option>1 Guest</option>
-              <option>4 Guests</option>
+            <select [(ngModel)]="searchGuests" class="w-full bg-white border-none rounded-lg h-12 px-3 text-sm text-slate-900 font-medium focus:ring-2 ring-primary appearance-none cursor-pointer">
+              <option [value]="1">1 Guest</option>
+              <option [value]="2">2 Guests</option>
+              <option [value]="3">3 Guests</option>
+              <option [value]="4">4 Guests</option>
+              <option [value]="5">5 Guests</option>
+              <option [value]="6">6 Guests</option>
             </select>
           </div>
-          <button class="bg-primary text-slate-900 h-12 rounded-lg font-bold hover:bg-[#EAB308] transition-colors flex items-center justify-center gap-2 group w-full shadow-lg">
+          <button (click)="onSearch()" class="bg-primary text-slate-900 h-12 rounded-lg font-bold hover:bg-[#EAB308] transition-colors flex items-center justify-center gap-2 group w-full shadow-lg">
             <span class="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">search</span>
             Search
           </button>
@@ -107,13 +117,30 @@
         <div class="w-24 h-1 bg-primary mx-auto rounded-full"></div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div *ngFor="let room of rooms"
+      <!-- Loading State -->
+      <div *ngIf="isLoadingFeatured" class="flex justify-center items-center py-20">
+        <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoadingFeatured && featuredRooms.length === 0" class="text-center py-20">
+        <span class="material-symbols-outlined text-6xl text-slate-300 mb-4">hotel</span>
+        <p class="text-slate-400 font-medium">Không có phòng nổi bật nào.</p>
+      </div>
+
+      <!-- Featured Rooms Grid -->
+      <div *ngIf="!isLoadingFeatured && featuredRooms.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div *ngFor="let room of featuredRooms"
           class="room-card group rounded-2xl overflow-hidden bg-white shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-100">
           <div class="relative aspect-video overflow-hidden">
             <img [src]="room.image" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
             <div class="absolute top-4 right-4 bg-slate-900/90 backdrop-blur-md text-primary px-3 py-1 rounded-full text-sm font-bold border border-primary/30">
               {{room.price | vnd}} <span class="text-[10px] text-slate-300">/đêm</span>
+            </div>
+            <!-- Rating Badge -->
+            <div *ngIf="room.rating" class="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-slate-900 px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+              <span class="material-symbols-outlined text-primary text-sm">star</span>
+              {{ room.rating | number:'1.1-1' }}
             </div>
           </div>
           <div class="p-6">
@@ -124,13 +151,20 @@
             <p class="text-slate-600 text-sm mb-6 line-clamp-2 leading-relaxed">{{room.desc}}</p>
 
             <button 
-              [routerLink]="isLoggedIn ? ['/checkout', room.id] : '/login'"
-              class="w-full py-3 rounded-lg font-bold transition-all duration-300"
-              [ngClass]="isLoggedIn ? 'bg-primary text-slate-900 hover:shadow-primary/20 hover:shadow-xl' : 'border-2 border-primary text-primary hover:bg-primary hover:text-white'">
-              {{ isLoggedIn ? 'Book This Room' : 'Login to Book' }}
+              [routerLink]="['/room-detail', room.id]"
+              class="w-full py-3 rounded-lg font-bold transition-all duration-300 bg-primary text-slate-900 hover:shadow-primary/20 hover:shadow-xl">
+              View Details
             </button>
           </div>
         </div>
+      </div>
+
+      <!-- View All Button -->
+      <div *ngIf="!isLoadingFeatured && featuredRooms.length > 0" class="text-center mt-12">
+        <button routerLink="/search" 
+          class="px-8 py-3 border-2 border-primary text-primary rounded-lg font-bold hover:bg-primary hover:text-slate-900 transition-all">
+          View All Rooms
+        </button>
       </div>
     </section>
   </main>

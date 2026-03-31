@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { RoomService } from '../../services/room.services';
@@ -50,10 +50,29 @@ export class RoomListComponent implements OnInit, OnDestroy {
         private roomSearchService: RoomSearchService,
         private authService: AuthService,
         private cdr: ChangeDetectorRef,
-        private router: Router
+        private router: Router,
+        private route: ActivatedRoute
     ) { }
 
     ngOnInit(): void {
+        // 0. Đọc query params từ URL (từ landing page search)
+        this.route.queryParams.subscribe(params => {
+            if (params['checkIn']) {
+                this.checkIn = params['checkIn'];
+            }
+            if (params['checkOut']) {
+                this.checkOut = params['checkOut'];
+            }
+            if (params['guests']) {
+                this.filters.guests = parseInt(params['guests'], 10) || 2;
+            }
+            this.updateNights();
+            // Reload rooms với params mới nếu đã init xong
+            if (this.allRooms.length > 0 || this.isLoading) {
+                this.loadRooms();
+            }
+        });
+
         // 1. Theo dõi trạng thái đăng nhập và đồng bộ thông tin User
         this.authSub = this.authService.isLoggedIn$.subscribe(status => {
             this.isLoggedIn = status;
