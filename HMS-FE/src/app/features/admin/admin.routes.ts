@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.component';
+import { RoomsComponent } from './rooms/rooms.component';
 
 export const adminRoutes: Routes = [
   {
@@ -23,13 +24,18 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'rooms',
-        loadComponent: () => import('./rooms/rooms.component').then(m => m.RoomsComponent),
+        component: RoomsComponent,
         data: { breadcrumb: 'Rooms' }
       },
       {
         path: 'services',
         loadComponent: () => import('./services/services.component').then(m => m.ServicesComponent),
         data: { breadcrumb: 'Services' }
+      },
+      {
+        path: 'amenities',
+        loadComponent: () => import('./amenities/amenities.component').then(m => m.AmenitiesComponent),
+        data: { breadcrumb: 'Amenities' }
       },
       {
         path: 'pricing',

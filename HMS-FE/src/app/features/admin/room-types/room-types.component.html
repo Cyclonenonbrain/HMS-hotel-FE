@@ -100,7 +100,7 @@
             <td
               class="py-4 px-6 text-sm font-semibold text-slate-900 dark:text-white whitespace-nowrap"
             >
-              ${{ room.basePrice }}
+              {{ room.basePrice | number:'1.0-0' }} đ
             </td>
             <td
               class="py-4 px-6 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap"
@@ -254,13 +254,13 @@
         <div class="flex flex-col gap-1.5">
           <label
             class="text-sm font-semibold text-slate-700 dark:text-slate-300"
-            >Base Price (USD)</label
+            >Base Price (VND)</label
           >
           <div class="relative">
-            <span
-              class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium"
-              >$</span
-            >
+              <span
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium"
+                >₫</span
+              >
             <input
               type="number"
               [(ngModel)]="formData.basePrice"
@@ -288,6 +288,60 @@
               placeholder="1"
               class="w-full pl-9 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
             />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">
+          Amenities
+        </label>
+        <div
+          class="w-full p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+        >
+          <div
+            *ngIf="amenityOptions.length > 0; else noAmenityOptions"
+            class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1"
+          >
+            <label
+              *ngFor="let amenity of amenityOptions"
+              class="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700/40 cursor-pointer transition-colors"
+            >
+              <input
+                type="checkbox"
+                [checked]="isAmenitySelected(amenity.code)"
+                (change)="toggleAmenity(amenity.code)"
+                class="h-4 w-4 accent-primary"
+              />
+              <span class="text-sm text-slate-700 dark:text-slate-200">
+                {{ amenity.name }}
+              </span>
+              <span class="text-xs text-slate-400">
+                ({{ amenity.code }})
+              </span>
+            </label>
+          </div>
+
+          <ng-template #noAmenityOptions>
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+              No amenities found. Please create amenities first.
+            </p>
+          </ng-template>
+
+          <div
+            *ngIf="selectedAmenityCodes.length > 0"
+            class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex flex-wrap gap-2"
+          >
+            <button
+              type="button"
+              *ngFor="let amenity of getSelectedAmenities()"
+              (click)="removeAmenity(amenity.code)"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/15 text-slate-800 dark:text-slate-100 text-xs font-medium hover:bg-primary/25 transition-colors"
+              title="Remove amenity"
+            >
+              {{ amenity.name }}
+              <span class="material-symbols-outlined text-[14px] leading-none">close</span>
+            </button>
           </div>
         </div>
       </div>

@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RoomTypeService } from '../../../core/room-type.service';
 import { RoomTypeResponse, RoomTypeCreateRequest } from '../../../core/models/room-type.model';
+import { AmenityService } from '../../../core/amenity.service';
+import { AmenityResponse } from '../../../core/models/amenity.model';
 
 @Component({
   selector: 'app-room-types',
@@ -13,6 +15,8 @@ import { RoomTypeResponse, RoomTypeCreateRequest } from '../../../core/models/ro
 })
 export class RoomTypesComponent implements OnInit {
   roomTypes: RoomTypeResponse[] = [];
+  amenityOptions: AmenityResponse[] = [];
+  selectedAmenityCodes: string[] = [];
 
   // Modal state
   showModal = false;
@@ -26,10 +30,14 @@ export class RoomTypesComponent implements OnInit {
   // Notification
   notification: { type: 'success' | 'error'; message: string } | null = null;
 
-  constructor(private roomTypeService: RoomTypeService) {}
+  constructor(
+    private roomTypeService: RoomTypeService,
+    private amenityService: AmenityService
+  ) {}
 
   ngOnInit(): void {
     this.loadRoomTypes();
+    this.loadAmenities();
   }
 
   loadRoomTypes(): void {
@@ -46,22 +54,56 @@ export class RoomTypesComponent implements OnInit {
     });
   }
 
+  loadAmenities(): void {
+    this.amenityService.getAmenities().subscribe({
+      next: (res) => (this.amenityOptions = res.data || []),
+      error: () => (this.amenityOptions = [])
+    });
+  }
+
+  isAmenitySelected(code: string): boolean {
+    return this.selectedAmenityCodes.includes(code);
+  }
+
+  toggleAmenity(code: string): void {
+    if (this.isAmenitySelected(code)) {
+      this.selectedAmenityCodes = this.selectedAmenityCodes.filter((item) => item !== code);
+      return;
+    }
+    this.selectedAmenityCodes = [...this.selectedAmenityCodes, code];
+  }
+
+  removeAmenity(code: string): void {
+    this.selectedAmenityCodes = this.selectedAmenityCodes.filter((item) => item !== code);
+  }
+
+  getSelectedAmenities(): AmenityResponse[] {
+    if (this.selectedAmenityCodes.length === 0) {
+      return [];
+    }
+    const selectedCodes = new Set(this.selectedAmenityCodes);
+    return this.amenityOptions.filter((amenity) => selectedCodes.has(amenity.code));
+  }
+
   // ─── Modals ────────────────────────────────
   openAddModal(): void {
     this.modalMode = 'add';
-    this.formData = { name: '', description: '', basePrice: 0, capacity: 1 };
+    this.formData = { name: '', description: '', basePrice: 0, capacity: 1, bedConfig: null, amenities: [] };
+    this.selectedAmenityCodes = [];
     this.showModal = true;
   }
 
   openEditModal(room: RoomTypeResponse): void {
     this.modalMode = 'edit';
     this.formData = { ...room };
+    this.selectedAmenityCodes = (room.amenities || []).map((x) => x.code);
     this.showModal = true;
   }
 
   closeModal(): void {
     this.showModal = false;
     this.formData = {};
+    this.selectedAmenityCodes = [];
   }
 
   saveModal(): void {
@@ -74,7 +116,9 @@ export class RoomTypesComponent implements OnInit {
       name: this.formData.name,
       description: this.formData.description,
       basePrice: this.formData.basePrice ?? 0,
-      capacity: this.formData.capacity ?? 1
+      capacity: this.formData.capacity ?? 1,
+      bedConfig: this.formData.bedConfig ?? null,
+      amenities: this.selectedAmenityCodes
     };
 
     if (this.modalMode === 'add') {

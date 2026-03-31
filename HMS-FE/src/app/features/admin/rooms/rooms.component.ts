@@ -1,43 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RoomService } from '../../../core/room.service';
+import { RoomCreateRequest, RoomResponse, RoomStatus } from '../../../core/models/room.model';
+import { RoomTypeResponse } from '../../../core/models/room-type.model';
+import { RoomTypeService } from '../../../core/room-type.service';
 import { VndPipe } from '../../../core/vnd.pipe';
-
-// ─── Models ────────────────────────────────────────────────────────────────
-export interface Amenity {
-  name: string;
-  icon: string; // Material Symbol name
-}
-
-export interface Room {
-  id: string;
-  roomNumber: string;
-  roomTypeId: string;
-  roomTypeName: string;
-  floor: number;
-  description: string;
-  price: number;
-  capacity: number;
-  imageUrl: string;
-  amenities: string[];
-  status: 'Available' | 'Occupied' | 'Maintenance';
-}
-
-// ─── Available Amenities ────────────────────────────────────────────────────
-const ALL_AMENITIES: Amenity[] = [
-  { name: 'Wi-Fi', icon: 'wifi' },
-  { name: 'Pool', icon: 'pool' },
-  { name: 'Beach', icon: 'beach_access' },
-  { name: 'Butler', icon: 'room_service' },
-  { name: 'Gym', icon: 'fitness_center' },
-  { name: 'Spa', icon: 'spa' },
-  { name: 'Bar', icon: 'local_bar' },
-  { name: 'Parking', icon: 'local_parking' },
-  { name: 'Balcony', icon: 'deck' },
-  { name: 'Kitchen', icon: 'kitchen' },
-  { name: 'TV', icon: 'tv' },
-  { name: 'Safe', icon: 'lock' },
-];
 
 @Component({
   selector: 'app-rooms',
@@ -46,161 +14,196 @@ const ALL_AMENITIES: Amenity[] = [
   templateUrl: './rooms.component.html',
   styleUrl: './rooms.component.css'
 })
-export class RoomsComponent {
-  readonly allAmenities: Amenity[] = ALL_AMENITIES;
+export class RoomsComponent implements OnInit {
+  rooms: RoomResponse[] = [];
+  roomTypes: RoomTypeResponse[] = [];
 
-  // Room Types for the dropdown
-  roomTypes = [
-    { id: 'RT01', name: 'Standard Room', price: 100, capacity: 2 },
-    { id: 'RT02', name: 'Deluxe Room', price: 150, capacity: 4 },
-    { id: 'RT03', name: 'Suite', price: 250, capacity: 2 },
-    { id: 'RT04', name: 'Family Room', price: 200, capacity: 6 },
-    { id: 'RT05', name: 'Penthouse', price: 500, capacity: 4 },
-  ];
+  loading = false;
+  searchTerm = '';
+  statusFilter: 'ALL' | RoomStatus = 'ALL';
+  typeFilter = 'ALL';
 
-  rooms: Room[] = [
-    {
-      id: 'R001', roomNumber: '101', roomTypeId: 'RT01', roomTypeName: 'Standard Room',
-      floor: 1, description: 'Cozy standard room with garden view and modern amenities.', price: 100, capacity: 2,
-      imageUrl: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80',
-      amenities: ['Wi-Fi', 'TV', 'Safe'], status: 'Available'
-    },
-    {
-      id: 'R002', roomNumber: '102', roomTypeId: 'RT01', roomTypeName: 'Standard Room',
-      floor: 1, description: 'Sunny standard room overlooking the courtyard.', price: 100, capacity: 2,
-      imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=600&q=80',
-      amenities: ['Wi-Fi', 'TV'], status: 'Occupied'
-    },
-    {
-      id: 'R003', roomNumber: '201', roomTypeId: 'RT02', roomTypeName: 'Deluxe Room',
-      floor: 2, description: 'Elegant suite featuring panoramic city views, marble bathroom, and exclusive lounge access.', price: 150, capacity: 4,
-      imageUrl: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=600&q=80',
-      amenities: ['Wi-Fi', 'Pool', 'Bar', 'Balcony'], status: 'Available'
-    },
-    {
-      id: 'R004', roomNumber: '202', roomTypeId: 'RT02', roomTypeName: 'Deluxe Room',
-      floor: 2, description: 'Spacious deluxe room with king bed and city-facing balcony.', price: 150, capacity: 4,
-      imageUrl: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=600&q=80',
-      amenities: ['Wi-Fi', 'Pool', 'Balcony'], status: 'Available'
-    },
-    {
-      id: 'R005', roomNumber: '301', roomTypeId: 'RT03', roomTypeName: 'Suite',
-      floor: 3, description: 'Private overwater villa with direct ocean access, personal plunge pool, and spacious sundeck.', price: 250, capacity: 2,
-      imageUrl: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=600&q=80',
-      amenities: ['Wi-Fi', 'Pool', 'Beach', 'Spa', 'Butler'], status: 'Available'
-    },
-    {
-      id: 'R006', roomNumber: '401', roomTypeId: 'RT04', roomTypeName: 'Family Room',
-      floor: 4, description: 'Spacious family room with two bedrooms, living area, and dedicated kids zone.', price: 200, capacity: 6,
-      imageUrl: 'https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=600&q=80',
-      amenities: ['Wi-Fi', 'TV', 'Kitchen', 'Parking'], status: 'Available'
-    },
-    {
-      id: 'R007', roomNumber: '501', roomTypeId: 'RT05', roomTypeName: 'Penthouse',
-      floor: 5, description: 'The ultimate luxury experience spanning the top floor, featuring 360-degree views, private cinema, and butler service.', price: 500, capacity: 4,
-      imageUrl: 'https://images.unsplash.com/photo-1631049552057-403cdb8f0658?w=600&q=80',
-      amenities: ['Wi-Fi', 'Pool', 'Butler', 'Gym', 'Bar', 'Balcony'], status: 'Available'
-    },
-  ];
+  currentPage = 1;
+  pageSize = 10;
 
-  // ─── Grouping ──────────────────────────────────────────────────────────────
-  get groupedRooms(): { typeName: string; typeId: string; rooms: Room[] }[] {
-    const map = new Map<string, Room[]>();
-    this.rooms.forEach(r => {
-      if (!map.has(r.roomTypeId)) map.set(r.roomTypeId, []);
-      map.get(r.roomTypeId)!.push(r);
-    });
-    return Array.from(map.entries()).map(([typeId, rooms]) => ({
-      typeId,
-      typeName: rooms[0].roomTypeName,
-      rooms
-    }));
-  }
-
-  getAmenityIcon(name: string): string {
-    return this.allAmenities.find(a => a.name === name)?.icon ?? 'check';
-  }
-
-  // ─── Modal state ───────────────────────────────────────────────────────────
   showModal = false;
   modalMode: 'add' | 'edit' = 'add';
   showDeleteDialog = false;
-  roomToDelete: Room | null = null;
-  formData: Partial<Room & { amenitySet: Set<string> }> = {};
-  amenitySet = new Set<string>();
+  roomToDelete: RoomResponse | null = null;
+  formData: Partial<RoomCreateRequest & { id: string }> = {};
+  notification: { type: 'success' | 'error'; message: string } | null = null;
+  private notifTimer: ReturnType<typeof setTimeout> | null = null;
+
+  readonly roomStatuses: RoomStatus[] = ['AVAILABLE', 'BOOKED', 'OCCUPIED', 'DIRTY', 'MAINTENANCE'];
+
+  constructor(
+    private roomService: RoomService,
+    private roomTypeService: RoomTypeService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadRoomTypes();
+    this.loadRooms();
+  }
+
+  loadRoomTypes(): void {
+    this.roomTypeService.getRoomTypes().subscribe({
+      next: (response) => {
+        this.roomTypes = response?.data || [];
+      },
+      error: (error) => {
+        this.showNotification('error', 'Failed to load room types.');
+        console.error('Error fetching room types:', error);
+      }
+    });
+  }
+
+  loadRooms(): void {
+    this.loading = true;
+    this.roomService.getRooms().subscribe({
+      next: (response) => {
+        this.rooms = response?.data || [];
+        this.syncCurrentPage();
+        this.loading = false;
+      },
+      error: (error) => {
+        this.showNotification('error', 'Failed to load rooms.');
+        console.error('Error fetching rooms:', error);
+        this.loading = false;
+      }
+    });
+  }
+
+  get filteredRooms(): RoomResponse[] {
+    const search = this.searchTerm.trim().toLowerCase();
+    return this.rooms.filter((room) => {
+      const matchesSearch =
+        !search ||
+        room.roomNumber.toLowerCase().includes(search) ||
+        room.roomTypeName.toLowerCase().includes(search) ||
+        room.id.toLowerCase().includes(search);
+      const matchesStatus =
+        this.statusFilter === 'ALL' || room.status === this.statusFilter;
+      const matchesType =
+        this.typeFilter === 'ALL' || room.roomTypeId === this.typeFilter;
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredRooms.length / this.pageSize));
+  }
+
+  get paginatedRooms(): RoomResponse[] {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    return this.filteredRooms.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  get visiblePages(): (number | string)[] {
+    const total = this.totalPages;
+    if (total <= 6) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const arr: (number | string)[] = [1, 2, 3];
+    if (this.currentPage > 4) arr.push('...');
+    if (this.currentPage > 3 && this.currentPage < total - 2) arr.push(this.currentPage);
+    if (this.currentPage < total - 3) arr.push('...');
+    arr.push(total - 2, total - 1, total);
+    return arr;
+  }
+
+  onFilterChange(): void {
+    this.currentPage = 1;
+  }
+
+  goToPage(page: number | string): void {
+    if (typeof page !== 'number') return;
+    this.currentPage = page;
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) this.currentPage--;
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) this.currentPage++;
+  }
 
   openAddModal(): void {
     this.modalMode = 'add';
-    const def = this.roomTypes[0];
     this.formData = {
-      roomNumber: '', floor: 1, description: '', status: 'Available',
-      roomTypeId: def.id, roomTypeName: def.name, price: def.price, capacity: def.capacity,
-      imageUrl: ''
+      roomNumber: '',
+      roomTypeId: this.roomTypes[0]?.id ?? '',
+      status: 'AVAILABLE',
+      floor: 1
     };
-    this.amenitySet = new Set();
     this.showModal = true;
   }
 
-  openEditModal(room: Room): void {
+  openEditModal(room: RoomResponse): void {
     this.modalMode = 'edit';
-    this.formData = { ...room };
-    this.amenitySet = new Set(room.amenities);
+    this.formData = {
+      id: room.id,
+      roomNumber: room.roomNumber,
+      roomTypeId: room.roomTypeId,
+      status: room.status,
+      floor: room.floor
+    };
     this.showModal = true;
   }
 
   closeModal(): void {
     this.showModal = false;
     this.formData = {};
-    this.amenitySet = new Set();
-  }
-
-  onRoomTypeChange(): void {
-    const rt = this.roomTypes.find(r => r.id === this.formData.roomTypeId);
-    if (rt) {
-      this.formData.roomTypeName = rt.name;
-      this.formData.price = rt.price;
-      this.formData.capacity = rt.capacity;
-    }
-  }
-
-  toggleAmenity(name: string): void {
-    if (this.amenitySet.has(name)) this.amenitySet.delete(name);
-    else this.amenitySet.add(name);
   }
 
   saveModal(): void {
-    if (!this.formData.roomNumber?.trim()) {
-      this.showNotification('error', 'Room number is required.');
+    if (!this.formData.roomNumber?.trim() || !this.formData.roomTypeId || !this.formData.status) {
+      this.showNotification('error', 'Please fill in all required fields.');
       return;
     }
-    const amenities = Array.from(this.amenitySet);
+
+    const request: RoomCreateRequest = {
+      roomNumber: this.formData.roomNumber.trim(),
+      roomTypeId: this.formData.roomTypeId,
+      status: this.formData.status as RoomStatus,
+      floor: this.formData.floor ?? 0
+    };
+
     if (this.modalMode === 'add') {
-      const newId = 'R' + String(this.rooms.length + 1).padStart(3, '0');
-      this.rooms = [...this.rooms, {
-        id: newId,
-        roomNumber: this.formData.roomNumber!,
-        roomTypeId: this.formData.roomTypeId!,
-        roomTypeName: this.formData.roomTypeName!,
-        floor: this.formData.floor ?? 1,
-        description: this.formData.description ?? '',
-        price: this.formData.price ?? 0,
-        capacity: this.formData.capacity ?? 1,
-        imageUrl: this.formData.imageUrl ?? '',
-        amenities,
-        status: this.formData.status ?? 'Available'
-      }];
-      this.showNotification('success', 'Room added successfully!');
-    } else {
-      this.rooms = this.rooms.map(r =>
-        r.id === this.formData.id ? { ...r, ...this.formData, amenities, roomTypeName: this.formData.roomTypeName! } as Room : r
-      );
-      this.showNotification('success', 'Room updated successfully!');
+      this.roomService.createRoom(request).subscribe({
+        next: () => {
+          this.showNotification('success', 'Room added successfully!');
+          this.loadRooms();
+          this.closeModal();
+        },
+        error: (error) => {
+          this.showNotification('error', 'Failed to add room.');
+          console.error('Error creating room:', error);
+        }
+      });
+      return;
     }
-    this.closeModal();
+
+    if (!this.formData.id) {
+      this.showNotification('error', 'Missing room id for update.');
+      return;
+    }
+
+    this.roomService.updateRoom(this.formData.id, request).subscribe({
+      next: () => {
+        this.showNotification('success', 'Room updated successfully!');
+        this.loadRooms();
+        this.closeModal();
+      },
+      error: (error) => {
+        this.showNotification('error', 'Failed to update room.');
+        console.error('Error updating room:', error);
+      }
+    });
   }
 
-  // ─── Delete ────────────────────────────────────────────────────────────────
-  openDeleteDialog(room: Room): void {
+  openDeleteDialog(room: RoomResponse): void {
     this.roomToDelete = room;
     this.showDeleteDialog = true;
   }
@@ -211,16 +214,63 @@ export class RoomsComponent {
   }
 
   confirmDelete(): void {
-    if (this.roomToDelete) {
-      this.rooms = this.rooms.filter(r => r.id !== this.roomToDelete!.id);
-      this.showNotification('success', `Room ${this.roomToDelete.roomNumber} has been deleted.`);
-    }
-    this.closeDeleteDialog();
+    if (!this.roomToDelete?.id) return;
+    this.roomService.deleteRoom(this.roomToDelete.id).subscribe({
+      next: () => {
+        this.showNotification('success', `Room ${this.roomToDelete?.roomNumber} has been deleted.`);
+        this.loadRooms();
+        this.closeDeleteDialog();
+      },
+      error: (error) => {
+        this.showNotification('error', 'Failed to delete room.');
+        console.error('Error deleting room:', error);
+        this.closeDeleteDialog();
+      }
+    });
   }
 
-  // ─── Notifications ─────────────────────────────────────────────────────────
-  notification: { type: 'success' | 'error'; message: string } | null = null;
-  private notifTimer: ReturnType<typeof setTimeout> | null = null;
+  displayStatus(status: RoomStatus): string {
+    switch (status) {
+      case 'AVAILABLE':
+        return 'Available';
+      case 'BOOKED':
+        return 'Booked';
+      case 'OCCUPIED':
+        return 'Occupied';
+      case 'DIRTY':
+        return 'Dirty';
+      case 'MAINTENANCE':
+        return 'Maintenance';
+      default:
+        return status;
+    }
+  }
+
+  statusClasses(status: RoomStatus): string {
+    switch (status) {
+      case 'AVAILABLE':
+        return 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-300';
+      case 'BOOKED':
+        return 'bg-indigo-50 text-indigo-700 ring-indigo-600/20 dark:bg-indigo-900/30 dark:text-indigo-300';
+      case 'OCCUPIED':
+        return 'bg-blue-50 text-blue-700 ring-blue-700/10 dark:bg-blue-900/30 dark:text-blue-300';
+      case 'DIRTY':
+        return 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-900/30 dark:text-amber-300';
+      case 'MAINTENANCE':
+        return 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/30 dark:text-red-300';
+      default:
+        return 'bg-slate-50 text-slate-700 ring-slate-600/20';
+    }
+  }
+
+  private syncCurrentPage(): void {
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = this.totalPages;
+    }
+    if (this.currentPage < 1) {
+      this.currentPage = 1;
+    }
+  }
 
   showNotification(type: 'success' | 'error', message: string): void {
     if (this.notifTimer) clearTimeout(this.notifTimer);

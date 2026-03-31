@@ -4,6 +4,8 @@ export interface RoomTypeResponse {
   description: string;
   basePrice: number;
   capacity: number;
+  bedConfig?: string | null;
+  amenities?: Array<{ code: string; name: string }>;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -13,4 +15,6 @@ export interface RoomTypeCreateRequest {
   description: string;
   basePrice: number;
   capacity: number;
+  bedConfig?: string | null;
+  amenities?: string[];
 }
