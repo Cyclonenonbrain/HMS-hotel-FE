@@ -1,4 +1,19 @@
 <div class="flex flex-col max-w-7xl mx-auto gap-8 p-6 md:p-8">
+  <div
+    *ngIf="isLoading"
+    class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-sm text-slate-600 dark:text-slate-300"
+  >
+    Loading dashboard data...
+  </div>
+
+  <div
+    *ngIf="!isLoading && loadError"
+    class="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-4 text-sm text-red-700 dark:text-red-300"
+  >
+    {{ loadError }}
+  </div>
+
+  <ng-container *ngIf="!isLoading && !loadError">
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
     <div
       class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
@@ -17,17 +32,17 @@
       <p
         class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight mt-2"
       >
-        $124,000
+        {{ formatCurrency(metrics?.totalRevenue) }}
       </p>
       <div class="flex items-center gap-2 mt-2">
         <span
           class="text-green-600 dark:text-green-400 text-sm font-medium flex items-center"
         >
           <span class="material-symbols-outlined text-[16px]">trending_up</span>
-          +12%
+          Live
         </span>
         <span class="text-slate-400 dark:text-slate-500 text-xs"
-          >vs last month</span
+          >real-time</span
         >
       </div>
     </div>
@@ -38,7 +53,7 @@
         <p
           class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal"
         >
-          Bookings Today
+          Active Bookings
         </p>
         <span
           class="material-symbols-outlined text-primary bg-primary/10 p-1.5 rounded-lg"
@@ -48,17 +63,17 @@
       <p
         class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight mt-2"
       >
-        42
+        {{ metrics?.activeBookings ?? 0 }}
       </p>
       <div class="flex items-center gap-2 mt-2">
         <span
           class="text-green-600 dark:text-green-400 text-sm font-medium flex items-center"
         >
           <span class="material-symbols-outlined text-[16px]">trending_up</span>
-          +5%
+          Live
         </span>
         <span class="text-slate-400 dark:text-slate-500 text-xs"
-          >vs yesterday</span
+          >real-time</span
         >
       </div>
     </div>
@@ -79,17 +94,17 @@
       <p
         class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight mt-2"
       >
-        88%
+        {{ formatPercent(metrics?.occupancyRate) }}
       </p>
       <div class="flex items-center gap-2 mt-2">
         <span
           class="text-green-600 dark:text-green-400 text-sm font-medium flex items-center"
         >
           <span class="material-symbols-outlined text-[16px]">trending_up</span>
-          +2%
+          Live
         </span>
         <span class="text-slate-400 dark:text-slate-500 text-xs"
-          >vs last week</span
+          >real-time</span
         >
       </div>
     </div>
@@ -110,7 +125,7 @@
       <p
         class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight mt-2"
       >
-        $245
+        {{ formatCurrency(metrics?.averageDailyRate) }}
       </p>
       <div class="flex items-center gap-2 mt-2">
         <span
@@ -119,10 +134,10 @@
           <span class="material-symbols-outlined text-[16px]"
             >trending_down</span
           >
-          -1%
+          Live
         </span>
         <span class="text-slate-400 dark:text-slate-500 text-xs"
-          >vs last month</span
+          >real-time</span
         >
       </div>
     </div>
@@ -145,11 +160,17 @@
           <option>Last Year</option>
         </select>
       </div>
+      <div
+        *ngIf="revenueError"
+        class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3 text-xs text-amber-700 dark:text-amber-300"
+      >
+        {{ revenueError }}
+      </div>
       <div class="flex items-baseline gap-3 mb-6">
         <p
           class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight"
         >
-          $1,450,000
+          {{ formatCurrency(metrics?.totalRevenue) }}
         </p>
         <p class="text-green-600 dark:text-green-400 text-sm font-medium">
           +8% from last year
@@ -177,7 +198,7 @@
         <div
           class="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-xs text-slate-400 text-right pr-2"
         >
-          <span>$300k</span><span>$200k</span><span>$100k</span><span>$0</span>
+          <span>{{ yAxisLabels[0] }}</span><span>{{ yAxisLabels[1] }}</span><span>{{ yAxisLabels[2] }}</span><span>{{ yAxisLabels[3] }}</span>
         </div>
         <svg
           class="w-full h-full ml-8 pb-6 absolute inset-0 z-10"
@@ -187,13 +208,13 @@
         >
           <path
             class="text-primary"
-            d="M0,80 C10,80 15,60 25,60 C35,60 40,75 50,45 C60,15 65,40 75,30 C85,20 90,50 100,10"
+            [attr.d]="revenuePath"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
           ></path>
           <path
-            d="M0,80 C10,80 15,60 25,60 C35,60 40,75 50,45 C60,15 65,40 75,30 C85,20 90,50 100,10 L100,100 L0,100 Z"
+            [attr.d]="revenueAreaPath"
             fill="url(#chart-gradient)"
             opacity="0.2"
           ></path>
@@ -205,29 +226,9 @@
           </defs>
           <circle
             class="text-primary bg-white"
-            cx="25"
-            cy="60"
-            fill="currentColor"
-            r="3"
-          ></circle>
-          <circle
-            class="text-primary bg-white"
-            cx="50"
-            cy="45"
-            fill="currentColor"
-            r="3"
-          ></circle>
-          <circle
-            class="text-primary bg-white"
-            cx="75"
-            cy="30"
-            fill="currentColor"
-            r="3"
-          ></circle>
-          <circle
-            class="text-primary bg-white"
-            cx="100"
-            cy="10"
+            *ngFor="let point of revenuePointPositions"
+            [attr.cx]="point.x"
+            [attr.cy]="point.y"
             fill="currentColor"
             r="3"
           ></circle>
@@ -235,8 +236,7 @@
         <div
           class="flex justify-between text-xs text-slate-400 mt-auto ml-8 pt-2"
         >
-          <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span
-          ><span>May</span><span>Jun</span><span>Jul</span>
+          <span *ngFor="let label of monthLabels">{{ label }}</span>
         </div>
       </div>
     </div>
@@ -248,6 +248,12 @@
       >
         Room Occupancy
       </p>
+      <div
+        *ngIf="occupancyError"
+        class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3 text-xs text-amber-700 dark:text-amber-300"
+      >
+        {{ occupancyError }}
+      </div>
       <div class="flex-1 flex flex-col justify-center relative min-h-[240px]">
         <div class="relative size-48 mx-auto flex items-center justify-center">
           <svg
@@ -264,76 +270,32 @@
               stroke-width="4"
             ></circle>
             <circle
-              class="stroke-primary"
+              *ngFor="let slice of occupancySlices"
+              [ngClass]="slice.strokeClass"
               cx="18"
               cy="18"
               fill="none"
               r="16"
-              stroke-dasharray="45 100"
-              stroke-dashoffset="0"
-              stroke-width="4"
-            ></circle>
-            <circle
-              class="stroke-slate-800 dark:stroke-slate-300"
-              cx="18"
-              cy="18"
-              fill="none"
-              r="16"
-              stroke-dasharray="30 100"
-              stroke-dashoffset="-45"
-              stroke-width="4"
-            ></circle>
-            <circle
-              class="stroke-slate-400 dark:stroke-slate-600"
-              cx="18"
-              cy="18"
-              fill="none"
-              r="16"
-              stroke-dasharray="15 100"
-              stroke-dashoffset="-75"
-              stroke-width="4"
-            ></circle>
-            <circle
-              class="stroke-primary/50"
-              cx="18"
-              cy="18"
-              fill="none"
-              r="16"
-              stroke-dasharray="10 100"
-              stroke-dashoffset="-90"
+              [attr.stroke-dasharray]="slice.percent + ' 100'"
+              [attr.stroke-dashoffset]="slice.offset"
               stroke-width="4"
             ></circle>
           </svg>
           <div class="absolute flex flex-col items-center justify-center">
             <span class="text-2xl font-bold text-slate-900 dark:text-slate-100"
-              >88%</span
+              >{{ occupancyTotalPercent }}%</span
             >
             <span class="text-xs text-slate-500">Total</span>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4 mt-6">
-          <div class="flex items-center gap-2">
-            <div class="size-3 rounded-sm bg-primary"></div>
-            <span class="text-sm text-slate-600 dark:text-slate-400"
-              >Standard (45%)</span
-            >
+          <div class="col-span-2 text-sm text-slate-500 dark:text-slate-400" *ngIf="!occupancyLegend.length">
+            No occupancy details available.
           </div>
-          <div class="flex items-center gap-2">
-            <div class="size-3 rounded-sm bg-slate-800 dark:bg-slate-300"></div>
+          <div class="flex items-center gap-2" *ngFor="let item of occupancyLegend">
+            <div class="size-3 rounded-sm" [ngClass]="item.colorClass"></div>
             <span class="text-sm text-slate-600 dark:text-slate-400"
-              >Deluxe (30%)</span
-            >
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="size-3 rounded-sm bg-slate-400 dark:bg-slate-600"></div>
-            <span class="text-sm text-slate-600 dark:text-slate-400"
-              >Suite (15%)</span
-            >
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="size-3 rounded-sm bg-primary/50"></div>
-            <span class="text-sm text-slate-600 dark:text-slate-400"
-              >Penthouse (10%)</span
+              >{{ item.name }} ({{ item.percent }}%)</span
             >
           </div>
         </div>
@@ -349,88 +311,28 @@
         <p
           class="text-slate-900 dark:text-slate-100 text-lg font-semibold leading-normal"
         >
-          Recent Activity
+          Revenue Breakdown (latest)
         </p>
-        <button class="text-primary text-sm font-medium hover:underline">
-          View All
+        <button class="text-primary text-sm font-medium hover:underline" (click)="loadDashboardData()">
+          Refresh
         </button>
       </div>
-      <div
-        class="flex flex-col relative before:absolute before:inset-0 before:ml-[15px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-700 before:to-transparent"
-      >
+      <div class="space-y-3">
         <div
-          class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-6"
+          *ngIf="!recentRevenueRows.length"
+          class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-sm text-slate-500 dark:text-slate-400"
         >
-          <div
-            class="flex items-center justify-center w-8 h-8 rounded-full border border-white dark:border-slate-900 bg-primary/20 text-primary shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow"
-          >
-            <span class="material-symbols-outlined text-[16px]">login</span>
-          </div>
-          <div
-            class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm"
-          >
-            <div class="flex items-center justify-between mb-1">
-              <h4
-                class="font-semibold text-slate-900 dark:text-slate-100 text-sm"
-              >
-                Check-in: Room 402
-              </h4>
-              <time class="text-xs text-slate-500">10:42 AM</time>
-            </div>
-            <p class="text-xs text-slate-600 dark:text-slate-400">
-              John Doe checked into Deluxe Suite.
-            </p>
-          </div>
+          No revenue breakdown data available.
         </div>
         <div
-          class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-6"
+          *ngFor="let row of recentRevenueRows"
+          class="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4"
         >
-          <div
-            class="flex items-center justify-center w-8 h-8 rounded-full border border-white dark:border-slate-900 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow"
-          >
-            <span class="material-symbols-outlined text-[16px]"
-              >room_service</span
-            >
+          <div>
+            <p class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ formatDateShort(row.date) }}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ row.bookingCount }} bookings • {{ row.roomNights }} nights</p>
           </div>
-          <div
-            class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm"
-          >
-            <div class="flex items-center justify-between mb-1">
-              <h4
-                class="font-semibold text-slate-900 dark:text-slate-100 text-sm"
-              >
-                Service Request
-              </h4>
-              <time class="text-xs text-slate-500">09:15 AM</time>
-            </div>
-            <p class="text-xs text-slate-600 dark:text-slate-400">
-              Room 305 requested extra towels.
-            </p>
-          </div>
-        </div>
-        <div
-          class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active"
-        >
-          <div
-            class="flex items-center justify-center w-8 h-8 rounded-full border border-white dark:border-slate-900 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow"
-          >
-            <span class="material-symbols-outlined text-[16px]">logout</span>
-          </div>
-          <div
-            class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm"
-          >
-            <div class="flex items-center justify-between mb-1">
-              <h4
-                class="font-semibold text-slate-900 dark:text-slate-100 text-sm"
-              >
-                Check-out: Room 210
-              </h4>
-              <time class="text-xs text-slate-500">08:30 AM</time>
-            </div>
-            <p class="text-xs text-slate-600 dark:text-slate-400">
-              Sarah Smith checked out. Payment processed.
-            </p>
-          </div>
+          <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ formatCurrency(row.dailyRevenue) }}</p>
         </div>
       </div>
     </div>
@@ -440,7 +342,7 @@
       <p
         class="text-slate-900 dark:text-slate-100 text-lg font-semibold leading-normal mb-4"
       >
-        Booking Status Summary
+        Room Occupancy Summary
       </p>
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
@@ -448,86 +350,38 @@
             <tr
               class="border-b border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400"
             >
-              <th class="pb-3 font-medium">Guest Name</th>
-              <th class="pb-3 font-medium">Room</th>
-              <th class="pb-3 font-medium">Dates</th>
-              <th class="pb-3 font-medium">Status</th>
+              <th class="pb-3 font-medium">Room Type</th>
+              <th class="pb-3 font-medium">Total</th>
+              <th class="pb-3 font-medium">Occupied</th>
+              <th class="pb-3 font-medium">Occupancy</th>
             </tr>
           </thead>
           <tbody class="text-sm">
             <tr
-              class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+              *ngIf="!occupancyByRoomType.length"
+              class="border-b border-slate-100 dark:border-slate-800/50"
             >
-              <td class="py-4 text-slate-900 dark:text-slate-100 font-medium">
-                Michael Johnson
-              </td>
-              <td class="py-4 text-slate-600 dark:text-slate-400">
-                Standard - 101
-              </td>
-              <td class="py-4 text-slate-600 dark:text-slate-400">
-                Oct 24 - Oct 26
-              </td>
-              <td class="py-4">
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                  >Confirmed</span
-                >
+              <td colspan="4" class="py-4 text-slate-500 dark:text-slate-400">
+                No occupancy data available.
               </td>
             </tr>
             <tr
+              *ngFor="let room of occupancyByRoomType"
               class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
             >
               <td class="py-4 text-slate-900 dark:text-slate-100 font-medium">
-                Emily Davis
+                {{ room.roomTypeName }}
               </td>
               <td class="py-4 text-slate-600 dark:text-slate-400">
-                Suite - 501
+                {{ room.totalRooms }}
               </td>
               <td class="py-4 text-slate-600 dark:text-slate-400">
-                Oct 25 - Oct 28
+                {{ room.occupiedRooms }}
               </td>
               <td class="py-4">
                 <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                  >Checked-in</span
-                >
-              </td>
-            </tr>
-            <tr
-              class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-            >
-              <td class="py-4 text-slate-900 dark:text-slate-100 font-medium">
-                Robert Wilson
-              </td>
-              <td class="py-4 text-slate-600 dark:text-slate-400">
-                Deluxe - 302
-              </td>
-              <td class="py-4 text-slate-600 dark:text-slate-400">
-                Oct 26 - Oct 29
-              </td>
-              <td class="py-4">
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                  >Pending</span
-                >
-              </td>
-            </tr>
-            <tr
-              class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-            >
-              <td class="py-4 text-slate-900 dark:text-slate-100 font-medium">
-                Jessica Brown
-              </td>
-              <td class="py-4 text-slate-600 dark:text-slate-400">
-                Standard - 105
-              </td>
-              <td class="py-4 text-slate-600 dark:text-slate-400">
-                Oct 24 - Oct 25
-              </td>
-              <td class="py-4">
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300"
-                  >Checked-out</span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary"
+                  >{{ formatPercent(room.occupancyPercent) }}</span
                 >
               </td>
             </tr>
@@ -536,4 +390,5 @@
       </div>
     </div>
   </div>
+  </ng-container>
 </div>
