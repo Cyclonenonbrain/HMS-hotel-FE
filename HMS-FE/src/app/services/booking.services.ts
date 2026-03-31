@@ -22,6 +22,16 @@ export interface MyBookingItem {
   paymentStatus: string;
 }
 
+export interface BookingCheckInAssignmentRequest {
+  booking_item_id: string;
+  room_id: string;
+  notes?: string;
+}
+
+export interface BookingCheckInRequest {
+  room_assignments: BookingCheckInAssignmentRequest[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -74,5 +84,9 @@ export class BookingService {
    */
   updateBookingStatus(id: string, statusRequest: { status: string }): Observable<ApiResponse<any>> {
     return this.http.patch<ApiResponse<any>>(`${this.API_URL}/${id}/status`, statusRequest);
+  }
+
+  checkInBooking(id: string, payload: BookingCheckInRequest): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.API_URL}/${id}/check-in`, payload);
   }
 }

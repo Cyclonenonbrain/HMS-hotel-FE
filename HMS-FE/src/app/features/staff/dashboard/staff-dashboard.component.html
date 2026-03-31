@@ -61,7 +61,17 @@
     </div>
   </header>
 
-  <div class="flex-1 overflow-auto relative">
+  <div *ngIf="isLoading" class="flex-1 flex items-center justify-center text-sm text-slate-500">
+    Loading staff dashboard...
+  </div>
+
+  <div *ngIf="!isLoading && errorMessage" class="flex-1 flex items-center justify-center px-6">
+    <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && !errorMessage" class="flex-1 overflow-auto relative">
     <div class="min-w-[1000px] w-full">
       
       <!-- Timeline Header: Days -->
@@ -174,60 +184,6 @@
     </div>
   </div>
 
-  <!-- Keep Footer exactly as before -->
-  <footer class="h-20 flex-shrink-0 bg-white border-t border-border-light px-8 flex items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40">
-    <div class="flex gap-4 w-full justify-between overflow-x-auto no-scrollbar">
-      <div class="flex flex-col gap-0.5 group shrink-0">
-        <div class="flex items-center gap-1">
-          <span class="text-[10px] font-extrabold text-text-secondary-light uppercase tracking-wider">Vacant</span>
-        </div>
-        <p class="text-xl font-black text-status-green">12</p>
-      </div>
-      <div class="w-px h-8 bg-border-light self-center shrink-0"></div>
-      <div class="flex flex-col gap-0.5 shrink-0">
-        <div class="flex items-center gap-1">
-          <span class="text-[10px] font-extrabold text-text-secondary-light uppercase tracking-wider">Occupied</span>
-        </div>
-        <p class="text-xl font-black text-status-purple">45</p>
-      </div>
-      <div class="w-px h-8 bg-border-light self-center shrink-0"></div>
-      <div class="flex flex-col gap-0.5 shrink-0">
-        <div class="flex items-center gap-1">
-          <span class="text-[10px] font-extrabold text-text-secondary-light uppercase tracking-wider">Not Ready</span>
-        </div>
-        <p class="text-xl font-black text-status-yellow">8</p>
-      </div>
-      <div class="w-px h-8 bg-border-light self-center shrink-0"></div>
-      <div class="flex flex-col gap-0.5 shrink-0">
-        <div class="flex items-center gap-1">
-          <span class="text-[10px] font-extrabold text-text-secondary-light uppercase tracking-wider">Maintenance</span>
-        </div>
-        <p class="text-xl font-black text-status-red">2</p>
-      </div>
-      <div class="w-px h-8 bg-border-light self-center shrink-0"></div>
-      <div class="flex flex-col gap-0.5 shrink-0">
-        <div class="flex items-center gap-1">
-          <span class="text-[10px] font-extrabold text-text-secondary-light uppercase tracking-wider">Reserved</span>
-        </div>
-        <p class="text-xl font-black text-status-purple">15</p>
-      </div>
-      <div class="w-px h-8 bg-border-light self-center shrink-0"></div>
-      <div class="flex flex-col gap-0.5 shrink-0">
-        <div class="flex items-center gap-1">
-          <span class="text-[10px] font-extrabold text-text-secondary-light uppercase tracking-wider">Due Out</span>
-        </div>
-        <p class="text-xl font-black text-status-orange">10</p>
-      </div>
-      <div class="w-px h-8 bg-border-light self-center shrink-0"></div>
-      <div class="flex flex-col gap-0.5 shrink-0">
-        <div class="flex items-center gap-1">
-          <span class="text-[10px] font-extrabold text-text-secondary-light uppercase tracking-wider">WFP</span>
-        </div>
-        <p class="text-xl font-black text-status-grey">5</p>
-      </div>
-    </div>
-  </footer>
-
   <!-- Floating 'Book Now' Button -->
   <button (click)="openNewBooking()" class="fixed bottom-24 right-8 bg-black text-primary hover:bg-black/90 px-6 py-4 rounded-full shadow-2xl flex items-center justify-center gap-2 transform hover:scale-105 transition-all z-50 group border border-primary/20">
     <span class="material-symbols-outlined text-2xl font-light">add_circle</span>
@@ -302,14 +258,6 @@
         </h3>
         
         <div class="flex items-end gap-3 flex-wrap sm:flex-nowrap">
-          <div class="flex flex-col gap-1.5 w-1/4 shrink-0 min-w-[120px]">
-            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Booking Type</label>
-            <div class="flex bg-slate-100 p-1 rounded-lg">
-              <button class="flex-1 py-1.5 text-xs font-bold rounded-md bg-white shadow-sm text-slate-900 border border-slate-200/50">Daily</button>
-              <button class="flex-1 py-1.5 text-xs font-medium rounded-md text-slate-500 hover:text-slate-700">Hourly</button>
-            </div>
-          </div>
-          
           <div class="flex flex-col gap-1.5 flex-1 min-w-[250px]">
             <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Check-in / Check-out</label>
             <div class="flex items-center">
@@ -337,17 +285,25 @@
             Room Selection
           </h3>
           <div class="flex items-center gap-2">
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="bookingForm.numberOfGuests"
+              class="py-1.5 pl-3 pr-2 w-24 text-xs font-medium border border-slate-200 rounded-md focus:ring-primary outline-none"
+              placeholder="Guests"
+              title="Number of guests"
+            />
             <select [(ngModel)]="bookingForm.roomFloorFilter" class="py-1.5 pl-3 pr-8 text-xs font-medium border border-slate-200 rounded-md focus:ring-primary outline-none">
               <option>All Floors</option>
-              <option>1st</option>
-              <option>2nd</option>
+              <option *ngFor="let floor of floorOptions" [value]="floor">{{ floor }}</option>
             </select>
             <select [(ngModel)]="bookingForm.roomTypeFilter" class="py-1.5 pl-3 pr-8 text-xs font-medium border border-slate-200 rounded-md focus:ring-primary outline-none">
               <option>All Types</option>
-              <option>King Deluxe</option>
-              <option>Suite</option>
-              <option>Ocean Terrace</option>
-              <option>Double Queen</option>
+              <option *ngFor="let type of roomTypeOptions" [value]="type">{{ type }}</option>
+            </select>
+            <select [(ngModel)]="bookingForm.amenityFilter" class="py-1.5 pl-3 pr-8 text-xs font-medium border border-slate-200 rounded-md focus:ring-primary outline-none">
+              <option>All Amenities</option>
+              <option *ngFor="let amenity of amenityOptions" [value]="amenity">{{ amenity }}</option>
             </select>
           </div>
         </div>
@@ -378,7 +334,7 @@
                     <span *ngIf="selectedRoomIds.includes(room.id)" class="material-symbols-outlined text-[12px] text-slate-900 font-bold">check</span>
                   </div>
                 </td>
-                <td class="px-4 py-3 font-extrabold text-slate-900 text-sm">{{ room.id }}</td>
+                <td class="px-4 py-3 font-extrabold text-slate-900 text-sm">{{ room.roomNumber }}</td>
                 <td class="px-4 py-3 text-slate-500">{{ room.floor }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ room.type }}</td>
                 <td class="px-4 py-3 text-slate-500 text-center">{{ room.cap }}</td>
@@ -396,6 +352,9 @@
             </tbody>
           </table>
         </div>
+        <div *ngIf="availabilityFilterLoading" class="text-[11px] text-slate-500">
+          Checking room availability for selected dates...
+        </div>
       </section>
 
       <!-- Booking Summary -->
@@ -405,46 +364,50 @@
             <span class="material-symbols-outlined text-primary text-base">shopping_cart</span>
             Booking Summary
           </h3>
-          <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded-md text-[10px] font-bold">{{ selectedRoomIds.length }} room selected</span>
+          <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded-md text-[10px] font-bold">{{ selectedRoomCount }} room selected</span>
         </div>
         
         <div class="flex flex-wrap gap-2">
           <div *ngFor="let room of selectedRoomsDetails" class="bg-[#1a2538] text-white pl-3 pr-1 py-1 rounded-md flex items-center gap-2 text-xs shadow-sm">
-            <span class="font-bold">Room {{ room.id }}</span>
+            <span class="font-bold">Room {{ room.roomNumber }}</span>
             <span class="text-slate-400 text-[10px]">• Standard Guest Occupancy</span>
             <button (click)="removeSelectedRoom(room.id); $event.stopPropagation()" class="p-1 hover:text-red-400 transition-colors rounded-full leading-none flex items-center justify-center">
               <span class="material-symbols-outlined text-[14px]">close</span>
             </button>
           </div>
         </div>
+
+        <div *ngIf="bookingActionError" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+          {{ bookingActionError }}
+        </div>
         
         <div class="bg-slate-50 rounded-xl p-5 border border-slate-100 grid grid-cols-2 gap-8 text-sm shadow-sm">
           <div class="flex flex-col gap-3">
             <div class="flex justify-between text-slate-500">
-              <span>Total Booking Capacity</span>
-              <span class="font-bold text-slate-900">{{ totalBookingCapacity }} Persons</span>
+              <span>Rooms selected</span>
+              <span class="font-bold text-slate-900">{{ selectedRoomCount }} room(s)</span>
             </div>
             <div class="flex justify-between text-slate-500">
-              <span>Standard Guest Rate Applied</span>
-              <span class="material-symbols-outlined text-status-green text-sm">check_circle</span>
+              <span>Total Booking Capacity</span>
+              <span class="font-bold text-slate-900">{{ totalBookingCapacity }} persons</span>
+            </div>
+            <div class="flex justify-between text-slate-500">
+              <span>Nights</span>
+              <span class="font-bold text-slate-900">{{ bookingForm.nights }} night(s)</span>
             </div>
           </div>
           <div class="flex flex-col gap-3">
             <div class="flex justify-between text-slate-500">
-              <span>Room Charge</span>
+              <span>Subtotal</span>
               <span class="font-bold text-slate-900">{{ totalRoomCharge | number }}</span>
             </div>
             <div class="flex justify-between text-slate-500">
-              <span>Discount</span>
-              <span class="font-bold text-status-green">- 0</span>
-            </div>
-            <div class="flex justify-between text-slate-500">
-              <span>Deposit</span>
-              <span class="font-bold text-slate-900">500,000</span>
+              <span>VAT (8%)</span>
+              <span class="font-bold text-slate-900">{{ vatAmount | number }}</span>
             </div>
             <div class="flex justify-between text-slate-900 pt-3 border-t border-slate-200 mt-1">
               <span class="font-bold text-base">Total</span>
-              <span class="font-black text-xl">{{ totalRoomCharge | number }}</span>
+              <span class="font-black text-xl">{{ totalWithVat | number }}</span>
             </div>
           </div>
         </div>
@@ -456,8 +419,8 @@
     <div class="px-8 py-5 border-t border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between shrink-0 gap-4">
       <button (click)="closeBookingModal()" class="text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors">Cancel</button>
       <div class="flex items-center gap-3">
-        <button class="px-6 py-2.5 rounded-lg bg-white border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">Save Booking</button>
-        <button (click)="saveBooking()" class="px-6 py-2.5 rounded-lg bg-primary text-slate-900 text-sm font-bold hover:brightness-105 transition-all shadow-sm flex items-center gap-2">
+        <button (click)="saveBooking()" [disabled]="bookingActionLoading" class="px-6 py-2.5 rounded-lg bg-white border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">Save Booking</button>
+        <button (click)="saveAndCheckIn()" [disabled]="bookingActionLoading" class="px-6 py-2.5 rounded-lg bg-primary text-slate-900 text-sm font-bold hover:brightness-105 transition-all shadow-sm flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
           <span class="material-symbols-outlined text-[18px]">check_circle</span>
           Save & Check-in
         </button>
