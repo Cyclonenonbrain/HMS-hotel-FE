@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { VndPipe } from '../../../core/vnd.pipe';
 import { HotelServiceService } from '../../../core/hotel-service.service';
 import { HotelServiceCreateRequest, HotelServiceResponse } from '../../../core/models/hotel-service.model';
@@ -189,7 +190,7 @@ export class ServicesComponent implements OnInit {
         this.closeDeleteDialog();
       },
       error: (error) => {
-        this.showToast('error', 'Failed to delete service.');
+        this.showToast('error', this.getApiErrorMessage(error, 'Failed to delete service.'));
         console.error('Error deleting service:', error);
         this.closeDeleteDialog();
       }
@@ -200,5 +201,25 @@ export class ServicesComponent implements OnInit {
     if (this.notifTimer) clearTimeout(this.notifTimer);
     this.notification = { type, message };
     this.notifTimer = setTimeout(() => (this.notification = null), 3000);
+  }
+
+  private getApiErrorMessage(error: unknown, fallback: string): string {
+    if (!(error instanceof HttpErrorResponse)) {
+      return fallback;
+    }
+
+    const payload = error.error;
+    if (payload && typeof payload === 'object' && 'message' in payload) {
+      const message = (payload as { message?: unknown }).message;
+      if (typeof message === 'string' && message.trim()) {
+        return message;
+      }
+    }
+
+    if (error.status === 409) {
+      return 'Service is being used in booking records, cannot delete.';
+    }
+
+    return fallback;
   }
 }
