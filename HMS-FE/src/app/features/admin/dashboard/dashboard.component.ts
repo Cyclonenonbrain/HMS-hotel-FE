@@ -88,7 +88,7 @@ export class DashboardComponent implements OnInit {
   }
 
   formatPercent(value: number | string | null | undefined): string {
-    return `${Math.round(this.toNumber(value))}%`;
+    return `${this.normalizePercent(value)}%`;
   }
 
   get chartSeries(): RevenueBreakdown[] {
@@ -133,14 +133,26 @@ export class DashboardComponent implements OnInit {
   }
 
   get occupancyTotalPercent(): number {
-    const totalRooms = this.occupancyByRoomType.reduce((sum, item) => sum + (item.totalRooms || 0), 0);
-    const occupiedRooms = this.occupancyByRoomType.reduce((sum, item) => sum + (item.occupiedRooms || 0), 0);
-    if (totalRooms > 0) return Math.round((occupiedRooms / totalRooms) * 100);
-    return Math.round(this.toNumber(this.metrics?.occupancyRate));
+    const totalRooms = this.occupancyByRoomType.reduce(
+      (sum, item) => sum + this.toNumber(item.totalRooms),
+      0
+    );
+    const occupiedRooms = this.occupancyByRoomType.reduce(
+      (sum, item) => sum + this.toNumber(item.occupiedRooms),
+      0
+    );
+
+    if (totalRooms > 0) {
+      return this.normalizePercent((occupiedRooms / totalRooms) * 100);
+    }
+    return this.normalizePercent(this.metrics?.occupancyRate);
   }
 
   get occupancyLegend(): Array<{ name: string; percent: number; colorClass: string }> {
-    const totalRooms = this.occupancyByRoomType.reduce((sum, item) => sum + (item.totalRooms || 0), 0);
+    const totalRooms = this.occupancyByRoomType.reduce(
+      (sum, item) => sum + this.toNumber(item.totalRooms),
+      0
+    );
     if (totalRooms <= 0) return [];
 
     const colors = [
@@ -152,7 +164,7 @@ export class DashboardComponent implements OnInit {
 
     return this.occupancyByRoomType.slice(0, 4).map((item, index) => ({
       name: item.roomTypeName,
-      percent: Math.round(((item.totalRooms || 0) / totalRooms) * 100),
+      percent: this.normalizePercent((this.toNumber(item.totalRooms) / totalRooms) * 100),
       colorClass: colors[index] || 'bg-slate-300'
     }));
   }
@@ -173,6 +185,17 @@ export class DashboardComponent implements OnInit {
   occupancyStrokeClass(index: number): string {
     const classes = ['stroke-primary', 'stroke-slate-800 dark:stroke-slate-300', 'stroke-slate-400 dark:stroke-slate-600', 'stroke-primary/50'];
     return classes[index] || 'stroke-slate-300';
+  }
+
+  private normalizePercent(value: number | string | null | undefined): number {
+    const numberValue = Math.round(this.toNumber(value));
+    if (!Number.isFinite(numberValue) || numberValue < 0) {
+      return 0;
+    }
+    if (numberValue > 100) {
+      return 100;
+    }
+    return numberValue;
   }
 
   formatDateShort(value: string): string {
