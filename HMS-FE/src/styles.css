@@ -1,1 +1,37 @@
-/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+/* ===== GLOBAL PRIMARY COLOR OVERRIDE ===== */
+.text-primary {
+  color: #f2cc0d !important;
+}
+
+.bg-primary {
+  background-color: #f2cc0d !important;
+}
+
+.border-primary {
+  border-color: #f2cc0d !important;
+}
+
+/* Hover states */
+.hover\:text-primary:hover {
+  color: #f2cc0d !important;
+}
+
+.hover\:bg-primary:hover {
+  background-color: #f2cc0d !important;
+}
+
+.hover\:border-primary:hover {
+  border-color: #f2cc0d !important;
+}

@@ -1,0 +1,26 @@
+.custom-scrollbar-wrapper::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar-wrapper::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.4);
+  border-radius: 20px;
+}
+
+.custom-scrollbar-wrapper:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.6);
+}
+
+/* Dark mode scrollbar styles */
+:host-context(.dark) .custom-scrollbar-wrapper::-webkit-scrollbar-thumb {
+  background-color: rgba(71, 85, 105, 0.5);
+}
+
+:host-context(.dark) .custom-scrollbar-wrapper:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(71, 85, 105, 0.8);
+}

@@ -1,0 +1,394 @@
+<div class="flex flex-col max-w-7xl mx-auto gap-8 p-6 md:p-8">
+  <div
+    *ngIf="isLoading"
+    class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-sm text-slate-600 dark:text-slate-300"
+  >
+    Loading dashboard data...
+  </div>
+
+  <div
+    *ngIf="!isLoading && loadError"
+    class="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-4 text-sm text-red-700 dark:text-red-300"
+  >
+    {{ loadError }}
+  </div>
+
+  <ng-container *ngIf="!isLoading && !loadError">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div
+      class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
+    >
+      <div class="flex justify-between items-start">
+        <p
+          class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal"
+        >
+          Total Revenue
+        </p>
+        <span
+          class="material-symbols-outlined text-primary bg-primary/10 p-1.5 rounded-lg"
+          >account_balance_wallet</span
+        >
+      </div>
+      <p
+        class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight mt-2"
+      >
+        {{ formatCurrency(metrics?.totalRevenue) }}
+      </p>
+      <div class="flex items-center gap-2 mt-2">
+        <span
+          class="text-green-600 dark:text-green-400 text-sm font-medium flex items-center"
+        >
+          <span class="material-symbols-outlined text-[16px]">trending_up</span>
+          Live
+        </span>
+        <span class="text-slate-400 dark:text-slate-500 text-xs"
+          >real-time</span
+        >
+      </div>
+    </div>
+    <div
+      class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
+    >
+      <div class="flex justify-between items-start">
+        <p
+          class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal"
+        >
+          Active Bookings
+        </p>
+        <span
+          class="material-symbols-outlined text-primary bg-primary/10 p-1.5 rounded-lg"
+          >book_online</span
+        >
+      </div>
+      <p
+        class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight mt-2"
+      >
+        {{ metrics?.activeBookings ?? 0 }}
+      </p>
+      <div class="flex items-center gap-2 mt-2">
+        <span
+          class="text-green-600 dark:text-green-400 text-sm font-medium flex items-center"
+        >
+          <span class="material-symbols-outlined text-[16px]">trending_up</span>
+          Live
+        </span>
+        <span class="text-slate-400 dark:text-slate-500 text-xs"
+          >real-time</span
+        >
+      </div>
+    </div>
+    <div
+      class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
+    >
+      <div class="flex justify-between items-start">
+        <p
+          class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal"
+        >
+          Occupancy Rate
+        </p>
+        <span
+          class="material-symbols-outlined text-primary bg-primary/10 p-1.5 rounded-lg"
+          >hotel</span
+        >
+      </div>
+      <p
+        class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight mt-2"
+      >
+        {{ formatPercent(metrics?.occupancyRate) }}
+      </p>
+      <div class="flex items-center gap-2 mt-2">
+        <span
+          class="text-green-600 dark:text-green-400 text-sm font-medium flex items-center"
+        >
+          <span class="material-symbols-outlined text-[16px]">trending_up</span>
+          Live
+        </span>
+        <span class="text-slate-400 dark:text-slate-500 text-xs"
+          >real-time</span
+        >
+      </div>
+    </div>
+    <div
+      class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
+    >
+      <div class="flex justify-between items-start">
+        <p
+          class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal"
+        >
+          ADR
+        </p>
+        <span
+          class="material-symbols-outlined text-primary bg-primary/10 p-1.5 rounded-lg"
+          >price_check</span
+        >
+      </div>
+      <p
+        class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight mt-2"
+      >
+        {{ formatCurrency(metrics?.averageDailyRate) }}
+      </p>
+      <div class="flex items-center gap-2 mt-2">
+        <span
+          class="text-red-500 dark:text-red-400 text-sm font-medium flex items-center"
+        >
+          <span class="material-symbols-outlined text-[16px]"
+            >trending_down</span
+          >
+          Live
+        </span>
+        <span class="text-slate-400 dark:text-slate-500 text-xs"
+          >real-time</span
+        >
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div
+      class="flex flex-col gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm lg:col-span-2"
+    >
+      <div class="flex justify-between items-center mb-2">
+        <p
+          class="text-slate-900 dark:text-slate-100 text-lg font-semibold leading-normal"
+        >
+          Monthly Revenue
+        </p>
+        <select
+          class="form-select text-sm border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg focus:ring-primary focus:border-primary"
+        >
+          <option>This Year</option>
+          <option>Last Year</option>
+        </select>
+      </div>
+      <div
+        *ngIf="revenueError"
+        class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3 text-xs text-amber-700 dark:text-amber-300"
+      >
+        {{ revenueError }}
+      </div>
+      <div class="flex items-baseline gap-3 mb-6">
+        <p
+          class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight"
+        >
+          {{ formatCurrency(metrics?.totalRevenue) }}
+        </p>
+        <p class="text-green-600 dark:text-green-400 text-sm font-medium">
+          +8% from last year
+        </p>
+      </div>
+      <div
+        class="flex-1 min-h-[240px] relative w-full flex flex-col justify-end"
+      >
+        <div
+          class="absolute inset-0 flex flex-col justify-between pt-2 pb-6 border-l border-b border-slate-200 dark:border-slate-700 ml-8"
+        >
+          <div
+            class="w-full border-t border-slate-100 dark:border-slate-800"
+          ></div>
+          <div
+            class="w-full border-t border-slate-100 dark:border-slate-800"
+          ></div>
+          <div
+            class="w-full border-t border-slate-100 dark:border-slate-800"
+          ></div>
+          <div
+            class="w-full border-t border-slate-100 dark:border-slate-800"
+          ></div>
+        </div>
+        <div
+          class="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-xs text-slate-400 text-right pr-2"
+        >
+          <span>{{ yAxisLabels[0] }}</span><span>{{ yAxisLabels[1] }}</span><span>{{ yAxisLabels[2] }}</span><span>{{ yAxisLabels[3] }}</span>
+        </div>
+        <svg
+          class="w-full h-full ml-8 pb-6 absolute inset-0 z-10"
+          preserveAspectRatio="none"
+          style="overflow: visible"
+          viewBox="0 0 100 100"
+        >
+          <path
+            class="text-primary"
+            [attr.d]="revenuePath"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          ></path>
+          <path
+            [attr.d]="revenueAreaPath"
+            fill="url(#chart-gradient)"
+            opacity="0.2"
+          ></path>
+          <defs>
+            <linearGradient id="chart-gradient" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#eccb13" stop-opacity="1"></stop>
+              <stop offset="100%" stop-color="#eccb13" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+          <circle
+            class="text-primary bg-white"
+            *ngFor="let point of revenuePointPositions"
+            [attr.cx]="point.x"
+            [attr.cy]="point.y"
+            fill="currentColor"
+            r="3"
+          ></circle>
+        </svg>
+        <div
+          class="flex justify-between text-xs text-slate-400 mt-auto ml-8 pt-2"
+        >
+          <span *ngFor="let label of monthLabels">{{ label }}</span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="flex flex-col gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm"
+    >
+      <p
+        class="text-slate-900 dark:text-slate-100 text-lg font-semibold leading-normal mb-2"
+      >
+        Room Occupancy
+      </p>
+      <div
+        *ngIf="occupancyError"
+        class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3 text-xs text-amber-700 dark:text-amber-300"
+      >
+        {{ occupancyError }}
+      </div>
+      <div class="flex-1 flex flex-col justify-center relative min-h-[240px]">
+        <div class="relative size-48 mx-auto flex items-center justify-center">
+          <svg
+            class="size-full -rotate-90"
+            viewBox="0 0 36 36"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              class="stroke-slate-100 dark:stroke-slate-800"
+              cx="18"
+              cy="18"
+              fill="none"
+              r="16"
+              stroke-width="4"
+            ></circle>
+            <circle
+              *ngFor="let slice of occupancySlices"
+              [ngClass]="slice.strokeClass"
+              cx="18"
+              cy="18"
+              fill="none"
+              r="16"
+              [attr.stroke-dasharray]="slice.percent + ' 100'"
+              [attr.stroke-dashoffset]="slice.offset"
+              stroke-width="4"
+            ></circle>
+          </svg>
+          <div class="absolute flex flex-col items-center justify-center">
+            <span class="text-2xl font-bold text-slate-900 dark:text-slate-100"
+              >{{ occupancyTotalPercent }}%</span
+            >
+            <span class="text-xs text-slate-500">Total</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mt-6">
+          <div class="col-span-2 text-sm text-slate-500 dark:text-slate-400" *ngIf="!occupancyLegend.length">
+            No occupancy details available.
+          </div>
+          <div class="flex items-center gap-2" *ngFor="let item of occupancyLegend">
+            <div class="size-3 rounded-sm" [ngClass]="item.colorClass"></div>
+            <span class="text-sm text-slate-600 dark:text-slate-400"
+              >{{ item.name }} ({{ item.percent }}%)</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
+    <div
+      class="flex flex-col gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm"
+    >
+      <div class="flex justify-between items-center mb-4">
+        <p
+          class="text-slate-900 dark:text-slate-100 text-lg font-semibold leading-normal"
+        >
+          Revenue Breakdown (latest)
+        </p>
+        <button class="text-primary text-sm font-medium hover:underline" (click)="loadDashboardData()">
+          Refresh
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div
+          *ngIf="!recentRevenueRows.length"
+          class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-sm text-slate-500 dark:text-slate-400"
+        >
+          No revenue breakdown data available.
+        </div>
+        <div
+          *ngFor="let row of recentRevenueRows"
+          class="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4"
+        >
+          <div>
+            <p class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ formatDateShort(row.date) }}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ row.bookingCount }} bookings • {{ row.roomNights }} nights</p>
+          </div>
+          <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ formatCurrency(row.dailyRevenue) }}</p>
+        </div>
+      </div>
+    </div>
+    <div
+      class="flex flex-col gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm"
+    >
+      <p
+        class="text-slate-900 dark:text-slate-100 text-lg font-semibold leading-normal mb-4"
+      >
+        Room Occupancy Summary
+      </p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr
+              class="border-b border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400"
+            >
+              <th class="pb-3 font-medium">Room Type</th>
+              <th class="pb-3 font-medium">Total</th>
+              <th class="pb-3 font-medium">Occupied</th>
+              <th class="pb-3 font-medium">Occupancy</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm">
+            <tr
+              *ngIf="!occupancyByRoomType.length"
+              class="border-b border-slate-100 dark:border-slate-800/50"
+            >
+              <td colspan="4" class="py-4 text-slate-500 dark:text-slate-400">
+                No occupancy data available.
+              </td>
+            </tr>
+            <tr
+              *ngFor="let room of occupancyByRoomType"
+              class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            >
+              <td class="py-4 text-slate-900 dark:text-slate-100 font-medium">
+                {{ room.roomTypeName }}
+              </td>
+              <td class="py-4 text-slate-600 dark:text-slate-400">
+                {{ room.totalRooms }}
+              </td>
+              <td class="py-4 text-slate-600 dark:text-slate-400">
+                {{ room.occupiedRooms }}
+              </td>
+              <td class="py-4">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary"
+                  >{{ formatPercent(room.occupancyPercent) }}</span
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  </ng-container>
+</div>

@@ -1,0 +1,68 @@
+.input-field {
+    @apply block w-full rounded-xl border-neutral-300 bg-transparent px-4 pb-2 pt-6 text-secondary outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary;
+}
+
+.input-label {
+    @apply absolute left-4 top-4 text-neutral-500 transition-all pointer-events-none;
+}
+
+/* Hiệu ứng Floating Label */
+.input-field:focus~.input-label,
+.input-field:not(:placeholder-shown)~.input-label {
+    @apply -top-0 text-[10px] font-bold uppercase tracking-widest text-primary pt-2;
+}
+
+/* Chrome, Safari, Edge, Opera - Remove arrows for number input */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+
+
+
+    :host {
+        display: block;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    /* Hiệu ứng mượt cho dropdown giống trang chủ */
+    .animate-in {
+        animation-duration: 200ms;
+        animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .flex-col.items-center {
+        min-width: 80px;
+    }
+
+    /* Đảm bảo nội dung checkout không bị menu đè lên lỗi hiển thị */
+    header {
+        background-image: radial-gradient(transparent 1px, #ffffff 1px);
+        background-size: 4px 4px;
+    }
+
+    /* checkout.component.css */
+
+    /* Định nghĩa màu Primary nếu chưa có trong tailwind.config */
+    :root {
+        --color-primary: #eccb13;
+        /* Màu vàng giống ảnh gốc */
+    }
+
+    /* Hiệu ứng Glow cho các node Active */
+    .step-active-glow {
+        box-shadow: 0 4px 10px rgba(236, 203, 19, 0.3);
+        /* Tăng độ sáng để giống LuxeCore */
+        transition: all 0.3s ease;
+    }
+
+    /* Đảm bảo font chữ đồng bộ */
+    .font-outfit {
+        font-family: 'Outfit', sans-serif;
+    }
+
+    /* Tinh chỉnh icon Google Symbols cho đậm giống ảnh */
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 700, 'GRAD' 0, 'opsz' 24;
+    }
+}

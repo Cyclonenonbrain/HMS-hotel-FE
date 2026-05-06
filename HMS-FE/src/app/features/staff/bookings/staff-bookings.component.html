@@ -1,0 +1,340 @@
+<div class="mx-auto w-full max-w-7xl p-6 lg:p-8">
+  <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div class="flex flex-col gap-2">
+      <h1 class="text-3xl font-bold tracking-tight text-slate-900">Manage Bookings</h1>
+      <p class="text-sm text-slate-500">{{ totalElements }} Total Bookings</p>
+    </div>
+  </div>
+
+  <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
+    <div class="relative flex-1 max-w-md">
+      <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+        <span class="material-symbols-outlined text-slate-400">search</span>
+      </div>
+      <input
+        class="block w-full rounded-lg border-0 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-primary placeholder:text-slate-500"
+        placeholder="Search by guest or ID"
+        type="text"
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onFilterChange()"
+      />
+    </div>
+    <div class="sm:w-48">
+      <select
+        class="block w-full rounded-lg border-0 bg-white py-2.5 pl-3 pr-10 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-primary"
+        [(ngModel)]="activeStatus"
+        (ngModelChange)="onFilterChange()"
+      >
+        <option value="all">All Statuses</option>
+        <option value="checked-in">Checked In</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="pending">Pending</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+    {{ errorMessage }}
+  </div>
+
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-slate-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider" scope="col">ID</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider" scope="col">Guest</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider" scope="col">Room Types</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider" scope="col">Rooms</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider" scope="col">Check-in</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider" scope="col">Check-out</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider" scope="col">Status</th>
+            <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider" scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200 bg-white">
+          <ng-container *ngFor="let booking of bookings">
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="px-6 py-4 text-sm font-medium text-slate-900 align-top">{{ booking.id }}</td>
+              <td class="px-6 py-4 align-top">
+                <div class="flex items-center gap-3">
+                  <div class="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium text-slate-600">{{ booking.guestInitials }}</div>
+                  <span class="text-sm text-slate-900">{{ booking.guestName }}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600 align-top">{{ booking.roomTypeSummary }}</td>
+              <td class="px-6 py-4 text-sm text-slate-600 align-top">{{ booking.roomSummary }}</td>
+              <td class="px-6 py-4 text-sm text-slate-500 align-top">{{ booking.checkIn }}</td>
+              <td class="px-6 py-4 text-sm text-slate-500 align-top">{{ booking.checkOut }}</td>
+              <td class="px-6 py-4 align-top">
+                <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset" [ngClass]="getStatusClasses(booking.status)">
+                  {{ booking.status }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right text-sm font-medium align-top">
+                <div *ngIf="!isFinalState(booking)" class="flex items-center justify-end gap-2">
+                  <button
+                    class="rounded px-3 py-1.5 text-xs font-semibold text-white"
+                    [ngClass]="isCheckedIn(booking) ? 'bg-slate-800 hover:bg-slate-700' : 'bg-emerald-600 hover:bg-emerald-500'"
+                    [disabled]="booking.actionLoading || (!isCheckedIn(booking) && !canCheckIn(booking))"
+                    (click)="toggleCheckInOut(booking)"
+                  >
+                    {{ isCheckedIn(booking) ? 'Check-out' : 'Check-in' }}
+                  </button>
+                  <button
+                    class="rounded bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-500 disabled:opacity-50"
+                    [disabled]="booking.actionLoading"
+                    (click)="cancelBooking(booking)"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    class="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-slate-900 hover:bg-primary/90"
+                    (click)="openServiceModal(booking)"
+                  >
+                    Services
+                  </button>
+                </div>
+                <p *ngIf="booking.actionError" class="mt-1 text-xs text-red-600">{{ booking.actionError }}</p>
+              </td>
+            </tr>
+
+            <tr *ngFor="let item of booking.bookingItems" class="bg-slate-50/70">
+              <td class="px-6 py-2"></td>
+              <td class="px-6 py-2 text-xs text-slate-500">Item</td>
+              <td class="px-6 py-2 text-xs text-slate-700">{{ item.roomTypeName }}</td>
+              <td class="px-6 py-2 text-xs text-slate-700">{{ item.roomNumber }}</td>
+              <td class="px-6 py-2 text-xs text-slate-500">{{ item.checkIn }}</td>
+              <td class="px-6 py-2 text-xs text-slate-500">{{ item.checkOut }}</td>
+              <td class="px-6 py-2"></td>
+              <td class="px-6 py-2"></td>
+            </tr>
+          </ng-container>
+
+          <tr *ngIf="!isLoading && bookings.length === 0">
+            <td colspan="8" class="px-6 py-8 text-center text-sm text-slate-500">
+              No bookings found matching your criteria.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="totalPages > 1" class="flex items-center justify-between border-t border-slate-200 bg-white px-6 py-3">
+      <div>
+        <p class="text-sm text-slate-500">
+          Showing
+          <span class="font-medium text-slate-900">{{ (currentPage - 1) * pageSize + 1 }}</span>
+          to
+          <span class="font-medium text-slate-900">{{ (currentPage * pageSize) > totalElements ? totalElements : (currentPage * pageSize) }}</span>
+          of
+          <span class="font-medium text-slate-900">{{ totalElements }}</span> results
+        </p>
+      </div>
+      <div>
+        <nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+          <button [disabled]="currentPage === 1" (click)="prevPage()" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-sm">chevron_left</span>
+          </button>
+
+          <ng-container *ngFor="let page of visiblePages">
+            <button
+              *ngIf="page !== '...'"
+              (click)="goToPage(page)"
+              [ngClass]="page === currentPage ? 'relative z-10 inline-flex items-center bg-primary px-4 py-2 text-sm font-semibold text-slate-900' : 'relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 hover:bg-slate-50'"
+            >
+              {{ page }}
+            </button>
+            <span *ngIf="page === '...'" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-300">...</span>
+          </ng-container>
+
+          <button [disabled]="currentPage === totalPages" (click)="nextPage()" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-sm">chevron_right</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="serviceModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+  <div class="w-full max-w-4xl rounded-xl bg-white p-6 shadow-2xl">
+    <div class="mb-4 flex items-start justify-between">
+      <div>
+        <h3 class="text-xl font-bold text-slate-900">Booking Services</h3>
+        <p class="text-xs text-slate-500">{{ selectedBookingTitle }}</p>
+      </div>
+      <button (click)="closeServiceModal()" class="text-slate-500">✕</button>
+    </div>
+
+    <div *ngIf="serviceModalError" class="mb-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+      {{ serviceModalError }}
+    </div>
+
+    <div class="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+      <input type="number" min="1" [(ngModel)]="serviceForm.quantity" class="rounded border px-3 py-2 text-sm" placeholder="Quantity" />
+      <div class="rounded border px-3 py-2 text-xs text-slate-600">
+        Services can be added only when booking status is <b>Checked In</b>.
+      </div>
+    </div>
+
+    <div class="mb-4 rounded border border-slate-200">
+      <div class="border-b border-slate-200 p-3">
+        <p class="mb-2 text-sm font-semibold text-slate-700">Hotel Services</p>
+        <input
+          type="text"
+          [(ngModel)]="serviceSearch"
+          class="w-full rounded border px-3 py-2 text-sm"
+          placeholder="Search service by name"
+        />
+      </div>
+      <div class="max-h-40 overflow-auto p-2">
+        <button
+          *ngFor="let s of filteredServices"
+          type="button"
+          class="mb-2 flex w-full items-center justify-between rounded border px-3 py-2 text-left text-sm hover:bg-slate-50"
+          [ngClass]="serviceForm.serviceId === s.id ? 'border-primary bg-primary/10' : 'border-slate-200'"
+          (click)="selectService(s.id)"
+        >
+          <span class="font-medium text-slate-800">{{ s.name }}</span>
+          <span class="text-slate-500">{{ s.price | number }}</span>
+        </button>
+        <p *ngIf="!serviceModalLoading && filteredServices.length === 0" class="py-3 text-center text-xs text-slate-500">
+          No services found.
+        </p>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <button (click)="addServiceUsage()" [disabled]="!serviceForm.serviceId || selectedBookingRawStatus !== 'CHECKED_IN'" class="rounded bg-primary px-4 py-2 text-sm font-bold text-slate-900 disabled:opacity-50">Add service usage</button>
+    </div>
+
+    <div class="max-h-72 overflow-auto rounded border border-slate-200">
+      <table class="min-w-full text-sm">
+        <thead class="bg-slate-50">
+          <tr>
+            <th class="px-3 py-2 text-left">Service</th>
+            <th class="px-3 py-2 text-left">Qty</th>
+            <th class="px-3 py-2 text-left">Line total</th>
+            <th class="px-3 py-2 text-left">Recorded at</th>
+            <th class="px-3 py-2 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of usages" class="border-t">
+            <td class="px-3 py-2">{{ u.service_name }}</td>
+            <td class="px-3 py-2">{{ u.quantity }}</td>
+            <td class="px-3 py-2">{{ u.line_total | number }}</td>
+            <td class="px-3 py-2">{{ u.created_at }}</td>
+            <td class="px-3 py-2 text-right">
+              <button
+                class="rounded bg-rose-600 px-2 py-1 text-xs font-semibold text-white hover:bg-rose-500 disabled:opacity-50"
+                [disabled]="deletingServiceUsageId === u.id"
+                (click)="deleteServiceUsage(u.id)"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!serviceModalLoading && usages.length === 0">
+            <td colspan="5" class="px-3 py-6 text-center text-slate-500">No service usages yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-4 flex items-center justify-end rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+      <div class="text-right">
+        <p class="text-xs text-slate-500">Total service amount</p>
+        <p class="text-lg font-bold text-slate-900">{{ totalServiceAmount | number }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="checkoutModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+  <div class="w-full max-w-3xl rounded-xl bg-white p-6 shadow-2xl">
+    <div class="mb-4 flex items-start justify-between">
+      <div>
+        <h3 class="text-xl font-bold text-slate-900">Checkout</h3>
+        <p class="text-xs text-slate-500">{{ checkoutBookingTitle }}</p>
+      </div>
+      <button (click)="closeCheckoutModal()" class="text-slate-500">✕</button>
+    </div>
+
+    <div *ngIf="checkoutError" class="mb-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+      {{ checkoutError }}
+    </div>
+
+    <div *ngIf="checkoutModalLoading" class="py-8 text-center text-sm text-slate-500">
+      Loading invoice...
+    </div>
+
+    <div *ngIf="!checkoutModalLoading && checkoutInvoice" class="space-y-4">
+      <div class="rounded border border-slate-200 p-4">
+        <div class="mb-2 flex items-center justify-between text-sm">
+          <span class="text-slate-500">Invoice #</span>
+          <span class="font-semibold">{{ checkoutInvoice.invoice_number }}</span>
+        </div>
+        <div class="mb-2 flex items-center justify-between text-sm">
+          <span class="text-slate-500">Subtotal Room</span>
+          <span>{{ checkoutInvoice.subtotal_room | number }}</span>
+        </div>
+        <div class="mb-2 flex items-center justify-between text-sm">
+          <span class="text-slate-500">Subtotal Service</span>
+          <span>{{ checkoutInvoice.subtotal_service | number }}</span>
+        </div>
+        <div class="mb-2 flex items-center justify-between text-sm">
+          <span class="text-slate-500">Discount</span>
+          <span>- {{ checkoutInvoice.discount_amount | number }}</span>
+        </div>
+        <div class="mb-2 flex items-center justify-between text-sm">
+          <span class="text-slate-500">Paid</span>
+          <span>{{ checkoutInvoice.paid_amount | number }}</span>
+        </div>
+        <div class="mt-3 border-t pt-3 flex items-center justify-between">
+          <span class="font-semibold text-slate-700">Balance Due</span>
+          <span class="text-lg font-bold" [ngClass]="checkoutInvoice.balance_due > 0 ? 'text-rose-600' : 'text-emerald-600'">
+            {{ checkoutInvoice.balance_due | number }}
+          </span>
+        </div>
+      </div>
+
+      <div class="max-h-52 overflow-auto rounded border border-slate-200">
+        <table class="min-w-full text-sm">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-3 py-2 text-left">Description</th>
+              <th class="px-3 py-2 text-left">Qty</th>
+              <th class="px-3 py-2 text-left">Unit</th>
+              <th class="px-3 py-2 text-left">Line total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of checkoutInvoice.invoice_items" class="border-t">
+              <td class="px-3 py-2">{{ item.description }}</td>
+              <td class="px-3 py-2">{{ item.quantity }}</td>
+              <td class="px-3 py-2">{{ item.unit_price | number }}</td>
+              <td class="px-3 py-2">{{ item.line_total | number }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex items-center justify-end gap-2">
+        <button (click)="printCheckoutInvoice()" class="rounded border border-slate-300 px-3 py-2 text-sm">
+          Print Bill
+        </button>
+        <button (click)="markInvoicePaidForCheckout()" [disabled]="checkoutPaying || checkoutInvoice.balance_due <= 0" class="rounded bg-primary px-3 py-2 text-sm font-bold text-slate-900 disabled:opacity-50">
+          Mark Paid
+        </button>
+        <button (click)="confirmCheckout()" [disabled]="checkoutPaying || checkoutInvoice.balance_due > 0" class="rounded bg-slate-900 px-3 py-2 text-sm font-bold text-white disabled:opacity-50">
+          Confirm Checkout
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,39 @@
+
+> hms-fe@0.0.0 build
+> ng build
+
+- Building...
+
+Initial chunk files   | Names                  |  Raw size | Estimated transfer size
+chunk-ID25XIL3.js     | -                      | 131.42 kB |                38.88 kB
+chunk-HBCJMEJX.js     | -                      |  85.54 kB |                21.31 kB
+main-L6LEWPSA.js      | main                   |  84.65 kB |                16.07 kB
+styles-Q22J6SK3.css   | styles                 |  60.47 kB |                 8.28 kB
+chunk-TYY44ETL.js     | -                      |  42.27 kB |                 8.47 kB
+polyfills-FFHMD2TL.js | polyfills              |  33.71 kB |                11.02 kB
+chunk-DC5K4XRQ.js     | -                      |  26.69 kB |                 7.81 kB
+chunk-XIVEJLG6.js     | -                      |  18.89 kB |                 5.52 kB
+chunk-NK6SJM2Y.js     | -                      | 963 bytes |               963 bytes
+chunk-E4HVSWAC.js     | -                      | 672 bytes |               672 bytes
+
+                      | Initial total          | 485.24 kB |               118.96 kB
+
+Lazy chunk files      | Names                  |  Raw size | Estimated transfer size
+chunk-TJNB5SNF.js     | rooms-component        |  24.56 kB |                 5.58 kB
+chunk-PHUWAL7W.js     | room-types-component   |  16.99 kB |                 3.81 kB
+chunk-LOAHB5BI.js     | room-details-component |  15.73 kB |                 4.69 kB
+chunk-G7AH7UDV.js     | admin-routes           |  14.58 kB |                 3.53 kB
+chunk-EDWCKQIA.js     | staff-routes           |  13.94 kB |                 3.03 kB
+chunk-IJQYI4S2.js     | dashboard-component    |  12.68 kB |                 2.93 kB
+
+Application bundle generation failed. [6.698 seconds]
+
+▲ [WARNING] src/app/pages/search&filter/search&filter.component.css exceeded maximum budget. Budget 2.00 kB was not met by 1.48 kB with a total of 3.48 kB.
+
+
+▲ [WARNING] css-inline-fonts:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Outfit:wght@300;400;600;700&display=swap exceeded maximum budget. Budget 2.00 kB was not met by 10.03 kB with a total of 12.03 kB.
+
+
+X [ERROR] css-inline-fonts:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Outfit:wght@300;400;600;700&display=swap exceeded maximum budget. Budget 4.00 kB was not met by 8.03 kB with a total of 12.03 kB.
+
+

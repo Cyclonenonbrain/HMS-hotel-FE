@@ -1,0 +1,300 @@
+<div class="bg-[#f8f8f5] min-h-screen font-display text-slate-900 flex flex-col">
+
+    <!-- ========== HEADER (đồng bộ từ Landing Page) ========== -->
+    <header
+        class="sticky top-0 z-50 flex items-center justify-between border-b border-primary/20 bg-white/90 backdrop-blur-md px-10 py-4 shadow-sm">
+        <div class="flex items-center gap-2 cursor-pointer" routerLink="/">
+            <span class="material-symbols-outlined text-3xl text-primary">hotel_class</span>
+            <h2 class="text-xl font-bold tracking-tight text-primary">Luxecore</h2>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-9">
+            <a routerLink="/" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Home</a>
+            <a routerLink="/search" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Rooms</a>
+            <a routerLink="/my-bookings" class="text-sm font-bold text-slate-900 border-b-2 border-primary pb-1">My Bookings</a>
+        </nav>
+
+        <div class="flex items-center gap-4">
+            <ng-container *ngIf="!isLoggedIn">
+                <button routerLink="/login"
+                    class="h-10 px-6 border border-primary text-primary rounded-lg font-bold text-sm hover:bg-primary/10 transition-all">
+                    Login
+                </button>
+                <button routerLink="/register"
+                    class="h-10 px-6 bg-primary text-slate-900 rounded-lg font-bold text-sm hover:bg-primary/90 transition-all">
+                    Sign Up
+                </button>
+            </ng-container>
+
+            <div *ngIf="isLoggedIn" class="flex items-center gap-3 group relative cursor-pointer">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-bold">{{ user?.fullName }}</p>
+                    <p class="text-[10px] text-primary font-bold uppercase tracking-wider">{{ user?.role || 'Member' }}
+                        Member</p>
+                </div>
+
+                <div
+                    class="size-10 rounded-full border-2 border-primary overflow-hidden shadow-lg transition-transform group-hover:scale-105">
+                    <img [src]="'https://ui-avatars.com/api/?name=' + user?.fullName + '&background=random&color=fff'"
+                        alt="Avatar">
+                </div>
+
+                <div class="absolute top-full right-0 pt-2 w-44 hidden group-hover:block drop-shadow-2xl z-[60]">
+                    <div
+                        class="bg-white border border-primary/20 rounded-xl py-2 shadow-xl animate-in fade-in slide-in-from-top-2">
+                        <a class="block px-4 py-2 text-xs font-medium hover:bg-primary/10 transition-colors">
+                            <span class="flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-sm">person</span> Profile Setting</span>
+                        </a>
+                        <a routerLink="/my-bookings" class="block px-4 py-2 text-xs font-medium hover:bg-primary/10 transition-colors">
+                            <span class="flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-sm">calendar_month</span> My Bookings</span>
+                        </a>
+                        <hr class="my-1 border-primary/10">
+                        <button (click)="onLogout()"
+                            class="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 transition-colors">
+                            <span class="flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-sm">logout</span> Sign Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="flex-1">
+
+        <!-- Page Title Section -->
+        <section class="max-w-7xl mx-auto px-6 pt-12 pb-6">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold mb-3">My Bookings</h1>
+                    <p class="text-slate-500 text-sm">Manage your trips and view details of your reserved rooms.</p>
+                </div>
+                <a routerLink="/search"
+                    class="inline-flex items-center gap-2 h-11 px-6 bg-primary text-slate-900 rounded-lg font-bold text-sm hover:bg-[#EAB308] transition-all shadow-lg self-start md:self-auto">
+                    <span class="material-symbols-outlined text-lg">add</span>
+                    New Booking
+                </a>
+            </div>
+        </section>
+
+        <!-- Bookings List -->
+        <section class="max-w-7xl mx-auto px-6 pb-20">
+            <div class="mb-6 flex flex-wrap items-center gap-2" *ngIf="!isLoading && !errorMessage">
+                <button (click)="setStatusFilter('ALL')"
+                    [ngClass]="selectedStatusFilter === 'ALL' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'"
+                    class="h-9 px-4 border rounded-full text-xs font-bold transition-colors">
+                    All
+                </button>
+                <button (click)="setStatusFilter('WAITING')"
+                    [ngClass]="selectedStatusFilter === 'WAITING' ? 'bg-primary text-slate-900 border-primary' : 'bg-white text-slate-600 border-slate-200'"
+                    class="h-9 px-4 border rounded-full text-xs font-bold transition-colors">
+                    Waiting
+                </button>
+                <button (click)="setStatusFilter('CONFIRMED')"
+                    [ngClass]="selectedStatusFilter === 'CONFIRMED' ? 'bg-status-green text-white border-status-green' : 'bg-white text-slate-600 border-slate-200'"
+                    class="h-9 px-4 border rounded-full text-xs font-bold transition-colors">
+                    Confirmed
+                </button>
+                <button (click)="setStatusFilter('COMPLETED')"
+                    [ngClass]="selectedStatusFilter === 'COMPLETED' ? 'bg-slate-700 text-white border-slate-700' : 'bg-white text-slate-600 border-slate-200'"
+                    class="h-9 px-4 border rounded-full text-xs font-bold transition-colors">
+                    Completed
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div *ngIf="isLoading" class="py-20 text-center">
+                <div class="w-12 h-12 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p class="text-slate-500 text-sm font-medium">Loading your bookings...</p>
+            </div>
+
+            <!-- Error State -->
+            <div *ngIf="errorMessage && !isLoading" class="py-20 text-center">
+                <div class="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-4xl text-red-500">error</span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">Cannot load bookings</h3>
+                <p class="text-slate-500 max-w-sm mx-auto mb-8 text-sm">{{ errorMessage }}</p>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="!isLoading && !errorMessage && filteredBookings.length === 0" class="py-20 text-center">
+                <div class="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-4xl text-primary">inbox</span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">No bookings in this filter</h3>
+                <p class="text-slate-500 max-w-sm mx-auto mb-8 text-sm">Try another status or create a new booking.</p>
+                <a routerLink="/search"
+                    class="inline-flex items-center gap-2 h-11 px-6 bg-primary text-slate-900 rounded-lg font-bold text-sm hover:bg-[#EAB308] transition-all shadow-lg">
+                    <span class="material-symbols-outlined text-lg">search</span>
+                    Explore Rooms
+                </a>
+            </div>
+
+            <!-- Booking Cards -->
+            <div *ngIf="!isLoading && !errorMessage && filteredBookings.length > 0" class="grid grid-cols-1 gap-6">
+                <div *ngFor="let booking of filteredBookings"
+                    class="rounded-2xl overflow-hidden bg-white shadow-lg border border-slate-100 flex flex-col md:flex-row">
+
+                    <!-- Image -->
+                    <div class="md:w-1/3 h-56 md:h-auto relative overflow-hidden">
+                        <img [src]="booking.thumbnailUrl || getFallbackImage()" [alt]="booking.roomTypeName"
+                            class="w-full h-full object-cover">
+
+                        <!-- Status Badge -->
+                        <div class="absolute top-4 left-4">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-md"
+                                [ngClass]="getStatusBadgeClass(booking.status)">
+                                <span class="material-symbols-outlined text-xs">info</span>
+                                {{ getStatusLabel(booking.status) }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="md:w-2/3 p-6 md:p-8 flex flex-col justify-between">
+                        <div>
+                            <!-- Title Row -->
+                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4">
+                                <h2 class="text-xl font-bold text-slate-900">{{ booking.roomTypeName }}</h2>
+                                <div class="mt-2 sm:mt-0 flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg">
+                                    <span class="material-symbols-outlined text-sm text-slate-400">tag</span>
+                                    <span class="text-xs font-mono font-bold text-slate-600">{{ booking.bookingId }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Date Grid -->
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                <div class="bg-[#f8f8f5] rounded-xl p-4 border border-slate-100">
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5">
+                                        <span class="material-symbols-outlined text-xs align-middle mr-1">login</span>
+                                        Check-in
+                                    </p>
+                                    <p class="font-bold text-slate-900 text-sm">{{ booking.checkIn | date:'dd/MM/yyyy' }}</p>
+                                    <p class="text-[10px] text-slate-400 mt-1">From 14:00</p>
+                                </div>
+                                <div class="bg-[#f8f8f5] rounded-xl p-4 border border-slate-100">
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5">
+                                        <span class="material-symbols-outlined text-xs align-middle mr-1">logout</span>
+                                        Check-out
+                                    </p>
+                                    <p class="font-bold text-slate-900 text-sm">{{ booking.checkOut | date:'dd/MM/yyyy' }}</p>
+                                    <p class="text-[10px] text-slate-400 mt-1">Before 12:00</p>
+                                </div>
+                                <div class="bg-[#f8f8f5] rounded-xl p-4 border border-slate-100">
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5">
+                                        <span class="material-symbols-outlined text-xs align-middle mr-1">nights_stay</span>
+                                        Nights
+                                    </p>
+                                    <p class="font-bold text-slate-900 text-sm">{{ booking.nights }}</p>
+                                </div>
+                                <div class="bg-[#f8f8f5] rounded-xl p-4 border border-slate-100">
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5">
+                                        <span class="material-symbols-outlined text-xs align-middle mr-1">payments</span>
+                                        Payment
+                                    </p>
+                                    <p class="font-bold text-slate-900 text-sm">{{ booking.paymentStatus }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer: Price & Actions -->
+                        <div class="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Total</p>
+                                <p class="text-2xl font-bold text-slate-900">{{ booking.totalAmount | vnd }}</p>
+                            </div>
+                            <button *ngIf="canReview(booking)" (click)="openReviewModal(booking)"
+                                class="h-10 px-5 border border-primary text-primary rounded-lg text-xs font-bold hover:bg-primary/10 transition-colors flex items-center justify-center gap-1.5">
+                                <span class="material-symbols-outlined text-sm">star</span>
+                                Review
+                            </button>
+                            <span *ngIf="isReviewed(booking)"
+                                class="h-10 px-5 border border-green-200 bg-green-50 text-green-700 rounded-lg text-xs font-bold inline-flex items-center justify-center gap-1.5">
+                                <span class="material-symbols-outlined text-sm">check_circle</span>
+                                Reviewed
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- ========== FOOTER (đồng bộ từ Landing Page) ========== -->
+    <footer class="bg-background-light dark:bg-slate-900 border-t border-primary/10 py-12 mt-auto">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-10 text-sm">
+            <div>
+                <h2 class="text-primary text-xl font-bold mb-4">Luxecore</h2>
+                <p class="text-slate-500 leading-relaxed">Redefining luxury hospitality. Experience unparalleled
+                    comfort and design at our exclusive properties worldwide.</p>
+            </div>
+            <div>
+                <h3 class="font-bold mb-4">Contact Info</h3>
+                <ul class="space-y-3 text-slate-500">
+                    <li class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                        123 Paradise Island
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary text-sm">mail</span>
+                        contact&#64;lumina.com
+                    </li>
+                </ul>
+            </div>
+            <div class="md:text-right flex flex-col justify-end">
+                <p class="text-slate-400">© 2026 Lumina Resort. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div *ngIf="reviewModalOpen" class="fixed inset-0 z-[80] bg-black/40 flex items-center justify-center p-4">
+        <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold">Review your stay</h3>
+                <button (click)="closeReviewModal()" class="text-slate-500 hover:text-slate-800">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <p class="text-sm text-slate-500 mb-4">{{ selectedBookingForReview?.roomTypeName }}</p>
+
+            <div class="mb-4">
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Rating</label>
+                <div class="mt-2 flex items-center gap-1">
+                    <button type="button" *ngFor="let star of [1,2,3,4,5]" (click)="setRating(star)"
+                        class="transition-transform hover:scale-110">
+                        <span class="material-symbols-outlined text-3xl"
+                            [ngClass]="star <= reviewForm.rating ? 'text-primary' : 'text-slate-300'">
+                            star
+                        </span>
+                    </button>
+                    <span class="ml-2 text-sm font-semibold text-slate-600">{{ reviewForm.rating }}/5</span>
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Comment</label>
+                <textarea [(ngModel)]="reviewForm.comment" rows="5"
+                    class="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-primary focus:outline-none"
+                    placeholder="Share your experience (minimum 10 characters)"></textarea>
+            </div>
+
+            <p *ngIf="reviewError" class="text-red-500 text-sm mb-3">{{ reviewError }}</p>
+
+            <div class="flex justify-end gap-3">
+                <button (click)="closeReviewModal()" class="h-10 px-5 border border-slate-200 rounded-lg text-sm font-bold">Cancel</button>
+                <button (click)="submitReview()" [disabled]="reviewSubmitting"
+                    class="h-10 px-5 bg-primary text-slate-900 rounded-lg text-sm font-bold disabled:opacity-50">
+                    {{ reviewSubmitting ? 'Submitting...' : (reviewForm.reviewId ? 'Update review' : 'Submit review') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>

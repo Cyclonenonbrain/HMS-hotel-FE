@@ -1,0 +1,88 @@
+<div class="flex min-h-screen bg-background-light dark:bg-background-dark font-display">
+  <div class="hidden lg:flex lg:w-1/2 relative bg-center bg-no-repeat bg-cover" style="background-image: url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070&auto=format&fit=crop');">
+    <div class="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent"></div>
+    <div class="relative w-full flex items-end p-12">
+      <div class="glassmorphism rounded-xl p-8 max-w-lg w-full">
+        <h1 class="text-3xl font-bold text-white mb-4">Join Our Exclusive Membership</h1>
+        <p class="text-slate-200 mb-6 text-lg">Experience the pinnacle of hospitality.</p>
+        <ul class="space-y-4">
+          <li class="flex items-center text-slate-200">
+            <span class="material-symbols-outlined text-primary mr-3">star</span> Early Access to Reservations
+          </li>
+          <li class="flex items-center text-slate-200">
+            <span class="material-symbols-outlined text-primary mr-3">percent</span> Exclusive Member-Only Rates
+          </li>
+          <li class="flex items-center text-slate-200">
+            <span class="material-symbols-outlined text-primary mr-3">room_service</span> Priority Upgrades & Amenities
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 lg:px-24 py-12 overflow-y-auto">
+    <header class="flex items-center gap-3 mb-12">
+      <span class="material-symbols-outlined text-primary text-3xl">hotel_class</span>
+      <h2 class="text-2xl font-bold tracking-wide dark:text-white text-slate-900">LUXECORE</h2>
+    </header>
+
+    <div class="max-w-md w-full mx-auto lg:mx-0">
+      <h2 class="text-3xl font-bold mb-2 dark:text-white">Create Account</h2>
+      <p class="text-slate-500 dark:text-slate-400 mb-8">Please fill in the details below to register.</p>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="space-y-5">
+        <div class="flex gap-4">
+          <div class="flex-1">
+            <input formControlName="firstName" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="firstName" placeholder="First Name" type="text"/>
+          </div>
+          <div class="flex-1">
+            <input formControlName="lastName" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="lastName" placeholder="Last Name" type="text"/>
+          </div>
+        </div>
+
+        <div>
+          <input formControlName="email" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="email" placeholder="Email Address" type="email"/>
+        </div>
+
+        <div>
+          <input formControlName="phone" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="phone" placeholder="Phone Number (e.g. 0909123456)" type="tel"/>
+        </div>
+
+        <div>
+          <input formControlName="password" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="password" placeholder="Password" type="password"/>
+        </div>
+
+        <div>
+          <input formControlName="confirmPassword" (keydown.enter)="onRegister()" class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" id="confirmPassword" placeholder="Confirm Password" type="password"/>
+          <p *ngIf="registerForm.hasError('mismatch') && registerForm.get('confirmPassword')?.touched" class="text-red-500 text-xs mt-1">Mật khẩu không khớp!</p>
+        </div>
+
+        <div class="flex items-center pt-2">
+          <input formControlName="terms" class="w-5 h-5 rounded border-slate-400 dark:border-slate-600 text-primary focus:ring-primary bg-transparent" id="terms" type="checkbox"/>
+          <label class="ml-3 text-sm text-slate-600 dark:text-slate-300" for="terms">
+            I agree to the <a class="text-primary hover:underline" href="#">Terms & Conditions</a>
+          </label>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
+          <p class="text-red-600 dark:text-red-400 text-sm">{{ errorMessage }}</p>
+        </div>
+
+        <div class="pt-4">
+          <button [disabled]="registerForm.invalid || isLoading" class="w-full h-14 rounded-lg bg-gradient-to-r from-[#0a1128] to-[#d4af37] text-white font-semibold text-lg hover:opacity-90 transition-opacity shadow-lg shadow-primary/20 flex items-center justify-center disabled:opacity-50" type="submit">
+            <span *ngIf="isLoading" class="material-symbols-outlined animate-spin mr-2">progress_activity</span>
+            {{ isLoading ? 'Creating Account...' : 'Create Account' }}
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-8 text-center">
+        <p class="text-slate-500 dark:text-slate-400">
+          Already have an account? 
+          <a class="text-primary font-medium hover:underline ml-1" routerLink="/login">Sign in</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

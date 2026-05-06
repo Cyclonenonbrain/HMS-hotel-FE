@@ -1,0 +1,57 @@
+import { Routes } from '@angular/router';
+import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.component';
+import { RoomsComponent } from './rooms/rooms.component';
+
+export const adminRoutes: Routes = [
+  {
+    path: '',
+    component: AdminLayoutComponent,
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
+        data: { breadcrumb: 'Dashboard' }
+      },
+      {
+        path: 'room-types',
+        loadComponent: () => import('./room-types/room-types.component').then(m => m.RoomTypesComponent),
+        data: { breadcrumb: 'Room Types' }
+      },
+      {
+        path: 'rooms',
+        component: RoomsComponent,
+        data: { breadcrumb: 'Rooms' }
+      },
+      {
+        path: 'services',
+        loadComponent: () => import('./services/services.component').then(m => m.ServicesComponent),
+        data: { breadcrumb: 'Services' }
+      },
+      {
+        path: 'amenities',
+        loadComponent: () => import('./amenities/amenities.component').then(m => m.AmenitiesComponent),
+        data: { breadcrumb: 'Amenities' }
+      },
+      {
+        path: 'coupons',
+        loadComponent: () => import('./coupons/coupons.component').then(m => m.CouponsComponent),
+        data: { breadcrumb: 'Coupons' }
+      },
+      {
+        path: 'users',
+        loadComponent: () => import('./users/users.component').then(m => m.UsersComponent),
+        data: { breadcrumb: 'Users' }
+      },
+      {
+        path: 'reviews',
+        loadComponent: () => import('./reviews/reviews.component').then(m => m.ReviewsComponent),
+        data: { breadcrumb: 'Reviews' }
+      }
+    ]
+  }
+];

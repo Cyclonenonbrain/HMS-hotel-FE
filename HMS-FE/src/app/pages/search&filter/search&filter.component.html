@@ -1,0 +1,324 @@
+<div class="bg-[#f8f8f5] min-h-screen font-display text-slate-900">
+    <header
+        class="sticky top-0 z-50 flex items-center justify-between border-b border-primary/20 bg-white/90 backdrop-blur-md px-10 py-4 shadow-sm">
+        <div class="flex items-center gap-2 cursor-pointer" routerLink="/">
+            <span class="material-symbols-outlined text-3xl text-primary">hotel_class</span>
+            <h2 class="text-xl font-bold tracking-tight text-primary">Luxecore</h2>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-9">
+            <a routerLink="/" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Home</a>
+            <a routerLink="/search" class="text-sm font-bold text-slate-900 border-b-2 border-primary pb-1">Rooms</a>
+            <a *ngIf="isLoggedIn" routerLink="/my-bookings"
+                class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">My Bookings</a>
+        </nav>
+
+        <div class="flex items-center gap-4">
+            <ng-container *ngIf="!isLoggedIn">
+                <button routerLink="/login"
+                    class="h-10 px-6 border border-primary text-primary rounded-lg font-bold text-sm hover:bg-primary/10 transition-all">
+                    Login
+                </button>
+                <button routerLink="/register"
+                    class="h-10 px-6 bg-primary text-slate-900 rounded-lg font-bold text-sm hover:bg-primary/90 transition-all">
+                    Sign Up
+                </button>
+            </ng-container>
+
+            <div *ngIf="isLoggedIn" class="flex items-center gap-3 group relative cursor-pointer">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-bold">{{ user?.fullName }}</p>
+                    <p class="text-[10px] text-primary font-bold uppercase tracking-wider">{{ user?.role || 'Member' }}
+                        Member</p>
+                </div>
+
+                <div
+                    class="size-10 rounded-full border-2 border-primary overflow-hidden shadow-lg transition-transform group-hover:scale-105">
+                    <img [src]="'https://ui-avatars.com/api/?name=' + user?.fullName + '&background=random&color=fff'"
+                        alt="Avatar">
+                </div>
+
+                <div class="absolute top-full right-0 pt-2 w-44 hidden group-hover:block drop-shadow-2xl z-[60]">
+                    <div
+                        class="bg-white border border-primary/20 rounded-xl py-2 shadow-xl animate-in fade-in slide-in-from-top-2">
+                        <a class="block px-4 py-2 text-xs font-medium hover:bg-primary/10 transition-colors">
+                            <span class="flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-sm">person</span> Profile Setting</span>
+                        </a>
+                        <hr class="my-1 border-primary/10">
+                        <button (click)="logout()"
+                            class="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 transition-colors">
+                            <span class="flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-sm">logout</span> Sign Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1440px] mx-auto px-10 py-10">
+        <div class="flex flex-wrap justify-between items-end gap-4 mb-10 border-b border-slate-200 pb-8">
+            <div>
+                <h1 class="text-4xl font-extrabold tracking-tight mb-2">Available Rooms</h1>
+                <p class="text-slate-400 text-sm mt-1">
+                    {{ filteredRooms.length }} {{ filteredRooms.length === 1 ? 'Room' : 'Rooms' }} Available for your
+                    dates
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-slate-400 uppercase">Sort By</span>
+                <select [(ngModel)]="selectedSort" (change)="applyFilters()"
+                    class="border-none bg-transparent font-bold text-slate-700 focus:ring-0 cursor-pointer">
+                    <option value="recommended">Recommended</option>
+                    <option value="low-to-high">Price: Low to High</option>
+                    <option value="high-to-high">Price: High to Low</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex gap-10 items-start">
+            <aside class="w-1/4 flex flex-col gap-8 bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">tune</span> Filters
+                    </h3>
+                    <button type="button" (click)="clearAllFilters()"
+                        class="text-[10px] font-bold text-primary uppercase tracking-widest hover:underline">
+                        Clear all
+                    </button>
+                </div>
+
+                <!-- DATE PICKERS SECTION -->
+                <div class="flex flex-col gap-4 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                    <label class="text-[11px] font-bold text-primary uppercase tracking-widest flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">calendar_month</span>
+                        Stay Dates
+                        <span class="ml-auto text-slate-600 normal-case font-semibold">{{ numberOfNights }} {{ numberOfNights === 1 ? 'night' : 'nights' }}</span>
+                    </label>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] font-semibold text-slate-500">Check-in</label>
+                            <input type="date" 
+                                [(ngModel)]="checkIn" 
+                                (change)="onCheckInChange()"
+                                [min]="minCheckInDate"
+                                class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] font-semibold text-slate-500">Check-out</label>
+                            <input type="date" 
+                                [(ngModel)]="checkOut" 
+                                (change)="onCheckOutChange()"
+                                [min]="checkIn"
+                                class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Keyword Search</label>
+                    <div class="relative">
+                        <span
+                            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                        <input type="text" name="search" [(ngModel)]="filters.searchQuery" (input)="onSearchInput()"
+                            placeholder="e.g. Ocean, Suite..."
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20">
+                    </div>
+                </div>
+
+                <hr class="border-slate-50">
+                <div class="flex flex-col gap-4">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                        Khoảng giá: {{filters.priceRange | vnd}}
+                    </label>
+                    <input type="range" name="price" min="50000" max="100000000" step="10000" [(ngModel)]="filters.priceRange"
+                        (change)="loadRooms()"
+                        class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+                    <div class="flex justify-between font-bold text-xs text-slate-600">
+                        <span>50.000₫</span>
+                        <span>100.000.000₫+</span>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Guests</label>
+
+                    <div
+                        class="mt-2 flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <span class="material-icons text-slate-400">groups</span>
+                            <span class="font-bold text-sm text-slate-700">Adults</span>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <button (click)="updateGuests(-1)" [disabled]="filters.guests <= 2"
+                                [class.opacity-30]="filters.guests <= 2"
+                                class="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center hover:bg-white transition-all text-slate-600">
+                                <span class="material-icons text-sm">remove</span>
+                            </button>
+
+                            <span class="font-bold text-slate-800 w-4 text-center select-none">{{ filters.guests
+                                }}</span>
+
+                            <button (click)="updateGuests(1)" [disabled]="filters.guests >= 4"
+                                [class.opacity-30]="filters.guests >= 4"
+                                class="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center hover:bg-white transition-all text-slate-600">
+                                <span class="material-icons text-sm">add</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-50">
+
+                <div class="flex flex-col gap-4">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Amenities</label>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="tv" name="tv"
+                                [(ngModel)]="filters.amenities.tv" (change)="loadRooms()"
+                                class="size-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer">
+                            <label for="tv"
+                                class="text-sm font-medium text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
+                                TV
+                            </label>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="balcony" name="balcony"
+                                [(ngModel)]="filters.amenities.balcony" (change)="loadRooms()"
+                                class="size-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer">
+                            <label for="balcony"
+                                class="text-sm font-medium text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
+                                Balcony
+                            </label>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="bathtub" name="bathtub" 
+                                [(ngModel)]="filters.amenities.bathtub" (change)="loadRooms()"
+                                class="size-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer">
+                            <label for="bathtub"
+                                class="text-sm font-medium text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
+                                Bathtub
+                            </label>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="kitchen" name="kitchen" 
+                                [(ngModel)]="filters.amenities.kitchen" (change)="loadRooms()"
+                                class="size-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer">
+                            <label for="kitchen"
+                                class="text-sm font-medium text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
+                                Kitchen
+                            </label>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="privatePool" name="privatePool" 
+                                [(ngModel)]="filters.amenities.privatePool" (change)="loadRooms()"
+                                class="size-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer">
+                            <label for="privatePool"
+                                class="text-sm font-medium text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
+                                Private Pool
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" (click)="loadRooms()"
+                    class="w-full mt-2 py-3.5 bg-slate-900 text-white font-bold text-xs rounded-xl hover:bg-slate-800 transition-all uppercase tracking-widest shadow-lg shadow-slate-200">
+                    Apply Filters
+                </button>
+            </aside>
+
+            <div class="w-3/4 flex flex-col gap-8">
+                <!-- LOADING STATE -->
+                <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-24 bg-white rounded-[2rem] border border-slate-100">
+                    <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
+                    <p class="text-slate-500 font-medium">Đang tìm phòng trống...</p>
+                </div>
+
+                <!-- ERROR STATE -->
+                <div *ngIf="errorMessage && !isLoading" 
+                    class="flex flex-col items-center justify-center py-24 bg-red-50 rounded-[2rem] border-2 border-dashed border-red-200">
+                    <span class="material-symbols-outlined text-6xl text-red-300 mb-4">error</span>
+                    <p class="text-red-500 font-bold tracking-wide text-sm mb-4">{{ errorMessage }}</p>
+                    <button (click)="loadRooms()" 
+                        class="px-6 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors">
+                        Thử lại
+                    </button>
+                </div>
+
+                <!-- ROOM CARDS - Chỉ hiển thị khi không loading và không có lỗi -->
+                <ng-container *ngIf="!isLoading && !errorMessage">
+                    <article *ngFor="let room of filteredRooms"
+                        [class.opacity-60]="!isRoomAvailable(room)"
+                        class="flex bg-white rounded-[2rem] overflow-hidden group shadow-sm border border-slate-50 transition-opacity">
+                        <div class="w-[42%] relative overflow-hidden">
+                            <img [src]="room.image"
+                                class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                [alt]="room.displayName">
+                            <!-- AVAILABILITY BADGE -->
+                            <div [class]="'badge ' + getAvailabilityBadgeClass(room)">
+                                {{ getAvailabilityText(room) }}
+                            </div>
+                        </div>
+
+                        <div class="w-[58%] p-10 flex flex-col">
+                            <div class="flex justify-between items-start mb-3">
+                            <h3
+                                class="text-2xl font-extrabold text-slate-900 group-hover:text-primary transition-colors">
+                                {{ room.displayName }}</h3>
+                        </div>
+
+                        <p class="text-slate-500 text-[15px] leading-relaxed mb-6 line-clamp-3">
+                            {{ room.displayDesc }}
+                        </p>
+
+                        <!-- Bed Config -->
+                        <div *ngIf="room.bedConfig" class="flex items-center gap-2 text-slate-600 mb-4">
+                            <span class="material-symbols-outlined text-xl">{{ getBedConfigIcon(room.bedConfig) }}</span>
+                            <span class="text-sm font-semibold">{{ getBedConfigLabel(room.bedConfig) }}</span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-5 mb-8">
+                            <div *ngFor="let item of room.icons" class="flex items-center gap-2 text-slate-400">
+                                <span class="material-symbols-outlined text-xl">{{ item.icon }}</span>
+                                <span class="text-xs font-bold uppercase tracking-wide">{{ item.label }}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
+                            <div>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-3xl font-black text-slate-900">{{ room.displayPrice | vnd }}</span>
+                                    <span class="text-sm font-bold text-slate-400">/ đêm</span>
+                                </div>
+                            </div>
+
+                            <button (click)="goToDetail(room.id, room)"
+                                [disabled]="!isRoomAvailable(room)"
+                                [class]="isRoomAvailable(room) 
+                                    ? 'bg-primary hover:bg-slate-900 hover:text-white text-slate-900 font-bold py-3.5 px-10 rounded-2xl transition-all shadow-xl shadow-primary/20 active:scale-95'
+                                    : 'bg-slate-200 text-slate-400 font-bold py-3.5 px-10 rounded-2xl cursor-not-allowed'">
+                                {{ isRoomAvailable(room) ? 'Book Now' : 'Sold Out' }}
+                            </button>
+                        </div>
+                    </div>
+                </article>
+                </ng-container>
+
+                <div *ngIf="filteredRooms.length === 0 && !isLoading && !errorMessage"
+                    class="flex flex-col items-center justify-center py-24 bg-white rounded-[2rem] border-2 border-dashed border-slate-100">
+                    <span class="material-symbols-outlined text-6xl text-slate-200 mb-4">bedtime</span>
+                    <p class="text-slate-400 font-bold tracking-widest uppercase text-sm">No rooms match your criteria
+                    </p>
+                    <p class="text-slate-300 text-sm mt-2">Thử thay đổi ngày hoặc bộ lọc</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
