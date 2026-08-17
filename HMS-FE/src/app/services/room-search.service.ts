@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../environment/environment';
+import { HotelService } from '../core/hotel.service';
 
 export interface RoomSearchParams {
   checkIn: string;    // ISO date YYYY-MM-DD
@@ -41,49 +42,49 @@ export interface ApiResponse<T> {
 export class RoomSearchService {
   private readonly apiUrl = environment.apiUrl || 'http://localhost:8081/api/v1';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private hotelService: HotelService
+  ) {}
 
   /**
    * Search rooms with availability based on check-in/check-out dates
    */
   searchRooms(params: RoomSearchParams): Observable<RoomSearchResult[]> {
+    const hotelId = this.hotelService.getActiveHotelId();
     let httpParams = new HttpParams()
       .set('checkIn', params.checkIn)
-      .set('checkOut', params.checkOut);
+      .set('checkOut', params.checkOut)
+      .set('hotelId', hotelId.toString())
+      .set('roomsNeeded', '1');
 
     if (params.adults) {
-      httpParams = httpParams.set('adults', params.adults.toString());
-    }
-    if (params.minPrice !== undefined) {
-      httpParams = httpParams.set('minPrice', params.minPrice.toString());
-    }
-    if (params.maxPrice !== undefined && params.maxPrice < 100000000) {
-      httpParams = httpParams.set('maxPrice', params.maxPrice.toString());
-    }
-    if (params.amenities && params.amenities.length > 0) {
-      httpParams = httpParams.set('amenities', params.amenities.join(','));
-    }
-    if (params.sortBy) {
-      httpParams = httpParams.set('sortBy', params.sortBy);
-    }
-    if (params.page !== undefined) {
-      httpParams = httpParams.set('page', params.page.toString());
-    }
-    if (params.size !== undefined) {
-      httpParams = httpParams.set('size', params.size.toString());
+      httpParams = httpParams.set('guests', params.adults.toString());
     }
 
-    return this.http.get<ApiResponse<RoomSearchResult[]>>(`${this.apiUrl}/rooms/search`, { params: httpParams })
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/availability/search`, { params: httpParams })
       .pipe(
-        map(response => response.data || []),
+        map(response => {
+          const list = response.data || [];
+          return list.map(item => {
+            const rt = item.roomType;
+            return {
+              roomTypeId: String(rt.id),
+              name: rt.name,
+              description: rt.description || '',
+              pricePerNight: parseFloat(rt.basePrice || 0),
+              rating: 4.9,
+              amenities: (rt.amenities || []).map((a: any) => String(a.name || '').toLowerCase().replace(/\s+/g, '_')),
+              thumbnailUrl: this.getImageByRoomName(rt.name),
+              capacity: rt.maxOccupancy || rt.baseOccupancy || 2,
+              availableRooms: item.availableRooms ?? 0,
+              bedConfig: rt.bedConfig || null
+            };
+          });
+        }),
         catchError(error => {
-          console.warn('Room search API error:', error);
-          // If 404 or API not available, fallback to room-types API
-          if (error.status === 404) {
-            console.warn('Falling back to room-types API');
-            return this.fallbackSearch(params);
-          }
-          throw error;
+          console.warn('Real availability search failed, falling back to mock search:', error);
+          return this.fallbackSearch(params);
         })
       );
   }
@@ -92,7 +93,8 @@ export class RoomSearchService {
    * Fallback: Use existing room-types API and mock availableRooms
    */
   private fallbackSearch(params: RoomSearchParams): Observable<RoomSearchResult[]> {
-    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/room-types`)
+    const hotelId = this.hotelService.getActiveHotelId();
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/hotels/${hotelId}/room-types`)
       .pipe(
         map(response => {
           const rooms = response.data || [];

@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn, HttpResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
+import { catchError, throwError, map } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -15,6 +15,19 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     : req;
 
   return next(authReq).pipe(
+    map(event => {
+      if (event instanceof HttpResponse) {
+        const body = event.body;
+        if (body && typeof body === 'object') {
+          const mappedBody = {
+            ...body,
+            success: (body as any).code === '2001'
+          };
+          return event.clone({ body: mappedBody });
+        }
+      }
+      return event;
+    }),
     catchError((err: HttpErrorResponse) => {
       if (err.status === 401) {
         localStorage.removeItem('access_token');

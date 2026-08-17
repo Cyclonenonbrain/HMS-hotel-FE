@@ -27,7 +27,6 @@ export class RegisterComponent implements OnInit {
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required],
       terms: [false, Validators.requiredTrue]
@@ -47,10 +46,10 @@ export class RegisterComponent implements OnInit {
 
       const formValue = this.registerForm.value;
       const registerData = {
+        username: formValue.email,
         email: formValue.email,
         password: formValue.password,
-        full_name: `${formValue.firstName} ${formValue.lastName}`,
-        phone: formValue.phone
+        fullName: `${formValue.firstName} ${formValue.lastName}`
       };
 
       this.authService.register(registerData).subscribe({

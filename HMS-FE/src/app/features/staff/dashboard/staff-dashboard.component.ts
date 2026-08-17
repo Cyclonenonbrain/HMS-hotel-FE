@@ -105,18 +105,47 @@ export class StaffDashboardComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    forkJoin({
-      rooms: this.roomService.getRooms({ page: 0, size: 500, sort: 'roomNumber,asc' }),
-      roomTypes: this.roomTypeService.getRoomTypes()
-    }).subscribe({
-      next: ({ rooms, roomTypes }) => {
-        this.roomsRaw = rooms?.data?.content ?? [];
-        this.roomTypesRaw = roomTypes?.data ?? [];
-        this.buildBookingModalRooms();
-        this.loadTimelineBookings();
+    this.roomTypeService.getRoomTypes().subscribe({
+      next: (roomTypesRes) => {
+        this.roomTypesRaw = roomTypesRes?.data || [];
+        if (this.roomTypesRaw.length === 0) {
+          this.roomsRaw = [];
+          this.buildBookingModalRooms();
+          this.loadTimelineBookings();
+          return;
+        }
+
+        const requests = this.roomTypesRaw.map(rt => 
+          this.roomService.getRoomsByRoomType(rt.id, 0, 1000)
+        );
+
+        forkJoin(requests).subscribe({
+          next: (roomsResponses) => {
+            let aggregatedRooms: RoomResponse[] = [];
+            roomsResponses.forEach((res, index) => {
+              const rt = this.roomTypesRaw[index];
+              const content = res?.data?.content || [];
+              content.forEach((item: any) => {
+                aggregatedRooms.push({
+                  ...item,
+                  roomTypeName: rt.name,
+                  roomTypeCapacity: rt.capacity,
+                  roomTypeBasePrice: rt.basePrice
+                });
+              });
+            });
+            this.roomsRaw = aggregatedRooms;
+            this.buildBookingModalRooms();
+            this.loadTimelineBookings();
+          },
+          error: (err) => {
+            this.errorMessage = err?.error?.message || 'Không tải được danh sách phòng.';
+            this.isLoading = false;
+          }
+        });
       },
       error: (err) => {
-        this.errorMessage = err?.error?.message || 'Không tải được danh sách phòng.';
+        this.errorMessage = err?.error?.message || 'Không tải được danh sách loại phòng.';
         this.isLoading = false;
       }
     });
@@ -368,7 +397,7 @@ export class StaffDashboardComponent implements OnInit {
   private mapRoomStatus(status: string): 'Ready' | 'Not Ready' | 'Maintenance' {
     const normalized = (status || '').toUpperCase();
     if (normalized === 'MAINTENANCE') return 'Maintenance';
-    if (normalized === 'DIRTY') return 'Not Ready';
+    if (normalized === 'CLEANING') return 'Not Ready';
     return 'Ready';
   }
 
@@ -694,8 +723,8 @@ export class StaffDashboardComponent implements OnInit {
 
   private computeFooterStats() {
     this.vacantCount = this.roomsRaw.filter((r) => r.status === 'AVAILABLE').length;
-    this.occupiedCount = this.roomsRaw.filter((r) => r.status === 'OCCUPIED' || r.status === 'BOOKED').length;
-    this.notReadyCount = this.roomsRaw.filter((r) => r.status === 'DIRTY').length;
+    this.occupiedCount = this.roomsRaw.filter((r) => r.status === 'OCCUPIED').length;
+    this.notReadyCount = this.roomsRaw.filter((r) => r.status === 'CLEANING').length;
     this.maintenanceCount = this.roomsRaw.filter((r) => r.status === 'MAINTENANCE').length;
     this.reservedCount = this.bookingsRaw.filter((b) => (b?.status || '').toUpperCase() === 'CONFIRMED').length;
     this.dueOutCount = this.bookingsRaw.filter((b) => (b?.status || '').toUpperCase() === 'COMPLETED').length;

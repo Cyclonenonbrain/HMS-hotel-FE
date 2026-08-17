@@ -13,7 +13,7 @@ export class UserService {
   private readonly apiUrl = `${environment.apiUrl}/admin/users`;
   private readonly fallbackApiUrl = `${environment.apiUrl}/admin/user`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getUsers(query?: AdminUserQuery): Observable<ApiResponse<PageResponse<AdminUserResponse>>> {
     let params = new HttpParams();

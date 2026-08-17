@@ -6,6 +6,7 @@ import { RoomCreateRequest, RoomResponse, RoomStatus } from '../../../core/model
 import { RoomTypeResponse } from '../../../core/models/room-type.model';
 import { RoomTypeService } from '../../../core/room-type.service';
 import { VndPipe } from '../../../core/vnd.pipe';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-rooms',
@@ -36,7 +37,7 @@ export class RoomsComponent implements OnInit {
   notification: { type: 'success' | 'error'; message: string } | null = null;
   private notifTimer: ReturnType<typeof setTimeout> | null = null;
 
-  readonly roomStatuses: RoomStatus[] = ['AVAILABLE', 'BOOKED', 'OCCUPIED', 'DIRTY', 'MAINTENANCE'];
+  readonly roomStatuses: RoomStatus[] = ['AVAILABLE', 'OCCUPIED', 'CLEANING', 'MAINTENANCE'];
 
   constructor(
     private roomService: RoomService,
@@ -62,27 +63,95 @@ export class RoomsComponent implements OnInit {
 
   loadRooms(): void {
     this.loading = true;
-    this.roomService.getRooms({
-      q: this.searchTerm.trim() || undefined,
-      roomTypeId: this.typeFilter === 'ALL' ? undefined : this.typeFilter,
-      status: this.statusFilter === 'ALL' ? undefined : this.statusFilter,
-      page: this.currentPage - 1,
-      size: this.pageSize,
-      sort: 'roomNumber,asc'
-    }).subscribe({
-      next: (response) => {
-        const page = response?.data;
-        this.rooms = page?.content || [];
-        this.totalElements = page?.totalElements ?? 0;
-        this.totalPages = Math.max(1, page?.totalPages ?? 1);
+    const term = this.searchTerm.trim().toLowerCase();
+    const statusF = this.statusFilter;
+
+    if (this.typeFilter === 'ALL') {
+      if (this.roomTypes.length === 0) {
+        this.rooms = [];
+        this.totalElements = 0;
+        this.totalPages = 1;
         this.loading = false;
-      },
-      error: (error) => {
-        this.showNotification('error', 'Failed to load rooms.');
-        console.error('Error fetching rooms:', error);
-        this.loading = false;
+        return;
       }
-    });
+
+      // Fetch all room types in parallel
+      const requests = this.roomTypes.map(rt => 
+        this.roomService.getRoomsByRoomType(rt.id, 0, 1000)
+      );
+
+      forkJoin(requests).subscribe({
+        next: (responses) => {
+          let aggregated: RoomResponse[] = [];
+          responses.forEach((res, index) => {
+            const rt = this.roomTypes[index];
+            const content = res?.data?.content || [];
+            content.forEach((item: any) => {
+              aggregated.push({
+                ...item,
+                roomTypeName: rt.name,
+                roomTypeCapacity: rt.capacity,
+                roomTypeBasePrice: rt.basePrice
+              });
+            });
+          });
+
+          // Apply client-side filters
+          let filtered = aggregated;
+          if (term) {
+            filtered = filtered.filter(r => r.roomNumber.toLowerCase().includes(term));
+          }
+          if (statusF !== 'ALL') {
+            filtered = filtered.filter(r => r.status === statusF);
+          }
+
+          this.totalElements = filtered.length;
+          this.totalPages = Math.max(1, Math.ceil(filtered.length / this.pageSize));
+          
+          // Page the results in-memory
+          this.rooms = filtered.slice((this.currentPage - 1) * this.pageSize, this.currentPage * this.pageSize);
+          this.loading = false;
+        },
+        error: (error) => {
+          this.showNotification('error', 'Failed to load aggregated rooms.');
+          console.error('Error loading rooms:', error);
+          this.loading = false;
+        }
+      });
+    } else {
+      const selectedType = this.roomTypes.find(rt => String(rt.id) === String(this.typeFilter));
+      
+      this.roomService.getRoomsByRoomType(this.typeFilter, this.currentPage - 1, this.pageSize).subscribe({
+        next: (response) => {
+          const page = response?.data;
+          let content = page?.content || [];
+          
+          if (selectedType) {
+            content = content.map((item: any) => ({
+              ...item,
+              roomTypeName: selectedType.name,
+              roomTypeCapacity: selectedType.capacity,
+              roomTypeBasePrice: selectedType.basePrice
+            }));
+          }
+
+          // Apply client-side search query if any
+          if (term) {
+            content = content.filter((r: RoomResponse) => r.roomNumber.toLowerCase().includes(term));
+          }
+
+          this.rooms = content;
+          this.totalElements = page?.totalElements ?? 0;
+          this.totalPages = Math.max(1, page?.totalPages ?? 1);
+          this.loading = false;
+        },
+        error: (error) => {
+          this.showNotification('error', 'Failed to load rooms.');
+          console.error('Error fetching rooms:', error);
+          this.loading = false;
+        }
+      });
+    }
   }
 
   get filteredRooms(): RoomResponse[] {
@@ -174,7 +243,7 @@ export class RoomsComponent implements OnInit {
     };
 
     if (this.modalMode === 'add') {
-      this.roomService.createRoom(request).subscribe({
+      this.roomService.createRoom(request.roomTypeId, request).subscribe({
         next: () => {
           this.showNotification('success', 'Room added successfully!');
           this.currentPage = 1;
@@ -194,7 +263,7 @@ export class RoomsComponent implements OnInit {
       return;
     }
 
-    this.roomService.updateRoom(this.formData.id, request).subscribe({
+    this.roomService.updateRoom(request.roomTypeId, this.formData.id, request).subscribe({
       next: () => {
         this.showNotification('success', 'Room updated successfully!');
         this.loadRooms();
@@ -219,7 +288,7 @@ export class RoomsComponent implements OnInit {
 
   confirmDelete(): void {
     if (!this.roomToDelete?.id) return;
-    this.roomService.deleteRoom(this.roomToDelete.id).subscribe({
+    this.roomService.deleteRoom(this.roomToDelete.roomTypeId, this.roomToDelete.id).subscribe({
       next: () => {
         this.showNotification('success', `Room ${this.roomToDelete?.roomNumber} has been deleted.`);
         if (this.rooms.length === 1 && this.currentPage > 1) {
@@ -240,12 +309,10 @@ export class RoomsComponent implements OnInit {
     switch (status) {
       case 'AVAILABLE':
         return 'Available';
-      case 'BOOKED':
-        return 'Booked';
       case 'OCCUPIED':
         return 'Occupied';
-      case 'DIRTY':
-        return 'Dirty';
+      case 'CLEANING':
+        return 'Cleaning';
       case 'MAINTENANCE':
         return 'Maintenance';
       default:
@@ -257,11 +324,9 @@ export class RoomsComponent implements OnInit {
     switch (status) {
       case 'AVAILABLE':
         return 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-300';
-      case 'BOOKED':
-        return 'bg-indigo-50 text-indigo-700 ring-indigo-600/20 dark:bg-indigo-900/30 dark:text-indigo-300';
       case 'OCCUPIED':
         return 'bg-blue-50 text-blue-700 ring-blue-700/10 dark:bg-blue-900/30 dark:text-blue-300';
-      case 'DIRTY':
+      case 'CLEANING':
         return 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-900/30 dark:text-amber-300';
       case 'MAINTENANCE':
         return 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/30 dark:text-red-300';

@@ -5,17 +5,24 @@ import { map } from 'rxjs/operators';
 import { environment } from '../../environment/environment';
 import { ApiResponse } from './models/api-response.model';
 import { RoomTypeResponse, RoomTypeCreateRequest } from './models/room-type.model';
+import { HotelService } from './hotel.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RoomTypeService {
-  private apiUrl = `${environment.apiUrl}/room-types`;
+  constructor(
+    private http: HttpClient,
+    private hotelService: HotelService
+  ) {}
 
-  constructor(private http: HttpClient) {}
+  private getApiUrl(hotelId?: number): string {
+    const activeHotelId = hotelId ?? this.hotelService.getActiveHotelId();
+    return `${environment.apiUrl}/hotels/${activeHotelId}/room-types`;
+  }
 
-  getRoomTypes(): Observable<ApiResponse<RoomTypeResponse[]>> {
-    return this.http.get<ApiResponse<any[]>>(this.apiUrl).pipe(
+  getRoomTypes(hotelId?: number): Observable<ApiResponse<RoomTypeResponse[]>> {
+    return this.http.get<ApiResponse<any[]>>(this.getApiUrl(hotelId)).pipe(
       map((res) => ({
         ...res,
         data: (res.data || []).map((item: any) => this.mapRoomTypeResponse(item))
@@ -23,8 +30,8 @@ export class RoomTypeService {
     );
   }
 
-  getRoomTypeById(id: string): Observable<ApiResponse<RoomTypeResponse>> {
-    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/${id}`).pipe(
+  getRoomTypeById(id: string, hotelId?: number): Observable<ApiResponse<RoomTypeResponse>> {
+    return this.http.get<ApiResponse<any>>(`${this.getApiUrl(hotelId)}/${id}`).pipe(
       map((res) => ({
         ...res,
         data: this.mapRoomTypeResponse(res.data)
@@ -32,9 +39,9 @@ export class RoomTypeService {
     );
   }
 
-  createRoomType(request: RoomTypeCreateRequest): Observable<ApiResponse<RoomTypeResponse>> {
+  createRoomType(request: RoomTypeCreateRequest, hotelId?: number): Observable<ApiResponse<RoomTypeResponse>> {
     const payload = this.toApiRequest(request);
-    return this.http.post<ApiResponse<any>>(this.apiUrl, payload).pipe(
+    return this.http.post<ApiResponse<any>>(this.getApiUrl(hotelId), payload).pipe(
       map((res) => ({
         ...res,
         data: this.mapRoomTypeResponse(res.data)
@@ -42,9 +49,9 @@ export class RoomTypeService {
     );
   }
 
-  updateRoomType(id: string, request: RoomTypeCreateRequest): Observable<ApiResponse<RoomTypeResponse>> {
+  updateRoomType(id: string, request: RoomTypeCreateRequest, hotelId?: number): Observable<ApiResponse<RoomTypeResponse>> {
     const payload = this.toApiRequest(request);
-    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/${id}`, payload).pipe(
+    return this.http.put<ApiResponse<any>>(`${this.getApiUrl(hotelId)}/${id}`, payload).pipe(
       map((res) => ({
         ...res,
         data: this.mapRoomTypeResponse(res.data)
@@ -52,8 +59,8 @@ export class RoomTypeService {
     );
   }
 
-  deleteRoomType(id: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
+  deleteRoomType(id: string, hotelId?: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.getApiUrl(hotelId)}/${id}`);
   }
 
   private mapRoomTypeResponse(item: any): RoomTypeResponse {

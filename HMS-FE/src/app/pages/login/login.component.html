@@ -45,10 +45,10 @@
 
       <form [formGroup]="loginForm" class="space-y-5">
         <div>
-          <input formControlName="email" type="email" id="email" placeholder="Email Address"
+          <input formControlName="email" type="text" id="email" placeholder="Email or Username"
             class="w-full h-14 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary focus:ring-0 focus:outline-none transition-colors" />
           <p *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" class="text-red-500 text-xs mt-1">
-            Please enter a valid email address.
+            Please enter your email or username.
           </p>
         </div>
 

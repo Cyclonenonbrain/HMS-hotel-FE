@@ -1,4 +1,4 @@
-export type RoomStatus = 'AVAILABLE' | 'BOOKED' | 'OCCUPIED' | 'DIRTY' | 'MAINTENANCE';
+export type RoomStatus = 'AVAILABLE' | 'OCCUPIED' | 'CLEANING' | 'MAINTENANCE';
 
 export interface RoomResponse {
   id: string;
