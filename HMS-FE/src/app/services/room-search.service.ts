@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
@@ -33,14 +33,15 @@ export interface RoomSearchResult {
 }
 
 export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
+  code?: string;
+  success?: boolean;
+  message?: string;
   data: T;
 }
 
 @Injectable({ providedIn: 'root' })
 export class RoomSearchService {
-  private readonly apiUrl = environment.apiUrl || 'http://localhost:8081/api/v1';
+  private readonly apiUrl = environment.apiUrl || 'http://localhost:8080/api/v1';
 
   constructor(
     private http: HttpClient,
@@ -62,28 +63,33 @@ export class RoomSearchService {
       httpParams = httpParams.set('guests', params.adults.toString());
     }
 
-    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/availability/search`, { params: httpParams })
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/availability/search`, { params: httpParams })
       .pipe(
         map(response => {
-          const list = response.data || [];
+          const raw = response.data;
+          const list: any[] = Array.isArray(raw) ? raw : (raw?.content || []);
           return list.map(item => {
-            const rt = item.roomType;
+            const rt = item.roomType || item;
+            const rtAmenities = Array.isArray(rt.amenities)
+              ? rt.amenities.map((a: any) => (typeof a === 'string' ? a : a.name || a.code || '').toLowerCase().replace(/\s+/g, '_'))
+              : [];
+
             return {
-              roomTypeId: String(rt.id),
-              name: rt.name,
+              roomTypeId: String(rt.id ?? ''),
+              name: rt.name || 'Room',
               description: rt.description || '',
-              pricePerNight: parseFloat(rt.basePrice || 0),
+              pricePerNight: parseFloat(rt.basePrice || rt.base_price || 0),
               rating: 4.9,
-              amenities: (rt.amenities || []).map((a: any) => String(a.name || '').toLowerCase().replace(/\s+/g, '_')),
-              thumbnailUrl: this.getImageByRoomName(rt.name),
-              capacity: rt.maxOccupancy || rt.baseOccupancy || 2,
-              availableRooms: item.availableRooms ?? 0,
-              bedConfig: rt.bedConfig || null
+              amenities: rtAmenities.length > 0 ? rtAmenities : this.extractAmenities(rt),
+              thumbnailUrl: (rt.images && rt.images.length > 0 && rt.images[0].imageUrl) ? rt.images[0].imageUrl : this.getImageByRoomName(rt.name),
+              capacity: rt.maxOccupancy || rt.baseOccupancy || rt.capacity || 2,
+              availableRooms: item.availableRooms ?? 1,
+              bedConfig: rt.bedConfig || rt.bed_config || null
             };
           });
         }),
         catchError(error => {
-          console.warn('Real availability search failed, falling back to mock search:', error);
+          console.warn('Real availability search failed, falling back to catalog search:', error);
           return this.fallbackSearch(params);
         })
       );
@@ -94,10 +100,11 @@ export class RoomSearchService {
    */
   private fallbackSearch(params: RoomSearchParams): Observable<RoomSearchResult[]> {
     const hotelId = this.hotelService.getActiveHotelId();
-    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/hotels/${hotelId}/room-types`)
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/hotels/${hotelId}/room-types`)
       .pipe(
         map(response => {
-          const rooms = response.data || [];
+          const raw = response.data;
+          const rooms: any[] = Array.isArray(raw) ? raw : (raw?.content || []);
           return rooms.map(room => this.transformToSearchResult(room, params));
         }),
         catchError(error => {
@@ -107,45 +114,36 @@ export class RoomSearchService {
       );
   }
 
-  /**
-   * Transform room-type data to RoomSearchResult format
-   * Mocks availableRooms based on room data
-   */
   private transformToSearchResult(room: any, params: RoomSearchParams): RoomSearchResult {
-    // Mock availableRooms: random 0-10, weighted towards having rooms available
-    const mockAvailable = this.generateMockAvailability(room.id);
-    
+    const rtAmenities = Array.isArray(room.amenities)
+      ? room.amenities.map((a: any) => (typeof a === 'string' ? a : a.name || a.code || '').toLowerCase().replace(/\s+/g, '_'))
+      : [];
+
     return {
-      roomTypeId: room.id,
+      roomTypeId: String(room.id ?? ''),
       name: room.name,
       description: room.description || '',
       pricePerNight: parseFloat(room.basePrice || room.base_price || 0),
-      rating: 4.9, // Default rating
-      amenities: this.extractAmenities(room),
-      thumbnailUrl: this.getImageByRoomName(room.name),
-      capacity: room.capacity || 2,
-      availableRooms: mockAvailable,
+      rating: 4.9,
+      amenities: rtAmenities.length > 0 ? rtAmenities : this.extractAmenities(room),
+      thumbnailUrl: (room.images && room.images.length > 0 && room.images[0].imageUrl) ? room.images[0].imageUrl : this.getImageByRoomName(room.name),
+      capacity: room.maxOccupancy || room.baseOccupancy || room.capacity || 2,
+      availableRooms: this.generateMockAvailability(String(room.id)),
       bedConfig: room.bedConfig || room.bed_config || null
     };
   }
 
-  /**
-   * Generate mock availability (will be replaced by real API)
-   * Uses room ID hash for consistent results per room
-   */
   private generateMockAvailability(roomId: string): number {
-    // Create a simple hash from roomId for consistent mock data
     let hash = 0;
     for (let i = 0; i < roomId.length; i++) {
       hash = ((hash << 5) - hash) + roomId.charCodeAt(i);
       hash |= 0;
     }
-    // Return 0-10, with 80% chance of having rooms (1-10)
     const rand = Math.abs(hash % 100);
-    if (rand < 20) return 0; // 20% chance sold out
-    if (rand < 40) return Math.abs(hash % 3) + 1; // 20% chance 1-3 rooms
-    if (rand < 70) return Math.abs(hash % 5) + 3; // 30% chance 3-7 rooms
-    return Math.abs(hash % 5) + 6; // 30% chance 6-10 rooms
+    if (rand < 10) return 1;
+    if (rand < 40) return Math.abs(hash % 3) + 1;
+    if (rand < 70) return Math.abs(hash % 5) + 3;
+    return Math.abs(hash % 5) + 6;
   }
 
   private extractAmenities(room: any): string[] {
@@ -163,25 +161,16 @@ export class RoomSearchService {
     return 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=1000';
   }
 
-  /**
-   * Helper: Get today's date in YYYY-MM-DD format
-   */
   static getToday(): string {
     return new Date().toISOString().split('T')[0];
   }
 
-  /**
-   * Helper: Get tomorrow's date in YYYY-MM-DD format
-   */
   static getTomorrow(): string {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow.toISOString().split('T')[0];
   }
 
-  /**
-   * Helper: Calculate number of nights between two dates
-   */
   static calculateNights(checkIn: string, checkOut: string): number {
     const start = new Date(checkIn);
     const end = new Date(checkOut);

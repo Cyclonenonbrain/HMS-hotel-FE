@@ -1,30 +1,27 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
-/**
- * Coupon Validation Response từ Backend
- */
 export interface CouponValidationResponse {
   code: string;
   is_valid: boolean;
-  reason?: string;                    // Lý do nếu không hợp lệ
+  validation_token?: string;
+  discount_amount?: number;
+  expires_at?: string;
+  reason?: string;
   discount_type?: 'PERCENT' | 'AMOUNT' | 'FIXED';
-  value?: number;                     // Giá trị coupon (% hoặc số tiền)
-  discount_amount?: number;           // Số tiền được giảm
-  total_after_discount?: number;      // Tổng sau khi giảm
+  value?: number;
+  total_after_discount?: number;
 }
 
-/**
- * API Response wrapper
- */
 export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
+  code?: string;
+  success?: boolean;
+  message?: string;
   data: T;
-  timestamp: string;
+  timestamp?: string;
 }
 
 @Injectable({
@@ -36,7 +33,7 @@ export class CouponService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Validate coupon code và tính discount
+   * Validate coupon code
    * GET /api/v1/customer/coupons/validate?code=XXX&currentTotal=123
    */
   validateCoupon(code: string, currentTotal: number): Observable<ApiResponse<CouponValidationResponse>> {
@@ -52,34 +49,35 @@ export class CouponService {
       .pipe(
         map((response) => ({
           ...response,
-          data: this.normalizeValidationResponse(response?.data)
+          success: response.code === '2001' || response.success === true,
+          data: this.normalizeValidationResponse(code, currentTotal, response?.data)
         })),
         catchError(this.handleError)
       );
   }
 
-  private normalizeValidationResponse(raw: any): CouponValidationResponse {
-    const discountTypeRaw = raw?.discount_type ?? raw?.discountType;
-    const normalizedDiscountType =
-      discountTypeRaw === 'FIXED' ? 'AMOUNT' : discountTypeRaw;
+  private normalizeValidationResponse(code: string, currentTotal: number, raw: any): CouponValidationResponse {
+    const discountAmount = Number(raw?.discount_amount ?? raw?.discountAmount ?? 0);
+    const isValid = Boolean(raw?.is_valid ?? raw?.valid ?? (discountAmount > 0));
+    const token = raw?.validation_token ?? raw?.validationToken ?? '';
+    const discountTypeRaw = raw?.discount_type ?? raw?.discountType ?? 'AMOUNT';
+    const totalAfterDiscount = Math.max(0, currentTotal - discountAmount);
 
     return {
-      code: raw?.code ?? '',
-      is_valid: Boolean(raw?.is_valid ?? raw?.isValid ?? false),
-      reason: raw?.reason,
-      discount_type: normalizedDiscountType,
-      value: Number(raw?.value ?? 0),
-      discount_amount: Number(raw?.discount_amount ?? raw?.discountAmount ?? 0),
-      total_after_discount: Number(raw?.total_after_discount ?? raw?.totalAfterDiscount ?? 0)
+      code: raw?.coupon_code ?? raw?.couponCode ?? code,
+      is_valid: isValid,
+      validation_token: token,
+      discount_amount: discountAmount,
+      expires_at: raw?.expires_at ?? raw?.expiresAt,
+      reason: raw?.reason ?? (isValid ? '' : 'Mã giảm giá không hợp lệ hoặc đã hết hạn'),
+      discount_type: discountTypeRaw === 'FIXED' ? 'AMOUNT' : discountTypeRaw,
+      value: Number(raw?.value ?? discountAmount),
+      total_after_discount: totalAfterDiscount
     };
   }
 
-  /**
-   * Xử lý lỗi API
-   */
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'Không thể kiểm tra mã giảm giá.';
-    
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Lỗi: ${error.error.message}`;
     } else {
@@ -91,7 +89,6 @@ export class CouponService {
         errorMessage = error.error?.message || `Lỗi: ${error.status}`;
       }
     }
-    
     console.error('CouponService Error:', error);
     return throwError(() => new Error(errorMessage));
   }

@@ -1,43 +1,29 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../environment/environment';
 import { ApiResponse } from './models/api-response.model';
-import { AdminUserCreateRequest, AdminUserQuery, AdminUserResponse, AdminUserUpdateRequest, PageResponse } from './models/user.model';
+import { AdminUserCreateRequest, AdminUserQuery, AdminUserResponse, AdminUserUpdateRequest, PageResponse, UserRole } from './models/user.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
-  private readonly apiUrl = `${environment.apiUrl}/admin/users`;
-  private readonly fallbackApiUrl = `${environment.apiUrl}/admin/user`;
+  private readonly apiUrl = `${environment.apiUrl}/users`;
 
   constructor(private http: HttpClient) { }
 
   getUsers(query?: AdminUserQuery): Observable<ApiResponse<PageResponse<AdminUserResponse>>> {
     let params = new HttpParams();
-    if (query?.q) params = params.set('q', query.q);
-    if (query?.role) params = params.set('role', query.role);
-    if (query?.isActive !== undefined) params = params.set('is_active', query.isActive);
     if (query?.page !== undefined) params = params.set('page', query.page);
     if (query?.size !== undefined) params = params.set('size', query.size);
-    if (query?.sort) params = params.set('sort', query.sort);
 
     return this.http.get<ApiResponse<any>>(this.apiUrl, { params }).pipe(
       map((res) => ({
         ...res,
         data: this.mapPageResponse(res.data)
-      })),
-      catchError((error) => {
-        if (error?.status !== 404) return throwError(() => error);
-        return this.http.get<ApiResponse<any>>(this.fallbackApiUrl, { params }).pipe(
-          map((res) => ({
-            ...res,
-            data: this.mapPageResponse(res.data)
-          }))
-        );
-      })
+      }))
     );
   }
 
@@ -46,16 +32,7 @@ export class UserService {
       map((res) => ({
         ...res,
         data: this.mapUserResponse(res.data)
-      })),
-      catchError((error) => {
-        if (error?.status !== 404) return throwError(() => error);
-        return this.http.post<ApiResponse<any>>(this.fallbackApiUrl, this.toCreateRequest(request)).pipe(
-          map((res) => ({
-            ...res,
-            data: this.mapUserResponse(res.data)
-          }))
-        );
-      })
+      }))
     );
   }
 
@@ -64,72 +41,60 @@ export class UserService {
       map((res) => ({
         ...res,
         data: this.mapUserResponse(res.data)
-      })),
-      catchError((error) => {
-        if (error?.status !== 404) return throwError(() => error);
-        return this.http.put<ApiResponse<any>>(`${this.fallbackApiUrl}/${id}`, this.toUpdateRequest(request)).pipe(
-          map((res) => ({
-            ...res,
-            data: this.mapUserResponse(res.data)
-          }))
-        );
-      })
+      }))
     );
   }
 
   deleteUser(id: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`).pipe(
-      catchError((error) => {
-        if (error?.status !== 404) return throwError(() => error);
-        return this.http.delete<ApiResponse<void>>(`${this.fallbackApiUrl}/${id}`);
-      })
-    );
+    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
   }
 
   private mapPageResponse(page: any): PageResponse<AdminUserResponse> {
+    const content = page?.content || (Array.isArray(page) ? page : []);
     return {
-      content: (page?.content || []).map((item: any) => this.mapUserResponse(item)),
-      totalElements: Number(page?.totalElements ?? 0),
-      totalPages: Number(page?.totalPages ?? 0),
-      size: Number(page?.size ?? 0),
-      number: Number(page?.number ?? 0),
+      content: content.map((item: any) => this.mapUserResponse(item)),
+      totalElements: Number(page?.totalElements ?? content.length),
+      totalPages: Number(page?.totalPages ?? 1),
+      size: Number(page?.size ?? content.length),
+      number: Number(page?.number ?? page?.page ?? 0),
       first: !!page?.first,
       last: !!page?.last
     };
   }
 
   private mapUserResponse(item: any): AdminUserResponse {
+    const roleList = Array.from(item?.roles || []);
+    const role = roleList.length > 0 ? roleList[0] : (item?.role || 'CUSTOMER');
     return {
-      id: item?.id,
+      id: String(item?.id ?? ''),
       email: item?.email ?? '',
-      fullName: item?.fullName ?? item?.full_name ?? '',
+      fullName: item?.fullName ?? item?.full_name ?? item?.username ?? '',
       phone: item?.phone ?? null,
-      role: item?.role ?? 'CUSTOMER',
-      isActive: Boolean(item?.isActive ?? item?.is_active ?? false),
-      createdAt: item?.createdAt ?? item?.created_at,
-      updatedAt: item?.updatedAt ?? item?.updated_at
+      role: role as UserRole,
+      isActive: Boolean(item?.isActive ?? item?.is_active ?? true),
+      createdAt: item?.createdAt ?? item?.created_at ?? '',
+      updatedAt: item?.updatedAt ?? item?.updated_at ?? ''
     };
   }
 
   private toCreateRequest(request: AdminUserCreateRequest): any {
+    const username = request.email ? request.email.split('@')[0] : 'user_' + Date.now();
     return {
+      username: username.length >= 4 ? username : username + '_usr',
       email: request.email,
       password: request.password,
-      full_name: request.fullName,
-      phone: request.phone,
-      role: request.role,
-      is_active: request.isActive
+      fullName: request.fullName,
+      roles: [request.role || 'CUSTOMER']
     };
   }
 
   private toUpdateRequest(request: AdminUserUpdateRequest): any {
     return {
       email: request.email,
-      password: request.password,
-      full_name: request.fullName,
-      phone: request.phone,
-      role: request.role,
-      is_active: request.isActive
+      password: request.password ? request.password : undefined,
+      fullName: request.fullName,
+      isActive: request.isActive !== undefined ? request.isActive : true,
+      roles: [request.role || 'CUSTOMER']
     };
   }
 }

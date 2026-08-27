@@ -1,8 +1,8 @@
-import { Component, OnInit, ElementRef, HostListener, OnDestroy, ChangeDetectorRef } from '@angular/core';
+﻿import { Component, OnInit, ElementRef, HostListener, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { CheckoutService, BookingCreateRequest } from '../../services/checkout.services'; 
+import { CheckoutService, HoldCreateRequest, HoldConversionRequest } from '../../services/checkout.services'; 
 import { PaymentService } from '../../services/payment.service';
 import { CouponService, CouponValidationResponse } from '../../services/coupon.service';
 import { AuthService } from '../../services/auth.services';
@@ -30,11 +30,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   // Room data from query params
   room = {
-    id: '',                    // roomTypeId (UUID)
+    id: '',                    // roomTypeId
     name: 'Executive Suite',
     type: 'Premium Suite',
     price: 0,
-    serviceFee: 0,             // Sẽ tính từ backend hoặc = 0
+    serviceFee: 0,
     image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80'
   };
 
@@ -98,35 +98,39 @@ export class CheckoutComponent implements OnInit, OnDestroy {
             this.bookingData.email = this.user.email || '';
             this.bookingData.phone = this.user.phone || '';
           } catch (e) {
-            console.error("Lỗi parse User tại Checkout:", e);
+            console.error('Error parsing user data:', e);
           }
         }
       } else {
         this.user = null;
-        this.router.navigate(['/login']);
       }
       this.cdr.detectChanges();
     });
   }
 
   private readQueryParams() {
-    this.route.queryParamMap.subscribe(params => {
-      const roomId = params.get('roomId');
-      const roomName = params.get('roomName');
-      const roomType = params.get('roomType');
-      const price = Number(params.get('price'));
-      const checkIn = params.get('checkIn');
-      const checkOut = params.get('checkOut');
-      const guests = Number(params.get('guests'));
-
-      if (roomId) this.room.id = roomId;
-      if (roomName) this.room.name = roomName;
-      if (roomType) this.room.type = roomType;
-      if (!isNaN(price) && price > 0) this.room.price = price;
-      if (checkIn) this.bookingData.checkIn = checkIn;
-      if (checkOut) this.bookingData.checkOut = checkOut;
-      if (!isNaN(guests) && guests > 0) this.bookingData.numberOfGuests = guests;
-
+    this.route.queryParams.subscribe(params => {
+      if (params['roomId']) this.room.id = params['roomId'];
+      if (params['roomName']) this.room.name = params['roomName'];
+      if (params['roomType']) this.room.type = params['roomType'];
+      if (params['price']) this.room.price = parseFloat(params['price']) || 0;
+      if (params['image']) this.room.image = params['image'];
+      
+      if (params['checkIn']) this.bookingData.checkIn = params['checkIn'];
+      if (params['checkOut']) this.bookingData.checkOut = params['checkOut'];
+      if (params['guests']) this.bookingData.numberOfGuests = parseInt(params['guests'], 10) || 2;
+      
+      // Fallback dates if missing
+      if (!this.bookingData.checkIn) {
+        const today = new Date();
+        this.bookingData.checkIn = today.toISOString().split('T')[0];
+      }
+      if (!this.bookingData.checkOut) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        this.bookingData.checkOut = tomorrow.toISOString().split('T')[0];
+      }
+      
       this.cdr.detectChanges();
     });
   }
@@ -189,7 +193,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     if (this.authSub) this.authSub.unsubscribe();
   }
 
-  // UI handlers
   toggleProfileMenu() {
     this.isProfileMenuOpen = !this.isProfileMenuOpen;
   }
@@ -216,7 +219,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.couponLoading = true;
     this.couponError = '';
 
-    this.couponService.validateCoupon(this.couponCode, this.roomTotal).subscribe({
+    this.couponService.validateCoupon(this.couponCode.trim(), this.roomTotal).subscribe({
       next: (response) => {
         this.couponLoading = false;
         if (response.success && response.data.is_valid) {
@@ -284,7 +287,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return emailRegex.test(email);
   }
 
-  // Main booking submission
+  // Main booking submission: Hold -> Convert -> PayOS
   onConfirmPayment() {
     if (!this.validateForm()) {
       return;
@@ -294,93 +297,91 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.isProcessingPayment = true;
     this.errorMessage = '';
 
-    // Deposit amount depends on payment method
-    const depositForBooking =
-      this.selectedPaymentMethod === 'ONLINE_DEPOSIT'
-        ? this.depositAmount
-        : this.selectedPaymentMethod === 'ONLINE_FULL'
-          ? this.totalAmount
-          : 0;
-
-    // Step 1: Create booking
-    const bookingRequest: BookingCreateRequest = {
-      channel: 'WEB',
-      deposit: depositForBooking,
-      coupon_code: this.appliedCoupon?.code || undefined,
-      notes: `Guest: ${this.bookingData.fullName}, Phone: ${this.bookingData.phone}, Payment: ${
-        this.selectedPaymentMethod === 'ONLINE_DEPOSIT'
-          ? 'Online (30% deposit)'
-          : this.selectedPaymentMethod === 'ONLINE_FULL'
-            ? 'Online (full payment)'
-            : 'Pay at hotel'
-      }`,
-      booking_items: [{
-        room_type_id: this.room.id,
-        check_in: this.bookingData.checkIn,
-        check_out: this.bookingData.checkOut,
-        number_of_guests: this.bookingData.numberOfGuests
+    const holdRequest: HoldCreateRequest = {
+      checkIn: this.bookingData.checkIn,
+      checkOut: this.bookingData.checkOut,
+      lines: [{
+        roomTypeId: Number(this.room.id),
+        guests: Number(this.bookingData.numberOfGuests || 1),
+        quantity: 1
       }]
     };
 
-    this.checkoutService.createBooking(bookingRequest).subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          const bookingId = response.data.id;
-          console.log('Booking created:', bookingId);
-          
-          if (
-            (this.selectedPaymentMethod === 'ONLINE_DEPOSIT' ||
-              this.selectedPaymentMethod === 'ONLINE_FULL') &&
-            depositForBooking > 0
-          ) {
-            // Online payment: Create PayOS payment link
-            this.createPaymentLink(bookingId);
-          } else {
-            // Pay at hotel: Go directly to success page
-            this.isLoading = false;
-            this.isProcessingPayment = false;
-            this.router.navigate(['/booking-success'], {
-              queryParams: { 
-                bookingId: bookingId,
-                paymentMethod: 'AT_HOTEL'
-              }
-            });
-          }
-        } else {
-          this.handleError('Không thể tạo đơn đặt phòng');
+    // Bước 1: Tạo Hold
+    this.checkoutService.createHold(holdRequest).subscribe({
+      next: (holdRes) => {
+        const holdToken = holdRes.data?.accessToken;
+        if (!holdToken) {
+          this.handleError('Không thể giữ phòng. Vui lòng thử lại.');
+          return;
         }
+
+        const convertRequest: HoldConversionRequest = {
+          customerName: this.bookingData.fullName.trim(),
+          customerPhone: this.bookingData.phone.trim(),
+          customerEmail: this.bookingData.email.trim(),
+          couponValidationToken: this.appliedCoupon?.validation_token || undefined
+        };
+
+        // Bước 2: Chuyển đổi Hold thành Booking
+        this.checkoutService.convertHold(holdToken, convertRequest).subscribe({
+          next: (convertRes) => {
+            const booking = convertRes.data;
+            const publicCode = booking?.publicCode;
+            if (!publicCode) {
+              this.handleError('Không thể tạo đơn đặt phòng.');
+              return;
+            }
+
+            if (this.selectedPaymentMethod === 'ONLINE_DEPOSIT' || this.selectedPaymentMethod === 'ONLINE_FULL') {
+              // Bước 3: Tạo PayOS link và redirect
+              this.createPaymentLink(publicCode, holdToken);
+            } else {
+              // Thanh toán tại khách sạn
+              this.isLoading = false;
+              this.isProcessingPayment = false;
+              this.router.navigate(['/booking-success'], {
+                queryParams: {
+                  publicCode: publicCode,
+                  bookingId: publicCode,
+                  paymentMethod: 'AT_HOTEL'
+                }
+              });
+            }
+          },
+          error: (err) => {
+            this.handleError(err.message || 'Lỗi khi xác nhận đơn đặt phòng.');
+          }
+        });
       },
       error: (err) => {
-        this.handleError(err.message || 'Lỗi khi tạo đơn đặt phòng');
+        this.handleError(err.message || 'Lỗi khi giữ phòng (phòng có thể đã hết trong thời gian này).');
       }
     });
   }
 
-  private createPaymentLink(bookingId: string) {
-    this.paymentService.createPayOsPaymentLink(bookingId).subscribe({
+  private createPaymentLink(publicCode: string, holdToken?: string) {
+    this.paymentService.createPayOsPaymentLink(publicCode, holdToken).subscribe({
       next: (response) => {
         this.isLoading = false;
         this.isProcessingPayment = false;
-
-        if (response.success && response.data?.checkout_url) {
-          // Redirect to PayOS checkout
-          console.log('Redirecting to PayOS:', response.data.checkout_url);
-          window.location.href = `${response.data.checkout_url}`;
+        const checkoutUrl = response.data?.checkout_url || response.data?.checkoutUrl;
+        if (checkoutUrl) {
+          window.location.href = `${checkoutUrl}`;
         } else {
-          // Nếu không có payment link (deposit = 0), navigate to success
           this.router.navigate(['/booking-success'], {
-            queryParams: { bookingId: bookingId }
+            queryParams: { publicCode: publicCode, bookingId: publicCode }
           });
         }
       },
       error: (err) => {
-        // Nếu lỗi tạo payment link, vẫn navigate to success với status pending
         console.warn('Payment link error, navigating to pending:', err);
         this.isLoading = false;
         this.isProcessingPayment = false;
         this.router.navigate(['/booking-success'], {
           queryParams: { 
-            bookingId: bookingId,
+            publicCode: publicCode,
+            bookingId: publicCode,
             status: 'pending'
           }
         });

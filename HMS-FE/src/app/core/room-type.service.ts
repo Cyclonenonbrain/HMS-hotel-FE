@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+﻿import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environment/environment';
@@ -21,12 +21,16 @@ export class RoomTypeService {
     return `${environment.apiUrl}/hotels/${activeHotelId}/room-types`;
   }
 
-  getRoomTypes(hotelId?: number): Observable<ApiResponse<RoomTypeResponse[]>> {
-    return this.http.get<ApiResponse<any[]>>(this.getApiUrl(hotelId)).pipe(
-      map((res) => ({
-        ...res,
-        data: (res.data || []).map((item: any) => this.mapRoomTypeResponse(item))
-      }))
+  getRoomTypes(hotelId?: number, page = 0, size = 50): Observable<ApiResponse<RoomTypeResponse[]>> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<ApiResponse<any>>(this.getApiUrl(hotelId), { params }).pipe(
+      map((res) => {
+        const rawList = Array.isArray(res.data) ? res.data : (res.data?.content || []);
+        return {
+          ...res,
+          data: rawList.map((item: any) => this.mapRoomTypeResponse(item))
+        };
+      })
     );
   }
 
@@ -64,27 +68,42 @@ export class RoomTypeService {
   }
 
   private mapRoomTypeResponse(item: any): RoomTypeResponse {
+    const rawAmenities = item?.amenities || [];
+    const mappedAmenities = rawAmenities.map((a: any) => {
+      if (typeof a === 'string') {
+        return { code: a.toUpperCase().replace(/\s+/g, '_'), name: a };
+      }
+      const name = a?.name || a?.code || '';
+      return {
+        id: a?.id,
+        code: a?.code || name.toUpperCase().replace(/\s+/g, '_'),
+        name: name,
+        iconUrl: a?.iconUrl
+      };
+    });
+
     return {
-      id: item?.id,
+      id: String(item?.id ?? ''),
       name: item?.name ?? '',
       description: item?.description ?? '',
       basePrice: Number(item?.basePrice ?? item?.base_price ?? 0),
-      capacity: Number(item?.capacity ?? 0),
+      capacity: Number(item?.maxOccupancy ?? item?.baseOccupancy ?? item?.capacity ?? 2),
       bedConfig: item?.bedConfig ?? item?.bed_config ?? null,
-      amenities: item?.amenities ?? [],
+      amenities: mappedAmenities,
       createdAt: item?.createdAt ?? item?.created_at,
       updatedAt: item?.updatedAt ?? item?.updated_at
     };
   }
 
   private toApiRequest(request: RoomTypeCreateRequest): any {
+    const capacity = Number(request.capacity || 2);
     return {
       name: request.name,
       description: request.description,
-      base_price: request.basePrice,
-      capacity: request.capacity,
-      bed_config: request.bedConfig ?? null,
-      amenities: request.amenities ?? []
+      basePrice: request.basePrice,
+      baseOccupancy: Math.max(1, Math.min(2, capacity)),
+      maxOccupancy: Math.max(1, capacity),
+      amenityIds: request.amenityIds || []
     };
   }
 }

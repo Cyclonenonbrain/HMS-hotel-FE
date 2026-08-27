@@ -1,28 +1,27 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+﻿import { Injectable } from '@angular/core';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
-/**
- * PayOS Payment Link Response
- */
 export interface PayOsPaymentLinkResponse {
-  checkout_url: string;       // URL để redirect user tới PayOS
-  qr_code?: string;           // QR code payload (optional)
-  payment_id: string;         // Payment UUID
-  order_code: string;         // PayOS order code
-  amount: number;             // Số tiền thanh toán
+  checkout_url?: string;
+  checkoutUrl?: string;
+  qr_code?: string;
+  qrCode?: string;
+  payment_id?: string | number;
+  paymentId?: string | number;
+  order_code?: string | number;
+  orderCode?: string | number;
+  amount?: number;
 }
 
-/**
- * API Response wrapper
- */
 export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
+  code?: string;
+  success?: boolean;
+  message?: string;
   data: T;
-  timestamp: string;
+  timestamp?: string;
 }
 
 @Injectable({
@@ -34,34 +33,37 @@ export class PaymentService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Tạo PayOS payment link cho booking
-   * POST /api/v1/bookings/{bookingId}/payment-links/payos
+   * Tạo PayOS payment link cho booking theo publicCode
+   * POST /api/v1/bookings/me/{publicCode}/payments/payos (User đã đăng nhập)
+   * POST /api/v1/bookings/lookup/{publicCode}/payments/payos (Khách vãng lai với X-Booking-Token)
    */
-  createPayOsPaymentLink(bookingId: string): Observable<ApiResponse<PayOsPaymentLinkResponse>> {
+  createPayOsPaymentLink(publicCode: string, bookingToken?: string): Observable<ApiResponse<PayOsPaymentLinkResponse>> {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      return this.http
+        .post<ApiResponse<PayOsPaymentLinkResponse>>(
+          `${this.API_URL}/bookings/me/${publicCode}/payments/payos`,
+          {}
+        )
+        .pipe(catchError(this.handleError));
+    }
+
+    let headers = new HttpHeaders();
+    if (bookingToken) {
+      headers = headers.set('X-Booking-Token', bookingToken);
+    }
+
     return this.http
       .post<ApiResponse<PayOsPaymentLinkResponse>>(
-        `${this.API_URL}/bookings/${bookingId}/payment-links/payos`,
-        {}
+        `${this.API_URL}/bookings/lookup/${publicCode}/payments/payos`,
+        {},
+        { headers }
       )
       .pipe(catchError(this.handleError));
   }
 
-  /**
-   * Kiểm tra trạng thái payment
-   * GET /api/v1/payments/{paymentId}
-   */
-  getPaymentStatus(paymentId: string): Observable<ApiResponse<any>> {
-    return this.http
-      .get<ApiResponse<any>>(`${this.API_URL}/payments/${paymentId}`)
-      .pipe(catchError(this.handleError));
-  }
-
-  /**
-   * Xử lý lỗi API
-   */
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'Đã có lỗi xảy ra khi tạo thanh toán.';
-    
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Lỗi: ${error.error.message}`;
     } else {
@@ -72,12 +74,11 @@ export class PaymentService {
       } else if (error.status === 403) {
         errorMessage = 'Bạn không có quyền thực hiện thanh toán này.';
       } else if (error.status === 404) {
-        errorMessage = 'Không tìm thấy booking.';
+        errorMessage = 'Không tìm thấy thông tin đặt phòng.';
       } else {
         errorMessage = error.error?.message || `Lỗi thanh toán: ${error.status}`;
       }
     }
-    
     console.error('PaymentService Error:', error);
     return throwError(() => new Error(errorMessage));
   }

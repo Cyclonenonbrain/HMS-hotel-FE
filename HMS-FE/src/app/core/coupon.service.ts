@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -18,7 +18,6 @@ export class CouponService {
     let params = new HttpParams();
     if (query?.page !== undefined) params = params.set('page', query.page);
     if (query?.size !== undefined) params = params.set('size', query.size);
-    if (query?.sort) params = params.set('sort', query.sort);
 
     return this.http.get<ApiResponse<any>>(this.apiUrl, { params }).pipe(
       map((res) => ({
@@ -46,17 +45,36 @@ export class CouponService {
     );
   }
 
+  activateCoupon(id: string): Observable<ApiResponse<CouponResponse>> {
+    return this.http.patch<ApiResponse<any>>(`${this.apiUrl}/${id}/activate`, {}).pipe(
+      map((res) => ({
+        ...res,
+        data: this.mapCouponResponse(res.data)
+      }))
+    );
+  }
+
+  deactivateCoupon(id: string): Observable<ApiResponse<CouponResponse>> {
+    return this.http.patch<ApiResponse<any>>(`${this.apiUrl}/${id}/deactivate`, {}).pipe(
+      map((res) => ({
+        ...res,
+        data: this.mapCouponResponse(res.data)
+      }))
+    );
+  }
+
   deleteCoupon(id: string): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
   }
 
   private mapPageResponse(page: any): PageResponse<CouponResponse> {
+    const content = page?.content || (Array.isArray(page) ? page : []);
     return {
-      content: (page?.content || []).map((item: any) => this.mapCouponResponse(item)),
-      totalElements: Number(page?.totalElements ?? 0),
-      totalPages: Number(page?.totalPages ?? 0),
-      size: Number(page?.size ?? 0),
-      number: Number(page?.number ?? 0),
+      content: content.map((item: any) => this.mapCouponResponse(item)),
+      totalElements: Number(page?.totalElements ?? content.length),
+      totalPages: Number(page?.totalPages ?? 1),
+      size: Number(page?.size ?? content.length),
+      number: Number(page?.number ?? page?.page ?? 0),
       first: !!page?.first,
       last: !!page?.last
     };
@@ -64,7 +82,7 @@ export class CouponService {
 
   private mapCouponResponse(item: any): CouponResponse {
     return {
-      id: item?.id,
+      id: String(item?.id ?? ''),
       code: item?.code ?? '',
       discountType: item?.discountType ?? item?.discount_type ?? 'PERCENT',
       value: Number(item?.value ?? 0),

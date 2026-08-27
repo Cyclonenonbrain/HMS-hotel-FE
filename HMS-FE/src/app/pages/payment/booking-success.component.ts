@@ -1,10 +1,10 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+﻿import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { CheckoutService, BookingResponse } from '../../services/checkout.services';
+import { Subscription } from 'rxjs';
+import { CheckoutService, BookingDetailResponse } from '../../services/checkout.services';
 import { AuthService } from '../../services/auth.services';
 import { VndPipe } from '../../core/vnd.pipe';
-import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-booking-success',
@@ -19,9 +19,9 @@ import { Subscription } from 'rxjs';
           <h2 class="text-xl font-bold tracking-tight text-primary">Luxecore</h2>
         </div>
         <nav class="hidden md:flex items-center gap-9">
-          <a routerLink="/" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Home</a>
-          <a routerLink="/search" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Rooms</a>
-          <a routerLink="/my-bookings" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">My Bookings</a>
+          <a routerLink="/" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Trang chủ</a>
+          <a routerLink="/search" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Phòng</a>
+          <a routerLink="/my-bookings" class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Đơn đặt phòng</a>
         </nav>
       </header>
 
@@ -47,14 +47,14 @@ import { Subscription } from 'rxjs';
           <!-- Success Icon -->
           <div class="text-center">
             <div class="inline-flex items-center justify-center w-20 h-20 rounded-full" 
-                 [ngClass]="booking.status === 'CONFIRMED' ? 'bg-green-100' : 'bg-yellow-100'">
+                 [ngClass]="booking.status === 'CONFIRMED' || booking.status === 'CHECKED_IN' ? 'bg-green-100' : 'bg-yellow-100'">
               <span class="material-symbols-outlined text-4xl" 
-                    [ngClass]="booking.status === 'CONFIRMED' ? 'text-green-600' : 'text-yellow-600'">
-                {{ booking.status === 'CONFIRMED' ? 'check_circle' : 'schedule' }}
+                    [ngClass]="booking.status === 'CONFIRMED' || booking.status === 'CHECKED_IN' ? 'text-green-600' : 'text-yellow-600'">
+                {{ booking.status === 'CONFIRMED' || booking.status === 'CHECKED_IN' ? 'check_circle' : 'schedule' }}
               </span>
             </div>
             <h1 class="mt-4 text-3xl font-black">
-              {{ booking.status === 'CONFIRMED' ? 'Đặt phòng thành công!' : 'Đang chờ thanh toán' }}
+              {{ booking.status === 'CONFIRMED' ? 'Đặt phòng thành công!' : 'Đơn đặt phòng đã được ghi nhận' }}
             </h1>
             <p class="mt-2 text-slate-500">
               {{ booking.status === 'CONFIRMED' 
@@ -68,35 +68,40 @@ import { Subscription } from 'rxjs';
             <div class="flex items-center justify-between pb-4 border-b border-neutral-100">
               <div>
                 <p class="text-xs text-slate-400 uppercase font-bold">Mã đặt phòng</p>
-                <p class="text-xl font-bold font-mono">{{ booking.id | slice:0:8 }}...</p>
+                <p class="text-xl font-bold font-mono text-primary">{{ booking.publicCode }}</p>
               </div>
               <div class="px-4 py-2 rounded-full text-xs font-bold uppercase"
                    [ngClass]="{
-                     'bg-green-100 text-green-700': booking.status === 'CONFIRMED',
-                     'bg-yellow-100 text-yellow-700': booking.status === 'PENDING',
+                     'bg-green-100 text-green-700': booking.status === 'CONFIRMED' || booking.status === 'COMPLETED',
+                     'bg-yellow-100 text-yellow-700': booking.status === 'PENDING_PAYMENT' || booking.status === 'PENDING',
                      'bg-red-100 text-red-700': booking.status === 'CANCELLED'
                    }">
                 {{ booking.status }}
               </div>
             </div>
 
+            <!-- Hotel name -->
+            <div *ngIf="booking.hotelName" class="py-2 text-sm text-slate-600 font-medium">
+              Khách sạn: <span class="font-bold text-slate-900">{{ booking.hotelName }}</span>
+            </div>
+
             <!-- Booking Items -->
-            <div *ngFor="let item of booking.booking_items" class="py-4 border-b border-neutral-100 last:border-0">
+            <div *ngFor="let item of booking.items" class="py-4 border-b border-neutral-100 last:border-0">
               <div class="flex justify-between items-start">
                 <div>
-                  <h3 class="font-bold text-lg">{{ item.room_type_name }}</h3>
-                  <p class="text-sm text-slate-500 mt-1">{{ item.number_of_guests }} khách</p>
+                  <h3 class="font-bold text-lg">{{ item.roomTypeName }}</h3>
+                  <p class="text-sm text-slate-500 mt-1">{{ item.actualGuests }} khách · Số lượng: {{ item.quantity }}</p>
                 </div>
-                <p class="font-bold">{{ item.snapshot_price | vnd }}</p>
+                <p class="font-bold">{{ item.totalAmount | vnd }}</p>
               </div>
               <div class="mt-3 flex gap-6">
                 <div>
                   <p class="text-xs text-slate-400 uppercase">Check-in</p>
-                  <p class="font-semibold">{{ item.check_in }}</p>
+                  <p class="font-semibold">{{ item.checkInDate || booking.checkInDate }}</p>
                 </div>
                 <div>
                   <p class="text-xs text-slate-400 uppercase">Check-out</p>
-                  <p class="font-semibold">{{ item.check_out }}</p>
+                  <p class="font-semibold">{{ item.checkOutDate || booking.checkOutDate }}</p>
                 </div>
               </div>
             </div>
@@ -104,14 +109,14 @@ import { Subscription } from 'rxjs';
             <!-- Total -->
             <div class="pt-4 flex justify-between items-center">
               <span class="text-slate-500">Tổng thanh toán</span>
-              <span class="text-2xl font-black">{{ booking.deposit | vnd }}</span>
+              <span class="text-2xl font-black text-primary">{{ booking.totalAmount | vnd }}</span>
             </div>
 
             <!-- Discount if any -->
-            <div *ngIf="booking.discount_snapshot && booking.discount_snapshot > 0" 
+            <div *ngIf="booking.couponSnapshot && booking.couponSnapshot.discountAmount > 0" 
                  class="mt-2 flex justify-between items-center text-green-600">
-              <span>Giảm giá ({{ booking.coupon_code_snapshot }})</span>
-              <span class="font-bold">-{{ booking.discount_snapshot | vnd }}</span>
+              <span>Giảm giá ({{ booking.couponSnapshot.code }})</span>
+              <span class="font-bold">-{{ booking.couponSnapshot.discountAmount | vnd }}</span>
             </div>
           </div>
 
@@ -119,7 +124,7 @@ import { Subscription } from 'rxjs';
           <div class="flex flex-col sm:flex-row gap-4">
             <button routerLink="/my-bookings" 
                     class="flex-1 py-4 bg-primary rounded-xl font-bold text-slate-900 text-center hover:bg-primary/90 transition-colors">
-              Xem đơn đặt phòng
+              Xem danh sách đặt phòng
             </button>
             <button routerLink="/" 
                     class="flex-1 py-4 bg-slate-100 rounded-xl font-bold text-slate-700 text-center hover:bg-slate-200 transition-colors">
@@ -129,7 +134,7 @@ import { Subscription } from 'rxjs';
 
           <!-- Help text -->
           <p class="text-center text-sm text-slate-400">
-            Thông tin đặt phòng đã được gửi đến email của bạn. 
+            Thông tin đặt phòng đã được lưu trữ. 
             Nếu cần hỗ trợ, vui lòng liên hệ hotline: <span class="font-bold">1900-xxxx</span>
           </p>
         </div>
@@ -143,11 +148,9 @@ import { Subscription } from 'rxjs';
   `]
 })
 export class BookingSuccessComponent implements OnInit {
-  booking: BookingResponse | null = null;
+  booking: BookingDetailResponse | null = null;
   isLoading = true;
   errorMessage = '';
-  
-  private routeSub!: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -159,22 +162,21 @@ export class BookingSuccessComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParamMap.subscribe(params => {
-      const bookingId = params.get('bookingId');
-      const status = params.get('status');
+      const publicCode = params.get('publicCode') || params.get('bookingId');
       
-      if (bookingId) {
-        this.loadBooking(bookingId);
+      if (publicCode) {
+        this.loadBooking(publicCode);
       } else {
-        this.errorMessage = 'Không tìm thấy thông tin đặt phòng';
+        this.errorMessage = 'Không tìm thấy mã đặt phòng';
         this.isLoading = false;
       }
     });
   }
 
-  private loadBooking(bookingId: string): void {
-    this.checkoutService.getBookingById(bookingId).subscribe({
+  private loadBooking(publicCode: string): void {
+    this.checkoutService.getBookingByCode(publicCode).subscribe({
       next: (response) => {
-        if (response.success && response.data) {
+        if (response && response.data) {
           this.booking = response.data;
         } else {
           this.errorMessage = 'Không thể tải thông tin đặt phòng';

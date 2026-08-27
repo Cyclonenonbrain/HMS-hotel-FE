@@ -1,9 +1,8 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { CheckoutService, BookingResponse } from '../../services/checkout.services';
 import { Subscription } from 'rxjs';
-
 
 @Component({
   selector: 'app-booking-confirmation',
@@ -32,13 +31,13 @@ export class BookingConfirmationComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.routeSub = this.route.queryParamMap.subscribe(params => {
-      const bookingIdFromQuery = params.get('bookingId');
+      const bookingIdFromQuery = params.get('bookingId') || params.get('publicCode');
       const bookingIdFromRoute = this.route.snapshot.paramMap.get('id');
       this.bookingId = bookingIdFromQuery || bookingIdFromRoute || '';
 
       if (!this.bookingId) {
         this.isLoading = false;
-        this.errorMessage = 'Không tìm thấy bookingId để xác nhận thanh toán.';
+        this.errorMessage = 'Không tìm thấy mã đặt phòng để xác nhận thanh toán.';
         this.cdr.detectChanges();
         return;
       }
@@ -91,15 +90,15 @@ export class BookingConfirmationComponent implements OnInit, OnDestroy {
 
   private pollBookingStatus(): void {
     this.checkoutService.getBookingById(this.bookingId).subscribe({
-      next: (res) => {
-        if (!res.success || !res.data) {
+      next: (res: any) => {
+        if (!res.data) {
           return;
         }
         this.bookingData = res.data;
         const currentStatus = String(res.data.status || '').toUpperCase();
         this.statusText = currentStatus;
 
-        if (currentStatus === 'CONFIRMED') {
+        if (currentStatus === 'CONFIRMED' || currentStatus === 'COMPLETED' || currentStatus === 'CHECKED_IN') {
           this.stopPolling();
           this.isLoading = false;
           this.cdr.detectChanges();
@@ -118,9 +117,8 @@ export class BookingConfirmationComponent implements OnInit, OnDestroy {
         this.isLoading = true;
         this.cdr.detectChanges();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error polling booking status:', err);
-        // Keep polling on transient network errors
         this.isLoading = true;
         this.cdr.detectChanges();
       }

@@ -1,10 +1,11 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environment/environment';
 import { ApiResponse } from './models/api-response.model';
 import { HotelServiceCreateRequest, HotelServiceQuery, HotelServiceResponse, PageResponse } from './models/hotel-service.model';
+import { HotelService } from './hotel.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,15 +13,16 @@ import { HotelServiceCreateRequest, HotelServiceQuery, HotelServiceResponse, Pag
 export class HotelServiceService {
   private readonly apiUrl = `${environment.apiUrl}/admin/services`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private hotelService: HotelService
+  ) {}
 
   getServices(query?: HotelServiceQuery): Observable<ApiResponse<PageResponse<HotelServiceResponse>>> {
-    let params = new HttpParams();
-    if (query?.q) params = params.set('q', query.q);
-    if (query?.isActive !== undefined) params = params.set('is_active', query.isActive);
+    const hotelId = this.hotelService.getActiveHotelId();
+    let params = new HttpParams().set('hotelId', hotelId.toString());
     if (query?.page !== undefined) params = params.set('page', query.page);
     if (query?.size !== undefined) params = params.set('size', query.size);
-    if (query?.sort) params = params.set('sort', query.sort);
 
     return this.http.get<ApiResponse<any>>(this.apiUrl, { params }).pipe(
       map((res) => ({
@@ -49,16 +51,19 @@ export class HotelServiceService {
   }
 
   deleteService(id: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
+    const hotelId = this.hotelService.getActiveHotelId();
+    const params = new HttpParams().set('hotelId', hotelId.toString());
+    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`, { params });
   }
 
   private mapPageResponse(page: any): PageResponse<HotelServiceResponse> {
+    const content = page?.content || (Array.isArray(page) ? page : []);
     return {
-      content: (page?.content || []).map((item: any) => this.mapServiceResponse(item)),
-      totalElements: Number(page?.totalElements ?? 0),
-      totalPages: Number(page?.totalPages ?? 0),
-      size: Number(page?.size ?? 0),
-      number: Number(page?.number ?? 0),
+      content: content.map((item: any) => this.mapServiceResponse(item)),
+      totalElements: Number(page?.totalElements ?? content.length),
+      totalPages: Number(page?.totalPages ?? 1),
+      size: Number(page?.size ?? content.length),
+      number: Number(page?.number ?? page?.page ?? 0),
       first: !!page?.first,
       last: !!page?.last
     };
@@ -66,20 +71,22 @@ export class HotelServiceService {
 
   private mapServiceResponse(item: any): HotelServiceResponse {
     return {
-      id: item?.id,
+      id: String(item?.id ?? ''),
       name: item?.name ?? '',
-      price: Number(item?.price ?? 0),
-      isActive: Boolean(item?.isActive ?? item?.is_active ?? false),
+      price: Number(item?.unitPrice ?? item?.unit_price ?? item?.price ?? 0),
+      isActive: item?.isRetired !== undefined ? !item.isRetired : (item?.isActive ?? item?.is_active ?? true),
       createdAt: item?.createdAt ?? item?.created_at,
       updatedAt: item?.updatedAt ?? item?.updated_at
     };
   }
 
   private toApiRequest(request: HotelServiceCreateRequest): any {
+    const hotelId = this.hotelService.getActiveHotelId();
     return {
+      hotelId: hotelId,
       name: request.name,
-      price: request.price,
-      is_active: request.isActive
+      description: (request as any).description || 'Hotel service',
+      unitPrice: request.price
     };
   }
 }

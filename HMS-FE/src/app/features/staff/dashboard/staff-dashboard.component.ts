@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -138,14 +138,14 @@ export class StaffDashboardComponent implements OnInit {
             this.buildBookingModalRooms();
             this.loadTimelineBookings();
           },
-          error: (err) => {
-            this.errorMessage = err?.error?.message || 'Không tải được danh sách phòng.';
+          error: (err: any) => {
+            this.errorMessage = err?.error?.message || 'KhÃ´ng táº£i Ä‘Æ°á»£c danh sÃ¡ch phÃ²ng.';
             this.isLoading = false;
           }
         });
       },
-      error: (err) => {
-        this.errorMessage = err?.error?.message || 'Không tải được danh sách loại phòng.';
+      error: (err: any) => {
+        this.errorMessage = err?.error?.message || 'KhÃ´ng táº£i Ä‘Æ°á»£c danh sÃ¡ch loáº¡i phÃ²ng.';
         this.isLoading = false;
       }
     });
@@ -164,8 +164,8 @@ export class StaffDashboardComponent implements OnInit {
         this.computeFooterStats();
         this.isLoading = false;
       },
-      error: (err) => {
-        this.errorMessage = err?.error?.message || 'Không tải được danh sách booking.';
+      error: (err: any) => {
+        this.errorMessage = err?.error?.message || 'KhÃ´ng táº£i Ä‘Æ°á»£c danh sÃ¡ch booking.';
         this.buildFloorTimeline();
         this.computeFooterStats();
         this.isLoading = false;
@@ -298,7 +298,7 @@ export class StaffDashboardComponent implements OnInit {
 
     const sortedFloors = Array.from(floorMap.entries()).sort((a, b) => a[0] - b[0]);
     this.floors = sortedFloors.map(([floor, rooms]) => ({
-      name: `Floor ${String(floor).padStart(2, '0')} — ${this.getFloorLabel(rooms)}`,
+      name: `Floor ${String(floor).padStart(2, '0')} â€” ${this.getFloorLabel(rooms)}`,
       rooms: rooms.sort((a, b) => Number(a.id) - Number(b.id))
     }));
   }
@@ -332,7 +332,7 @@ export class StaffDashboardComponent implements OnInit {
     const monthsArr = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
     const inHH = String(checkIn.getHours()).padStart(2, '0');
     const inMM = String(checkIn.getMinutes()).padStart(2, '0');
-    return `${inHH}:${inMM} • ${monthsArr[checkIn.getMonth()]} ${checkIn.getDate()} - ${checkOut.getDate()}`;
+    return `${inHH}:${inMM} â€¢ ${monthsArr[checkIn.getMonth()]} ${checkIn.getDate()} - ${checkOut.getDate()}`;
   }
 
   getBookingPositionStyles(booking: Booking): any {
@@ -569,17 +569,17 @@ export class StaffDashboardComponent implements OnInit {
   private createBooking(withCheckIn: boolean) {
     this.bookingActionError = '';
     if (!this.bookingForm.checkInDate || !this.bookingForm.checkOutDate) {
-      this.bookingActionError = 'Vui lòng chọn ngày check-in/check-out.';
+      this.bookingActionError = 'Vui lÃ²ng chá»n ngÃ y check-in/check-out.';
       return;
     }
     if (this.selectedRoomIds.length === 0) {
-      this.bookingActionError = 'Vui lòng chọn ít nhất 1 phòng cụ thể.';
+      this.bookingActionError = 'Vui lÃ²ng chá»n Ã­t nháº¥t 1 phÃ²ng cá»¥ thá»ƒ.';
       return;
     }
 
     const selectedRooms = this.availableRoomsList.filter((r) => this.selectedRoomIds.includes(r.id));
     if (selectedRooms.length === 0) {
-      this.bookingActionError = 'Không tìm thấy phòng đã chọn.';
+      this.bookingActionError = 'KhÃ´ng tÃ¬m tháº¥y phÃ²ng Ä‘Ã£ chá»n.';
       return;
     }
 
@@ -606,7 +606,7 @@ export class StaffDashboardComponent implements OnInit {
 
     this.bookingActionLoading = true;
     this.bookingService.createBooking(bookingPayload).subscribe({
-      next: (createRes) => {
+      next: (createRes: any) => {
         const booking = createRes?.data;
         if (!withCheckIn) {
           this.bookingActionLoading = false;
@@ -641,7 +641,7 @@ export class StaffDashboardComponent implements OnInit {
 
         if (!booking?.id || assignments.length !== bookingItems.length) {
           this.bookingActionLoading = false;
-          this.bookingActionError = 'Không thể map đủ phòng cụ thể để check-in.';
+          this.bookingActionError = 'KhÃ´ng thá»ƒ map Ä‘á»§ phÃ²ng cá»¥ thá»ƒ Ä‘á»ƒ check-in.';
           return;
         }
 
@@ -655,15 +655,15 @@ export class StaffDashboardComponent implements OnInit {
             this.closeBookingModal();
             this.loadTimelineBookings();
           },
-          error: (err) => {
+          error: (err: any) => {
             this.bookingActionLoading = false;
-            this.bookingActionError = this.resolveBookingActionError(err, 'Save & Check-in thất bại.');
+            this.bookingActionError = this.resolveBookingActionError(err, 'Save & Check-in tháº¥t báº¡i.');
           }
         });
       },
-      error: (err) => {
+      error: (err: any) => {
         this.bookingActionLoading = false;
-        this.bookingActionError = this.resolveBookingActionError(err, 'Tạo booking thất bại.');
+        this.bookingActionError = this.resolveBookingActionError(err, 'Táº¡o booking tháº¥t báº¡i.');
       }
     });
   }
@@ -672,7 +672,7 @@ export class StaffDashboardComponent implements OnInit {
     if (err?.status === 401) {
       localStorage.removeItem('access_token');
       this.router.navigate(['/login']);
-      return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+      return 'PhiÃªn Ä‘Äƒng nháº­p Ä‘Ã£ háº¿t háº¡n. Vui lÃ²ng Ä‘Äƒng nháº­p láº¡i.';
     }
     return err?.error?.message || fallback;
   }
@@ -731,4 +731,5 @@ export class StaffDashboardComponent implements OnInit {
     this.pendingPaymentCount = this.bookingsRaw.filter((b) => (b?.payment_status || '').toUpperCase() !== 'PAID').length;
   }
 }
+
 

@@ -1,65 +1,100 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+﻿import { Injectable } from '@angular/core';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, retry } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
-/**
- * Interface khớp với ApiResponse.java từ Backend
- */
 export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
+  code?: string;
+  success?: boolean;
+  message?: string;
   data: T;
-  timestamp: string;
+  timestamp?: string;
 }
 
-/**
- * Booking Item Request - khớp với BookingItemRequest DTO từ Backend
- */
-export interface BookingItemRequest {
-  room_type_id: string;           // UUID
-  check_in: string;               // LocalDate (YYYY-MM-DD)
-  check_out: string;              // LocalDate (YYYY-MM-DD)
-  number_of_guests: number;       // Integer
-  pricing_mode?: string;          // Optional: NIGHTLY, HOURLY
+export interface HoldLineRequest {
+  roomTypeId: number;
+  guests: number;
+  quantity: number;
 }
 
-/**
- * DTO khớp với BookingCreateRequest từ Backend
- */
-export interface BookingCreateRequest {
-  channel: 'WEB' | 'COUNTER' | 'ADMIN';
-  deposit: number;                // BigDecimal - tổng tiền cọc (có thể = totalAmount)
-  notes?: string;                 // Optional notes
-  coupon_code?: string;           // Optional coupon code
-  booking_items: BookingItemRequest[];
+export interface HoldCreateRequest {
+  checkIn: string; // YYYY-MM-DD
+  checkOut: string; // YYYY-MM-DD
+  lines: HoldLineRequest[];
 }
 
-/**
- * Booking Response từ Backend
- */
-export interface BookingResponse {
-  id: string;                     // UUID
-  user_id: string;
-  status: 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
-  channel: string;
-  deposit: number;
-  coupon_code_snapshot?: string;
-  discount_snapshot?: number;
-  booking_items: BookingItemResponse[];
-  created_at: string;
-  updated_at: string;
+export interface HoldResponse {
+  accessToken: string;
+  hotelId: number;
+  status: string;
+  checkIn: string;
+  checkOut: string;
+  expiresAt: string;
+  lines: Array<{
+    roomTypeId: number;
+    roomTypeName: string;
+    guests: number;
+    quantity: number;
+    roomSubtotal: number;
+    discountAmount: number;
+    surchargeAmount: number;
+    totalAmount: number;
+  }>;
 }
 
-export interface BookingItemResponse {
-  id: string;
-  room_type_id: string;
-  room_type_name: string;
-  check_in: string;
-  check_out: string;
-  number_of_guests: number;
-  snapshot_price: number;
+export interface HoldConversionRequest {
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  couponValidationToken?: string;
+}
+
+export interface BookingDetailResponse {
+  publicCode: string;
+  hotelId: number;
+  hotelName: string;
+  checkInDate: string;
+  checkOutDate: string;
+  status: string;
+  totalAmount: number;
+  couponSnapshot?: {
+    code: string;
+    discountAmount: number;
+  };
+  items: Array<{
+    roomTypeId: number;
+    roomTypeName: string;
+    checkInDate: string;
+    checkOutDate: string;
+    actualGuests: number;
+    quantity: number;
+    totalAmount: number;
+  }>;
+  roomAssignments?: Array<{
+    roomTypeId: number;
+    roomNumber: string;
+  }>;
+}
+
+export type BookingResponse = BookingDetailResponse;
+
+export interface BookingSummaryResponse {
+  publicCode: string;
+  hotelId: number;
+  hotelName: string;
+  checkInDate: string;
+  checkOutDate: string;
+  status: string;
+  totalAmount: number;
+}
+
+export interface PagedData<T> {
+  page?: number;
+  size?: number;
+  totalElements?: number;
+  totalPages?: number;
+  content: T[];
 }
 
 @Injectable({
@@ -71,44 +106,67 @@ export class CheckoutService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Tạo booking mới
-   * POST /api/v1/bookings
+   * Bước 1: Tạo Hold (giữ phòng nguyên tử 10 phút)
+   * POST /api/v1/holds
    */
-  createBooking(payload: BookingCreateRequest): Observable<ApiResponse<BookingResponse>> {
+  createHold(payload: HoldCreateRequest): Observable<ApiResponse<HoldResponse>> {
     return this.http
-      .post<ApiResponse<BookingResponse>>(`${this.API_URL}/bookings`, payload)
-      .pipe(
-        retry(1),
-        catchError(this.handleError)
-      );
-  }
-
-  /**
-   * Lấy thông tin booking theo ID
-   * GET /api/v1/bookings/{id}
-   */
-  getBookingById(bookingId: string): Observable<ApiResponse<BookingResponse>> {
-    return this.http
-      .get<ApiResponse<BookingResponse>>(`${this.API_URL}/bookings/${bookingId}`)
+      .post<ApiResponse<HoldResponse>>(`${this.API_URL}/holds`, payload)
       .pipe(catchError(this.handleError));
   }
 
   /**
-   * Lấy danh sách bookings của user hiện tại
-   * GET /api/v1/bookings
+   * Bước 2: Chuyển đổi Hold thành Booking chính thức
+   * POST /api/v1/holds/convert
+   * Header: X-Hold-Token
    */
-  getMyBookings(): Observable<ApiResponse<BookingResponse[]>> {
+  convertHold(accessToken: string, payload: HoldConversionRequest): Observable<ApiResponse<BookingDetailResponse>> {
+    const headers = new HttpHeaders().set('X-Hold-Token', accessToken);
     return this.http
-      .get<ApiResponse<BookingResponse[]>>(`${this.API_URL}/bookings`)
+      .post<ApiResponse<BookingDetailResponse>>(`${this.API_URL}/holds/convert`, payload, { headers })
       .pipe(catchError(this.handleError));
   }
 
   /**
-   * Xử lý lỗi API tập trung
+   * Lấy chi tiết Booking theo publicCode
    */
+  getBookingByCode(publicCode: string, bookingToken?: string): Observable<ApiResponse<BookingDetailResponse>> {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      return this.http
+        .get<ApiResponse<BookingDetailResponse>>(`${this.API_URL}/bookings/me/${publicCode}`)
+        .pipe(catchError(this.handleError));
+    }
+
+    let headers = new HttpHeaders();
+    if (bookingToken) {
+      headers = headers.set('X-Booking-Token', bookingToken);
+    }
+    return this.http
+      .get<ApiResponse<BookingDetailResponse>>(`${this.API_URL}/bookings/lookup/${publicCode}`, { headers })
+      .pipe(catchError(this.handleError));
+  }
+
+  getBookingById(bookingId: string): Observable<ApiResponse<BookingDetailResponse>> {
+    return this.getBookingByCode(bookingId);
+  }
+
+  /**
+   * Lấy danh sách booking của khách hàng đăng nhập
+   * GET /api/v1/bookings/me
+   */
+  getMyBookings(page = 0, size = 10): Observable<ApiResponse<PagedData<BookingSummaryResponse>>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http
+      .get<ApiResponse<PagedData<BookingSummaryResponse>>>(`${this.API_URL}/bookings/me`, { params })
+      .pipe(catchError(this.handleError));
+  }
+
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'Đã có lỗi xảy ra, vui lòng thử lại sau.';
-    
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Lỗi: ${error.error.message}`;
     } else {
@@ -119,12 +177,11 @@ export class CheckoutService {
       } else if (error.status === 400) {
         errorMessage = error.error?.message || 'Dữ liệu không hợp lệ.';
       } else if (error.status === 409) {
-        errorMessage = error.error?.message || 'Phòng đã được đặt trong khoảng thời gian này.';
+        errorMessage = error.error?.message || 'Phòng đã hết hoặc đã có người đặt.';
       } else {
         errorMessage = error.error?.message || `Mã lỗi: ${error.status}`;
       }
     }
-    
     console.error('CheckoutService Error:', error);
     return throwError(() => new Error(errorMessage));
   }
